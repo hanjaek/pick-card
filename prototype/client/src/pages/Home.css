@@ -1,0 +1,328 @@
+.home {
+  padding-top: 70px;
+}
+
+/* ============================================================
+   히어로 섹션 - BNK 레드 그라디언트
+   ============================================================ */
+.hero {
+  min-height: 90vh;
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-red) 55%, #E84040 100%);
+  display: flex;
+  align-items: center;
+  padding: 80px 10%;
+  gap: 60px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 도트 그리드 패턴 */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.hero-content {
+  flex: 1;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 18px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+  letter-spacing: 0.5px;
+}
+
+.hero-title {
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 22px;
+  word-break: keep-all;
+}
+
+/* 포인트 텍스트: 흰색 배경에 레드 텍스트 효과 */
+.hero-title .highlight {
+  background: #fff;
+  color: var(--bnk-red);
+  padding: 0 8px;
+  border-radius: 6px;
+}
+
+.hero-sub {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.9;
+  margin-bottom: 42px;
+}
+
+.hero-btns {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 흰 배경 주요 버튼 */
+.btn-primary {
+  display: inline-block;
+  padding: 15px 38px;
+  background: #fff;
+  color: var(--bnk-red);
+  border-radius: var(--radius-btn);
+  font-size: 16px;
+  font-weight: 800;
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  background: #f5e8e8;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* 테두리 ghost 버튼 */
+.btn-ghost {
+  display: inline-block;
+  padding: 15px 38px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #fff;
+  border-radius: var(--radius-btn);
+  font-size: 16px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #fff;
+}
+
+/* ---- 히어로 우측 플로팅 카드 ---- */
+.hero-visual {
+  flex: 1;
+  position: relative;
+  height: 420px;
+  z-index: 1;
+}
+
+.float-card {
+  position: absolute;
+  width: 270px;
+  height: 165px;
+  border-radius: 16px;
+  padding: 18px 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.fc-chip {
+  width: 36px;
+  height: 26px;
+  background: linear-gradient(135deg, #e8c96e, #f5e4a1);
+  border-radius: 5px;
+}
+
+.fc-network {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+.fc-label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+/* 각 카드 위치 + float 애니메이션 */
+.fc-1 {
+  top: 10px;
+  left: 20px;
+  animation: float1 4s ease-in-out infinite;
+}
+
+.fc-2 {
+  top: 130px;
+  left: 150px;
+  animation: float2 4s ease-in-out infinite 0.9s;
+  z-index: 2;
+}
+
+.fc-3 {
+  top: 260px;
+  left: 10px;
+  animation: float3 4s ease-in-out infinite 1.8s;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50%       { transform: rotate(-8deg) translateY(-16px); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: rotate(5deg) translateY(0); }
+  50%       { transform: rotate(5deg) translateY(-12px); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: rotate(-3deg) translateY(0); }
+  50%       { transform: rotate(-3deg) translateY(-10px); }
+}
+
+/* 글로우 원 */
+.hero-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 70%);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: glowPulse 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* ============================================================
+   공통 섹션
+   ============================================================ */
+.section-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 80px 40px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.section-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--bnk-dark-red);
+  margin-bottom: 12px;
+}
+
+.section-title.center {
+  text-align: center;
+}
+
+.section-sub {
+  font-size: 15px;
+  color: var(--bnk-gray);
+}
+
+/* ============================================================
+   추천 카드 섹션
+   ============================================================ */
+.featured-section {
+  background: var(--bnk-bg);
+}
+
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  justify-content: center;
+}
+
+.section-cta {
+  text-align: center;
+  margin-top: 44px;
+}
+
+.btn-more {
+  display: inline-block;
+  padding: 14px 42px;
+  border: 2px solid var(--bnk-red);
+  color: var(--bnk-red);
+  border-radius: var(--radius-btn);
+  font-size: 15px;
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.btn-more:hover {
+  background: var(--bnk-red);
+  color: #fff;
+}
+
+/* ============================================================
+   혜택 소개 섹션
+   ============================================================ */
+.why-section {
+  background: #fff;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-top: 50px;
+}
+
+.why-card {
+  background: var(--bnk-bg);
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  transition: var(--transition);
+  border: 1px solid var(--bnk-border);
+}
+
+.why-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--bnk-red);
+}
+
+.why-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  margin: 0 auto 22px;
+}
+
+/* 혜택 아이콘 색상: 레드 계열로 통일 */
+.icon-ai     { background: linear-gradient(135deg, var(--bnk-dark-red), var(--bnk-red)); }
+.icon-secure { background: linear-gradient(135deg, #2D2D2D, #555); }
+.icon-global { background: linear-gradient(135deg, var(--bnk-red), #E84040); }
+
+.why-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bnk-dark-red);
+  margin-bottom: 14px;
+}
+
+.why-card p {
+  font-size: 14px;
+  color: var(--bnk-gray);
+  line-height: 1.75;
+  word-break: keep-all;
+}
