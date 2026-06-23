@@ -5,11 +5,18 @@ import './CardItem.css'
  * - 앞면: 실제 카드처럼 칩/번호/네트워크 로고 표시
  * - 뒷면: 혜택 목록 + 신청 버튼 (hover 시 뒤집힘)
  */
-function CardItem({ card }) {
-  const { name, type, colorFrom, colorTo, benefits, annualFee, network, approvalCode } = card
+function CardItem({ card, onClick }) {
+  const name        = card.name        || card.prd_nm       || ''
+  const type        = card.type        || card.card_type_cd || ''
+  const colorFrom   = card.colorFrom   || card.color_from   || '#D71919'
+  const colorTo     = card.colorTo     || card.color_to     || '#8B0304'
+  const annualFee   = card.annualFee   ?? card.annual_fee   ?? 0
+  const network     = card.network     || 'VISA'
+  const approvalCode= card.approvalCode|| ''
+  const benefits    = card.benefits    || []
 
   return (
-    <div className="card-wrapper">
+    <div className="card-wrapper" onClick={onClick} style={onClick ? { cursor: 'pointer' } : {}}>
       <div className="card-inner">
 
         {/* 카드 앞면: 그라디언트 배경 + 카드 정보 */}
@@ -43,10 +50,10 @@ function CardItem({ card }) {
           </div>
 
           <ul className="benefit-list">
-            {benefits.map((b, i) => (
+            {(benefits || []).map((b, i) => (
               <li key={i} className="benefit-item">
                 <span className="benefit-dot" />
-                {b}
+                {typeof b === 'string' ? b : b.desc}
               </li>
             ))}
           </ul>
