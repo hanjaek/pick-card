@@ -1,49 +1,21 @@
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import CardItem from '../components/CardItem'
 import './Home.css'
 
-// 메인 페이지에 노출할 추천 카드 데이터
-// 실제 구현 시: useEffect + axios.get('/api/cards') 로 대체
-const FEATURED_CARDS = [
-  {
-    id: 1,
-    name: 'BNK AI 마스터카드',
-    type: '신용카드',
-    colorFrom: '#667eea',
-    colorTo: '#764ba2',
-    benefits: ['ChatGPT · Claude 구독 30% 할인', 'AI 교육 플랫폼 20% 캐시백', '클라우드 서비스 5% 청구할인'],
-    annualFee: 15000,
-    network: 'VISA',
-    approvalCode: 'BNK-2024-AI-001'
-  },
-  {
-    id: 2,
-    name: 'BNK 자기개발카드',
-    type: '체크카드',
-    colorFrom: '#11998e',
-    colorTo: '#38ef7d',
-    benefits: ['자격증 응시료 10% 환급', '온·오프라인 서점 5% 캐시백', '강의 플랫폼 월 1만원 할인'],
-    annualFee: 5000,
-    network: 'MASTER',
-    approvalCode: 'BNK-2024-EDU-002'
-  },
-  {
-    id: 3,
-    name: 'BNK 엔터카드',
-    type: '신용카드',
-    colorFrom: '#f7971e',
-    colorTo: '#ffd200',
-    benefits: ['OTT 4종 구독료 50% 할인', '영화관 2인 1인 요금', '음원 스트리밍 무료 이용'],
-    annualFee: 12000,
-    network: 'VISA',
-    approvalCode: 'BNK-2024-ENT-003'
-  }
-]
-
 function Home() {
+  const [featuredCards, setFeaturedCards] = useState([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    fetch('/api/cards')
+      .then(r => r.json())
+      .then(data => setFeaturedCards(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="home">
-
       {/* ====== 히어로 섹션 ====== */}
       <section className="hero">
         <div className="hero-content">
@@ -63,7 +35,6 @@ function Home() {
           </div>
         </div>
 
-        {/* 우측: 떠다니는 카드 3장 */}
         <div className="hero-visual">
           <div
             className="float-card fc-1"
@@ -89,8 +60,40 @@ function Home() {
             <span className="fc-network">VISA</span>
             <span className="fc-label">Pickard 엔터카드</span>
           </div>
-          {/* 배경 글로우 원 */}
           <div className="hero-glow" />
+        </div>
+      </section>
+
+      {/* ====== AI 디자인 배너 ====== */}
+      <section className="ai-design-banner">
+        <div className="section-inner">
+          <div className="adb-content">
+            <div className="adb-left">
+              <div className="adb-badge">NEW</div>
+              <h2 className="adb-title">✨ AI로 나만의 카드 디자인</h2>
+              <p className="adb-desc">
+                원하는 디자인을 글로 설명하면 AI가<br />
+                세상에 하나뿐인 카드를 만들어드립니다
+              </p>
+              <Link to="/cards" className="adb-btn">지금 만들어보기</Link>
+            </div>
+            <div className="adb-cards">
+              {[
+                ['#667eea', '#764ba2'],
+                ['#f7971e', '#ffd200'],
+                ['#11998e', '#38ef7d'],
+              ].map(([from, to], i) => (
+                <div
+                  key={i}
+                  className={`adb-card adb-card-${i + 1}`}
+                  style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+                >
+                  <div className="adb-chip" />
+                  <span className="adb-net">VISA</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -98,14 +101,18 @@ function Home() {
       <section className="featured-section">
         <div className="section-inner">
           <div className="section-header">
-            <h2 className="section-title">AI 추천 카드</h2>
+            <h2 className="section-title">인기 카드</h2>
             <p className="section-sub">
-              카드에 마우스를 올리면 혜택을 확인할 수 있습니다
+              카드를 클릭하면 상세 정보를 확인할 수 있습니다
             </p>
           </div>
           <div className="card-grid">
-            {FEATURED_CARDS.map(card => (
-              <CardItem key={card.id} card={card} />
+            {featuredCards.map(card => (
+              <CardItem
+                key={card.id}
+                card={card}
+                onClick={() => navigate(`/cards/${card.id}`)}
+              />
             ))}
           </div>
           <div className="section-cta">
@@ -125,6 +132,11 @@ function Home() {
               <p>소비 패턴을 분석해 가장 혜택이 큰 카드를 자동으로 추천합니다</p>
             </div>
             <div className="why-card">
+              <div className="why-icon icon-design" />
+              <h3>AI 커스텀 디자인</h3>
+              <p>원하는 테마를 설명하면 AI가 세상에 하나뿐인 나만의 카드를 만들어드립니다</p>
+            </div>
+            <div className="why-card">
               <div className="why-icon icon-secure" />
               <h3>비대면 실명확인</h3>
               <p>신분증 촬영 한 번으로 빠르고 안전하게 카드를 신청하세요</p>
@@ -137,7 +149,6 @@ function Home() {
           </div>
         </div>
       </section>
-
     </div>
   )
 }
