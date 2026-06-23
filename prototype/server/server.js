@@ -8,6 +8,7 @@ const cardRoutes         = require('./routes/cards')
 const termsRoutes        = require('./routes/terms')
 const applicationsRoutes = require('./routes/applications')
 const designRoutes       = require('./routes/design')
+const recommendRoutes    = require('./routes/recommend')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -25,6 +26,7 @@ app.use('/api/cards',        cardRoutes)
 app.use('/api/terms',        termsRoutes)
 app.use('/api/applications', applicationsRoutes)
 app.use('/api/design',       designRoutes)
+app.use('/api/recommend',   recommendRoutes)
 
 // PDF 파일 정적 서빙: /uploads/terms/2026-06-23_001.pdf 형태로 접근 가능
 // 프론트에서 <a href="/uploads/terms/파일명.pdf"> 로 다운로드/미리보기
