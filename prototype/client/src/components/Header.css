@@ -1,4 +1,4 @@
-/* 헤더: 상단 고정, 흰 배경 + 레드 포인트 (BNK 부산은행 스타일) */
+/* 헤더: 상단 고정, 기본 흰 배경 / 투명 모드 지원 */
 .header {
   position: fixed;
   top: 0;
@@ -9,6 +9,52 @@
   background: #fff;
   border-bottom: 1px solid var(--bnk-border);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 히어로 위에서 투명 상태 */
+.header.transparent {
+  background: transparent;
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+.header.transparent .logo-mark {
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+}
+
+.header.transparent .logo-main { color: #fff; }
+.header.transparent .logo-sub  { color: rgba(255,255,255,0.6); }
+
+.header.transparent .nav-link {
+  color: rgba(255,255,255,0.8);
+}
+.header.transparent .nav-link:hover,
+.header.transparent .nav-link.active {
+  color: #fff;
+}
+.header.transparent .nav-link::after { background: #fff; }
+
+.header.transparent .btn-login {
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.4);
+}
+.header.transparent .btn-login:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-color: rgba(255,255,255,0.7);
+}
+
+.header.transparent .btn-signup {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.header.transparent .btn-signup:hover {
+  background: rgba(255,255,255,0.25);
+  box-shadow: none;
+  transform: none;
 }
 
 .header-inner {
@@ -132,7 +178,7 @@
 .btn-signup:hover {
   background: var(--bnk-dark-red);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(215, 25, 25, 0.35);
+  box-shadow: 0 6px 20px rgba(139, 3, 4, 0.28);
 }
 
 .btn-logout {

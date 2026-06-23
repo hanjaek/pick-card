@@ -1,15 +1,26 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './Header.css'
 
 function Header() {
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location   = useLocation()
+  const navigate   = useNavigate()
+  const [scrolled, setScrolled] = useState(false)
 
-  // 현재 경로와 일치하는 링크에 active 클래스 추가
-  const isActive = (path) => (location.pathname === path ? 'active' : '')
-
-  // 로그인 상태 확인 (localStorage에 JWT 토큰 존재 여부)
+  const isHome    = location.pathname === '/'
+  const isActive  = (path) => location.pathname.startsWith(path) ? 'active' : ''
   const isLoggedIn = !!localStorage.getItem('token')
+
+  useEffect(() => {
+    if (!isHome) {
+      setScrolled(true)
+      return
+    }
+    const onScroll = () => setScrolled(window.scrollY > 60)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [isHome])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -17,9 +28,8 @@ function Header() {
   }
 
   return (
-    <header className="header">
+    <header className={`header${scrolled ? '' : ' transparent'}`}>
       <div className="header-inner">
-        {/* 브랜드 로고 */}
         <Link to="/" className="header-logo">
           <div className="logo-mark">BNK</div>
           <div className="logo-text">
@@ -28,13 +38,11 @@ function Header() {
           </div>
         </Link>
 
-        {/* 주요 네비게이션 링크 */}
         <nav className="header-nav">
-          <Link to="/"      className={`nav-link ${isActive('/')}`}>홈</Link>
-          <Link to="/cards" className={`nav-link ${isActive('/cards')}`}>카드 상품</Link>
+          <Link to="/cards"   className={`nav-link ${isActive('/cards')}`}>카드</Link>
+          <Link to="/support" className={`nav-link ${isActive('/support')}`}>고객센터</Link>
         </nav>
 
-        {/* 로그인 상태에 따라 버튼 분기 */}
         <div className="header-auth">
           {isLoggedIn ? (
             <button className="btn-logout" onClick={handleLogout}>로그아웃</button>
