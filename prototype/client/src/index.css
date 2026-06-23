@@ -1,4 +1,15 @@
 /* ============================================================
+   SUIT Variable 폰트 (로컬)
+   ============================================================ */
+@font-face {
+  font-family: 'SUIT';
+  src: url('/fonts/SUIT-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
    BNK 부산은행 공식 브랜드 컬러 (CI 기준)
    - BNK Red      PANTONE 1797C  #D71919  (메인 레드)
    - BNK Dark Red PANTONE 188C   #8B0304  (다크 레드)
