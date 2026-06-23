@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Home.css'
 
@@ -14,11 +14,14 @@ const FILTERS = [
 ]
 
 const CARD_COLORS = [
-  ['#C01515', '#8B0304'],
-  ['#1F2937', '#374151'],
-  ['#0C1A2E', '#1E3A5F'],
-  ['#1C1B4B', '#312E81'],
-  ['#064E3B', '#065F46'],
+  ['#FF6B6B', '#FF8E53'],
+  ['#4158D0', '#C850C0'],
+  ['#D71919', '#FF6B35'],
+  ['#0F2027', '#2C5364'],
+  ['#00B09B', '#96C93D'],
+  ['#8E2DE2', '#4A00E0'],
+  ['#0052D4', '#4364F7'],
+  ['#F7971E', '#FFD200'],
 ]
 
 const PARTNERS = [
@@ -35,19 +38,45 @@ const FEATURES = [
 ]
 
 function CardSlide({ card, index, onClick }) {
-  const colorFrom = card.color_from || CARD_COLORS[index % 5][0]
-  const colorTo   = card.color_to   || CARD_COLORS[index % 5][1]
+  const colorFrom = card.color_from || CARD_COLORS[index % CARD_COLORS.length][0]
+  const colorTo   = card.color_to   || CARD_COLORS[index % CARD_COLORS.length][1]
   const name      = card.prd_nm || card.name || `카드 ${index + 1}`
+  const benefits  = card.benefits || []
+  const annualFee = card.annual_fee ?? card.annualFee ?? 0
 
   return (
     <div className="csl-wrap" onClick={onClick}>
-      <div className="csl-card" style={{ background: `linear-gradient(145deg, ${colorFrom}, ${colorTo})` }}>
-        <div className="csl-chip" />
-        <span className="csl-net">{card.network || 'VISA'}</span>
-        <div className="csl-gloss" />
+      <div className="csl-flip">
+        <div className="csl-flip-inner">
+          {/* 앞면 */}
+          <div
+            className="csl-front"
+            style={{ background: `linear-gradient(145deg, ${colorFrom}, ${colorTo})` }}
+          >
+            <div className="csl-chip" />
+            <span className="csl-net">{card.network || 'VISA'}</span>
+            <div className="csl-front-bottom">
+              <span className="csl-front-name">{name}</span>
+            </div>
+            <div className="csl-gloss" />
+          </div>
+          {/* 뒷면 */}
+          <div className="csl-back-face">
+            <p className="csl-back-title">{name}</p>
+            <ul className="csl-back-benefits">
+              {benefits.slice(0, 3).map((b, i) => (
+                <li key={i}>{typeof b === 'string' ? b : b.desc}</li>
+              ))}
+              {benefits.length === 0 && <li>혜택 정보 없음</li>}
+            </ul>
+            <p className="csl-back-fee">
+              연회비 {annualFee > 0 ? `${annualFee.toLocaleString()}원` : '없음'}
+            </p>
+          </div>
+        </div>
       </div>
       <p className="csl-name">{name}</p>
-      <p className="csl-sub">{card.benefits?.[0]?.desc || '혜택 카드'}</p>
+      <p className="csl-sub">{benefits?.[0]?.desc || '혜택 카드'}</p>
     </div>
   )
 }
@@ -56,6 +85,7 @@ export default function Home() {
   const [allCards, setAllCards] = useState([])
   const [filter,   setFilter]   = useState('all')
   const navigate = useNavigate()
+  const sectionsRef = useRef([])
 
   useEffect(() => {
     fetch('/api/cards')
@@ -63,6 +93,18 @@ export default function Home() {
       .then(d => setAllCards(Array.isArray(d) ? d : []))
       .catch(() => {})
   }, [])
+
+  // 스크롤 페이드인
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('sec-visible')
+      }),
+      { threshold: 0.12 }
+    )
+    document.querySelectorAll('.sec-animate').forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [allCards])
 
   const displayed = filter === 'all'
     ? allCards
@@ -91,7 +133,7 @@ export default function Home() {
 
       {/* ── CARD LINEUP ── */}
       <section className="lineup-sec">
-        <div className="sec-inner">
+        <div className="sec-inner sec-animate">
           <p className="sec-eyebrow">추천 카드</p>
           <h2 className="sec-title">
             <span className="sec-sub-title">나에게 딱 맞는</span><br />
@@ -126,7 +168,7 @@ export default function Home() {
 
       {/* ── AI RECOMMEND ── */}
       <section className="ai-rec-sec">
-        <div className="sec-inner hori">
+        <div className="sec-inner hori sec-animate">
           <div className="ar-text">
             <p className="sec-eyebrow">AI 추천</p>
             <h2 className="sec-title">
@@ -144,7 +186,7 @@ export default function Home() {
               <div className="arc-bubble bot">
                 분석 완료! 3가지 카드를 추천해드릴게요 ✦
                 <div className="arc-card-list">
-                  {['생활 캐시백 카드', '교통 특화 카드', '올인원 카드'].map((nm, i) => (
+                  {['Young 체크카드', '그린라이프 카드', '마이플러스 카드'].map((nm, i) => (
                     <div key={i} className="arc-card-item">
                       <div className="arc-card-dot" style={{ background: CARD_COLORS[i][0] }} />
                       {nm}
@@ -161,7 +203,7 @@ export default function Home() {
 
       {/* ── PARTNERS ── */}
       <section className="partners-sec">
-        <div className="sec-inner">
+        <div className="sec-inner sec-animate">
           <p className="sec-eyebrow">제휴 혜택</p>
           <h2 className="sec-title">
             <span className="sec-sub-title">많이 쓰는 곳에서</span><br />
@@ -181,7 +223,7 @@ export default function Home() {
 
       {/* ── AI DESIGN CTA ── */}
       <section className="design-cta-sec">
-        <div className="sec-inner">
+        <div className="sec-inner sec-animate">
           <p className="sec-eyebrow light">나만의 카드</p>
           <h2 className="sec-title light">
             <span className="sec-sub-title light">AI로 만드는</span><br />
@@ -207,7 +249,7 @@ export default function Home() {
 
       {/* ── FEATURES ── */}
       <section className="features-sec">
-        <div className="sec-inner">
+        <div className="sec-inner sec-animate">
           <p className="sec-eyebrow">기본 혜택</p>
           <h2 className="sec-title">
             <span className="sec-sub-title">어디서나 편리하게</span><br />
@@ -215,7 +257,7 @@ export default function Home() {
           </h2>
           <div className="features-grid">
             {FEATURES.map((f, i) => (
-              <div key={i} className="feat-item">
+              <div key={i} className="feat-item" style={{ transitionDelay: `${i * 80}ms` }}>
                 <span className="feat-icon">{f.icon}</span>
                 <p className="feat-title">{f.title}</p>
                 <p className="feat-desc">{f.desc}</p>
@@ -224,18 +266,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ── TICKER ── */}
-      <div className="ticker" aria-hidden>
-        <div className="ticker-track">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span key={i} className="ticker-item">
-              <span className="ti-badge">BNK Pickard</span>
-              나에게 맞는 카드, AI가 찾아드립니다
-            </span>
-          ))}
-        </div>
-      </div>
 
     </div>
   )

@@ -120,6 +120,20 @@
 }
 
 /* ================================================================
+   SCROLL FADE-IN
+   ================================================================ */
+.sec-animate {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.75s cubic-bezier(0.4,0,0.2,1),
+              transform 0.75s cubic-bezier(0.4,0,0.2,1);
+}
+.sec-animate.sec-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================================================================
    COMMON SECTION STYLES
    ================================================================ */
 .sec-inner {
@@ -146,7 +160,7 @@
   font-weight: 700;
   letter-spacing: 1.8px;
   text-transform: uppercase;
-  color: var(--bnk-gold);       /* BNK Gold — 따뜻한 포인트 */
+  color: var(--bnk-gold);
   margin-bottom: 18px;
 }
 .sec-eyebrow.light { color: rgba(255,255,255,0.4); }
@@ -162,7 +176,6 @@
 }
 .sec-title.light { color: #fff; }
 
-/* 제목 앞 '작은 회색' 텍스트 — BNK Light Gray 기반 따뜻한 톤 */
 .sec-sub-title { color: #C4B4A4; }
 .sec-sub-title.light { color: rgba(255,255,255,0.32); }
 
@@ -209,6 +222,9 @@
   color: #fff;
 }
 
+/* ----------------------------------------------------------------
+   Card Slider
+   ---------------------------------------------------------------- */
 .card-slider {
   display: flex;
   gap: 18px;
@@ -226,55 +242,162 @@
   scroll-snap-align: start;
 }
 
-.csl-card {
-  position: relative;
+/* 3D 플립 컨테이너 */
+.csl-flip {
   width: 210px;
   height: 132px;
-  border-radius: 18px;
-  overflow: hidden;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(101,92,79,0.12);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  perspective: 900px;
+  margin-bottom: 14px;
 }
-.csl-wrap:hover .csl-card {
-  transform: translateY(-10px);
-  box-shadow: 0 24px 56px rgba(101,92,79,0.2);
+
+.csl-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.csl-wrap:hover .csl-flip-inner {
+  transform: rotateY(180deg);
+}
+
+/* 공통: 앞면 / 뒷면 */
+.csl-front,
+.csl-back-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
+/* 앞면 */
+.csl-front {
+  color: #fff;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
 }
 
 .csl-chip {
-  position: absolute;
-  top: 15px; left: 15px;
-  width: 26px; height: 18px;
+  width: 22px;
+  height: 16px;
   background: linear-gradient(135deg, #c8940a, #f0d070);
   border-radius: 3px;
 }
 
 .csl-net {
   position: absolute;
-  top: 13px; right: 15px;
-  font-size: 9px; font-weight: 900;
+  top: 11px;
+  right: 13px;
+  font-size: 9px;
+  font-weight: 900;
   letter-spacing: 1px;
   color: rgba(255,255,255,0.8);
 }
 
+.csl-front-bottom {
+  align-self: flex-end;
+  width: 100%;
+}
+
+.csl-front-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
 .csl-gloss {
-  position: absolute; inset: 0;
-  background: linear-gradient(130deg, rgba(255,255,255,0.15) 0%, transparent 55%);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, rgba(255,255,255,0.18) 0%, transparent 55%);
   pointer-events: none;
 }
 
+/* 뒷면 */
+.csl-back-face {
+  transform: rotateY(180deg);
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(101,92,79,0.12);
+}
+
+.csl-back-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--bnk-dark-red);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.csl-back-benefits {
+  list-style: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.csl-back-benefits li {
+  font-size: 10px;
+  color: var(--bnk-gray);
+  line-height: 1.4;
+  padding-left: 11px;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.csl-back-benefits li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--bnk-red);
+  flex-shrink: 0;
+}
+
+.csl-back-fee {
+  font-size: 10px;
+  color: var(--bnk-light-gray);
+  border-top: 1px solid var(--bnk-border);
+  padding-top: 5px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
 .csl-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--bnk-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  letter-spacing: -0.2px;
 }
 
 .csl-sub {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--bnk-light-gray);
   white-space: nowrap;
   overflow: hidden;
@@ -285,7 +408,7 @@
   flex-shrink: 0;
   width: 210px;
   height: 132px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: linear-gradient(90deg, var(--bnk-cream) 25%, var(--bnk-border) 50%, var(--bnk-cream) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -400,7 +523,8 @@
 }
 
 .arc-card-dot {
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -438,13 +562,18 @@
   color: var(--bnk-gray);
   white-space: nowrap;
   border: 1px solid var(--bnk-border);
+  transition: var(--transition);
+}
+.marquee-item:hover {
+  border-color: var(--bnk-gold);
+  color: var(--bnk-gold);
 }
 
 /* ================================================================
    AI DESIGN CTA
    ================================================================ */
 .design-cta-sec {
-  background: #1A1410;          /* 따뜻한 다크 — 순수 블랙보다 온기 있음 */
+  background: #1A1410;
   position: relative;
   overflow: hidden;
 }
@@ -496,6 +625,7 @@
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 28px 72px rgba(0,0,0,0.55);
+  transition: transform 0.4s ease;
 }
 
 .dcc-0 { top: 30px;  left: 0px;   transform: rotate(-10deg); }
@@ -503,8 +633,14 @@
 .dcc-2 { top: 160px; left: 60px;  transform: rotate(6deg);   }
 .dcc-3 { top: 130px; left: 210px; transform: rotate(13deg);  }
 
+.design-cta-sec:hover .dcc-0 { transform: rotate(-10deg) translateY(-6px); }
+.design-cta-sec:hover .dcc-1 { transform: rotate(-2deg)  translateY(-4px); }
+.design-cta-sec:hover .dcc-2 { transform: rotate(6deg)   translateY(-8px); }
+.design-cta-sec:hover .dcc-3 { transform: rotate(13deg)  translateY(-5px); }
+
 .dcc-gloss {
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   background: linear-gradient(130deg, rgba(255,255,255,0.12) 0%, transparent 55%);
   pointer-events: none;
 }
@@ -525,14 +661,14 @@
   text-align: center;
   padding: 36px 16px 28px;
   border-radius: 24px;
-  background: var(--bnk-cream);   /* 따뜻한 베이지 */
+  background: var(--bnk-cream);
   border: 1px solid var(--bnk-border);
-  transition: var(--transition);
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 .feat-item:hover {
   background: #EAE1D8;
-  transform: translateY(-6px);
-  box-shadow: 0 12px 36px rgba(137,110,74,0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(137,110,74,0.12);
 }
 
 .feat-icon {
@@ -552,47 +688,6 @@
 .feat-desc {
   font-size: 13px;
   color: var(--bnk-light-gray);
-}
-
-/* ================================================================
-   TICKER
-   ================================================================ */
-.ticker {
-  overflow: hidden;
-  background: var(--bnk-dark-red);   /* 다크 레드 — 진한 레드보다 차분함 */
-  padding: 18px 0;
-}
-
-.ticker-track {
-  display: flex;
-  gap: 56px;
-  animation: tickerScroll 20s linear infinite;
-  width: max-content;
-}
-
-@keyframes tickerScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.ticker-item {
-  flex-shrink: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.75);
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.ti-badge {
-  background: rgba(255,255,255,0.15);
-  padding: 3px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 800;
-  color: rgba(255,255,255,0.9);
 }
 
 /* ================================================================
