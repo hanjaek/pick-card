@@ -586,6 +586,28 @@
   color: var(--bnk-light-gray);
 }
 
+/* ===== 약관 링크 ===== */
+.cd-terms-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  margin-top: 16px;
+  background: var(--bnk-bg);
+  border: 1px solid var(--bnk-border);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bnk-text);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.cd-terms-link:hover {
+  border-color: var(--bnk-red);
+  color: var(--bnk-red);
+  background: #fff;
+}
+
 /* ===== 반응형 ===== */
 @media (max-width: 900px) {
   .cd-layout {

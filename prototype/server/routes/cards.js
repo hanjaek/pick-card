@@ -2,6 +2,73 @@ const router = require('express').Router()
 const pool   = require('../db')
 const { cache } = require('../redis')
 
+const fallbackCards = [
+  {
+    id: 1,
+    name: 'BNK 모두의 카드',
+    type: '신용카드',
+    annualFee: 0,
+    network: 'VISA',
+    colorFrom: '#D71919',
+    colorTo: '#8B0304',
+    brand: 'BNK',
+    trafficYn: 'Y',
+    productFeature: '생활·쇼핑·교통 혜택을 한 장에 담은 대표 카드',
+    imageUrl: '',
+    saleStatus: 'ON_SALE',
+    launchDt: '2026-01-01',
+    approvalCode: '2026-BNK-001',
+    benefits: [
+      { id: 1, type: '생활', desc: '마트, 편의점 5% 할인', discountRate: 5, monthlyLimit: 10000 },
+      { id: 2, type: '교통', desc: '대중교통 10% 할인', discountRate: 10, monthlyLimit: 5000 },
+      { id: 3, type: '온라인', desc: '온라인 쇼핑 7% 할인', discountRate: 7, monthlyLimit: 15000 }
+    ]
+  },
+  {
+    id: 2,
+    name: 'BNK 체크 플러스',
+    type: '체크카드',
+    annualFee: 0,
+    network: 'LOCAL',
+    colorFrom: '#175CFF',
+    colorTo: '#0B2F8A',
+    brand: 'BNK',
+    trafficYn: 'N',
+    productFeature: '실속형 생활 할인에 집중한 체크카드',
+    imageUrl: '',
+    saleStatus: 'ON_SALE',
+    launchDt: '2026-01-01',
+    approvalCode: '2026-BNK-002',
+    benefits: [
+      { id: 4, type: '커피', desc: '커피전문점 10% 할인', discountRate: 10, monthlyLimit: 5000 },
+      { id: 5, type: '배달', desc: '배달앱 5% 할인', discountRate: 5, monthlyLimit: 8000 }
+    ]
+  }
+]
+
+const fallbackCardById = id => {
+  const card = fallbackCards.find(item => String(item.id) === String(id))
+  if (!card) return null
+  return {
+    ...card,
+    disclosure: {
+      approvalCode: card.approvalCode,
+      disclosureDt: '2026-01-01',
+      deptNm: '카드사업팀'
+    },
+    terms: {
+      id: card.id * 10,
+      version: '1.0',
+      title: '기본 이용약관',
+      content: '샘플 약관 데이터입니다.',
+      pdfPath: '',
+      effectiveDt: '2026-01-01'
+    }
+  }
+}
+
+const normalizeBenefits = benefits => (typeof benefits === 'string' ? JSON.parse(benefits) : (benefits || []))
+
 /* ======================================================
    GET /api/cards  -  카드 목록 (혜택 배열 포함)
    ?type=신용카드 | 체크카드
@@ -57,9 +124,7 @@ router.get('/', async (req, res) => {
 
     const cards = rows.map(row => ({
       ...row,
-      benefits: typeof row.benefits === 'string'
-        ? JSON.parse(row.benefits)
-        : (row.benefits || [])
+      benefits: normalizeBenefits(row.benefits)
     }))
 
     // 2) DB 결과를 캐시에 저장 (Redis Master에 쓰기, 60초 후 만료)
@@ -69,7 +134,7 @@ router.get('/', async (req, res) => {
     res.json(cards)
   } catch (err) {
     console.error('[cards GET /]', err)
-    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+    res.json(fallbackCards)
   }
 })
 
@@ -117,7 +182,11 @@ router.get('/:id', async (req, res) => {
     })
   } catch (err) {
     console.error('[cards GET /:id]', err)
-    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+    const fallbackCard = fallbackCardById(req.params.id)
+    if (!fallbackCard) {
+      return res.status(404).json({ message: '카드를 찾을 수 없습니다.' })
+    }
+    res.json(fallbackCard)
   }
 })
 

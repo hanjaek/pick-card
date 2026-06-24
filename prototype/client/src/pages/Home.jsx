@@ -141,7 +141,7 @@ export default function Home() {
           <div className="filter-chips">
             <button
               className="fchip fchip-find"
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/cards')}
             >
               ✦ 내게 맞는 카드 찾기
             </button>

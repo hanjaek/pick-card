@@ -10,9 +10,10 @@ import CardApply  from './pages/CardApply'
 import CardDesign  from './pages/CardDesign'
 import CardSearch  from './pages/CardSearch'
 import MyPage      from './pages/MyPage'
-import Admin       from './pages/Admin'
+import Terms       from './pages/Terms'
 import Chatbot     from './pages/Chatbot'
 import IdCardOcr   from './pages/IdCardOcr'
+import Admin       from './pages/Admin'
 
 function AdminRoute({ children }) {
   const isAdmin = localStorage.getItem('isAdmin') === 'true'
@@ -40,11 +41,12 @@ function App() {
                 <Routes>
                   <Route path="/"                      element={<Home />}       />
                   <Route path="/cards"                 element={<Cards />}      />
-                  <Route path="/search"                element={<CardSearch />} />
+                  <Route path="/search"                element={<Navigate to="/cards" replace />} />
                   <Route path="/cards/:id"             element={<CardDetail />} />
                   <Route path="/cards/:id/apply"       element={<CardApply />}  />
                   <Route path="/cards/:id/design"      element={<CardDesign />} />
                   <Route path="/mypage"                element={<MyPage />}     />
+                  <Route path="/terms"                 element={<Terms />}      />
                   <Route path="/chatbot"               element={<Chatbot />}    />
                   <Route path="/ocr"                   element={<IdCardOcr />}  />
                   <Route path="/login"                 element={<Login />}      />

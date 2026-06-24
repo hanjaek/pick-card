@@ -11,15 +11,15 @@ const termsRoutes        = require('./routes/terms')
 const applicationsRoutes = require('./routes/applications')
 const designRoutes       = require('./routes/design')
 const recommendRoutes    = require('./routes/recommend')
-const ocrRouter = require('./routes/ocr')
+const ocrRouter          = require('./routes/ocr')
+const chatbotRoutes      = require('./routes/chatbot')
+const verifyRoutes       = require('./routes/verify')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
 
 /* ================================================================
    Redis 세션 스토어 설정
-   - Redis가 실행 중이면 세션을 Redis에 저장 (Master에 씀)
-   - Redis 미연결 시 MemoryStore 폴백 (개발 편의)
    ================================================================ */
 let sessionStore
 try {
@@ -33,22 +33,19 @@ try {
 }
 
 app.use(session({
-  store:             sessionStore,                         // Redis or Memory
+  store:             sessionStore,
   secret:            process.env.SESSION_SECRET || 'bnk-pickard-dev-secret',
   resave:            false,
   saveUninitialized: false,
-  // rolling=false: 만료시간은 세션 내부 expiresAt 으로만 관리.
-  // (단순 상태 조회 polling 이 세션을 자동 연장하지 않도록 함.
-  //  연장은 오직 명시적 /api/auth/extend 호출로만 일어남)
   rolling:           false,
   cookie: {
-    httpOnly: true,    // JS에서 쿠키 접근 차단 (XSS 방어)
-    secure:   false,   // HTTPS 환경에서는 true 로 변경
-    maxAge:   60 * 60 * 1000,   // 60분 — Redis 키 TTL(안전망). 실제 만료 판정은 expiresAt
+    httpOnly: true,
+    secure:   false,
+    maxAge:   60 * 60 * 1000,
   },
 }))
 
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
 
 app.use(cors({
   origin:      'http://localhost:3000',
@@ -65,6 +62,8 @@ app.use('/api/applications', applicationsRoutes)
 app.use('/api/design',       designRoutes)
 app.use('/api/recommend',    recommendRoutes)
 app.use('/api/ocr',          ocrRouter)
+app.use('/api/chatbot',      chatbotRoutes)
+app.use('/api/verify',       verifyRoutes)
 
 /* ================================================================
    정적 파일 서빙 (약관 PDF 등)
@@ -72,7 +71,7 @@ app.use('/api/ocr',          ocrRouter)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 /* ================================================================
-   헬스체크 — Redis 연결 상태도 함께 반환
+   헬스체크
    ================================================================ */
 app.get('/api/health', async (_, res) => {
   let redisStatus = 'disconnected'

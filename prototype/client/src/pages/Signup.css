@@ -1,6 +1,1 @@
-/* Signup 전용 추가 스타일 (Auth.css를 기반으로 확장) */
-
-/* 회원가입은 필드가 많아 카드 너비를 넓힘 */
-.signup-card {
-  width: 1000px;
-}
+/* Signup-specific overrides — now handled entirely by Auth.css */
