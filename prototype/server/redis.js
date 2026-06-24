@@ -32,6 +32,8 @@ if (SENTINELS) {
     name:                  MASTER_NAME,
     sentinelRetryStrategy: RETRY,
     enableReadyCheck:      true,
+    commandTimeout:        2000,   // 2초 내 응답 없으면 실패 → 캐시가 본체를 막지 않음
+    maxRetriesPerRequest:  1,
   }
 
   master  = new Redis({ ...common, role: 'master' })   // 쓰기 (마스터 자동추적)
@@ -41,7 +43,7 @@ if (SENTINELS) {
   console.log('[Redis] Sentinel 모드 활성화 (auto-failover):', SENTINELS)
 } else {
   /* ── ② 직접 연결 모드 (호스트 개발) ── */
-  const common = { retryStrategy: RETRY, maxRetriesPerRequest: 2, enableReadyCheck: true }
+  const common = { retryStrategy: RETRY, maxRetriesPerRequest: 1, enableReadyCheck: true, commandTimeout: 2000 }
 
   master  = new Redis({ host: process.env.REDIS_MASTER_HOST || '127.0.0.1',
                         port: Number(process.env.REDIS_MASTER_PORT) || 6379, ...common })

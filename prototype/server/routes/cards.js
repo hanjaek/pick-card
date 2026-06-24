@@ -127,8 +127,8 @@ router.get('/', async (req, res) => {
       benefits: normalizeBenefits(row.benefits)
     }))
 
-    // 2) DB 결과를 캐시에 저장 (Redis Master에 쓰기, 60초 후 만료)
-    await cache.set(cacheKey, cards, 60)
+    // 2) DB 결과를 캐시에 저장 (fire-and-forget: 캐시 쓰기가 응답을 지연시키지 않음)
+    cache.set(cacheKey, cards, 60)
 
     res.set('X-Cache', 'MISS')
     res.json(cards)
