@@ -50,7 +50,11 @@ export default function CardApply() {
 
   // Step 3: 신청 정보
   const [form, setForm] = useState({
-    email: '', address: '', billingDay: '15', creditLimit: '3000000'
+    email: '', zipCode: '', address: '', homePhone: '',
+    residenceType: '', incomeType: '', jobYn: 'N',
+    billingAccount: '', statementMethod: 'EMAIL',
+    contractMethod: 'EMAIL', paperTermsYn: 'N',
+    billingDay: '15', creditLimit: '3000000',
   })
 
   const token = localStorage.getItem('token')
@@ -76,6 +80,12 @@ export default function CardApply() {
   }
 
   const handleSubmit = async () => {
+    // 필수 항목 검증
+    if (!form.billingAccount || !form.zipCode || !form.address ||
+        !form.email || !form.residenceType || !form.incomeType) {
+      alert('필수 항목(*)을 모두 입력해주세요.')
+      return
+    }
     setSubmitting(true)
     try {
       const res = await fetch('/api/applications', {
@@ -85,16 +95,25 @@ export default function CardApply() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          cardId:        id,
-          applicantName: verify.name,
-          birthDt:       verify.birth,
-          phoneNo:       verify.phone,
-          email:         form.email,
-          address:       form.address,
-          billingDay:    Number(form.billingDay),
-          creditLimit:   card.type === '체크카드' ? 0 : Number(form.creditLimit),
-          applyMethod:   'INTERNET',
-          designId:      savedDesign?.id || null
+          cardId:         id,
+          applicantName:  verify.name,
+          birthDt:        verify.birth,
+          phoneNo:        verify.phone,
+          homePhone:      form.homePhone,
+          email:          form.email,
+          zipCode:        form.zipCode,
+          address:        form.address,
+          residenceType:  form.residenceType,
+          incomeType:     form.incomeType,
+          jobYn:          form.jobYn,
+          billingAccount: form.billingAccount,
+          statementMethod: form.statementMethod,
+          contractMethod: form.contractMethod,
+          paperTermsYn:   form.paperTermsYn,
+          billingDay:     Number(form.billingDay),
+          creditLimit:    card.type === '체크카드' ? 0 : Number(form.creditLimit),
+          applyMethod:    'INTERNET',
+          designId:       savedDesign?.id || null
         })
       })
       const data = await res.json()
@@ -259,8 +278,54 @@ export default function CardApply() {
             <h2 className="apply-step-title">신청 정보 입력</h2>
 
             <div className="apply-form">
+
+              {/* 청구 정보 */}
+              <p className="apply-subhead">청구 정보</p>
               <label className="apply-field">
-                <span>이메일</span>
+                <span>결제 계좌 <em className="apply-req">*</em></span>
+                <div className="apply-field-row">
+                  <input type="text" value="부산은행" disabled className="apply-fixed" />
+                  <input
+                    type="text"
+                    placeholder="계좌번호 입력 (- 없이)"
+                    value={form.billingAccount}
+                    onChange={e => setForm(p => ({ ...p, billingAccount: e.target.value }))}
+                  />
+                </div>
+              </label>
+              <label className="apply-field">
+                <span>청구서 수령방법</span>
+                <select
+                  value={form.statementMethod}
+                  onChange={e => setForm(p => ({ ...p, statementMethod: e.target.value }))}
+                >
+                  <option value="EMAIL">E-mail</option>
+                  <option value="SMART">스마트 명세서</option>
+                  <option value="POST_HOME">자택(우편)</option>
+                  <option value="POST_WORK">직장(우편)</option>
+                </select>
+              </label>
+
+              {/* 고객 정보 */}
+              <p className="apply-subhead">고객 정보</p>
+              <label className="apply-field">
+                <span>우편번호 / 주소 <em className="apply-req">*</em></span>
+                <input
+                  type="text"
+                  placeholder="우편번호"
+                  value={form.zipCode}
+                  onChange={e => setForm(p => ({ ...p, zipCode: e.target.value }))}
+                  style={{ maxWidth: 140, marginBottom: 8 }}
+                />
+                <input
+                  type="text"
+                  placeholder="도로명 주소 입력"
+                  value={form.address}
+                  onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
+                />
+              </label>
+              <label className="apply-field">
+                <span>이메일 <em className="apply-req">*</em></span>
                 <input
                   type="email"
                   placeholder="example@email.com"
@@ -269,14 +334,66 @@ export default function CardApply() {
                 />
               </label>
               <label className="apply-field">
-                <span>주소</span>
+                <span>자택전화 (선택)</span>
                 <input
-                  type="text"
-                  placeholder="도로명 주소 입력"
-                  value={form.address}
-                  onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
+                  type="tel"
+                  placeholder="051-000-0000"
+                  value={form.homePhone}
+                  onChange={e => setForm(p => ({ ...p, homePhone: e.target.value }))}
                 />
               </label>
+              <label className="apply-field">
+                <span>주거형태 <em className="apply-req">*</em></span>
+                <select
+                  value={form.residenceType}
+                  onChange={e => setForm(p => ({ ...p, residenceType: e.target.value }))}
+                >
+                  <option value="">선택하세요</option>
+                  <option value="자가">자가</option>
+                  <option value="전세">전세</option>
+                  <option value="월세">월세</option>
+                  <option value="기타">기타</option>
+                </select>
+              </label>
+              <label className="apply-field">
+                <span>소득분류 <em className="apply-req">*</em></span>
+                <select
+                  value={form.incomeType}
+                  onChange={e => setForm(p => ({ ...p, incomeType: e.target.value }))}
+                >
+                  <option value="">선택하세요</option>
+                  <option value="근로소득">근로소득</option>
+                  <option value="사업소득">사업소득</option>
+                  <option value="기타">기타</option>
+                </select>
+              </label>
+              <label className="apply-field">
+                <span>직장유무 <em className="apply-req">*</em></span>
+                <div className="apply-radio-row">
+                  <label><input type="radio" name="jobYn" checked={form.jobYn === 'Y'} onChange={() => setForm(p => ({ ...p, jobYn: 'Y' }))} /> 유</label>
+                  <label><input type="radio" name="jobYn" checked={form.jobYn === 'N'} onChange={() => setForm(p => ({ ...p, jobYn: 'N' }))} /> 무</label>
+                </div>
+              </label>
+
+              {/* 계약서류 제공 */}
+              <p className="apply-subhead">계약서류 제공</p>
+              <label className="apply-field">
+                <span>계약서류 수령방법 <em className="apply-req">*</em></span>
+                <div className="apply-radio-row">
+                  <label><input type="radio" name="contractM" checked={form.contractMethod === 'SMS'} onChange={() => setForm(p => ({ ...p, contractMethod: 'SMS' }))} /> 문자</label>
+                  <label><input type="radio" name="contractM" checked={form.contractMethod === 'EMAIL'} onChange={() => setForm(p => ({ ...p, contractMethod: 'EMAIL' }))} /> 이메일</label>
+                </div>
+              </label>
+              <label className="apply-field">
+                <span>종이약관 추가수령</span>
+                <div className="apply-radio-row">
+                  <label><input type="radio" name="paperT" checked={form.paperTermsYn === 'Y'} onChange={() => setForm(p => ({ ...p, paperTermsYn: 'Y' }))} /> 수령</label>
+                  <label><input type="radio" name="paperT" checked={form.paperTermsYn === 'N'} onChange={() => setForm(p => ({ ...p, paperTermsYn: 'N' }))} /> 미수령</label>
+                </div>
+              </label>
+
+              {/* 카드 옵션 */}
+              <p className="apply-subhead">카드 옵션</p>
               <label className="apply-field">
                 <span>결제일</span>
                 <select

@@ -380,3 +380,40 @@
   font-size: 15px;
   color: var(--bnk-red);
 }
+
+/* ── 신청정보 확장 섹션 (실제 카드 신청서 항목) ── */
+.apply-subhead {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--bnk-text);
+  margin: 22px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bnk-red);
+}
+.apply-subhead:first-child { margin-top: 0; }
+
+.apply-req { color: var(--bnk-red); font-style: normal; margin-left: 2px; }
+
+.apply-fixed {
+  max-width: 110px;
+  background: var(--bnk-bg);
+  color: var(--bnk-gray);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.apply-radio-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 4px 0;
+}
+.apply-radio-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--bnk-text);
+  cursor: pointer;
+}
+.apply-radio-row input[type="radio"] { accent-color: var(--bnk-red); width: 16px; height: 16px; }

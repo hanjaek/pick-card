@@ -18,8 +18,10 @@ function authMiddleware(req, res, next) {
    ====================================================== */
 router.post('/', authMiddleware, async (req, res) => {
   const {
-    cardId, applicantName, birthDt, phoneNo, email,
-    address, billingDay, creditLimit, applyMethod, designId
+    cardId, applicantName, birthDt, phoneNo, homePhone, email,
+    zipCode, address, residenceType, incomeType, jobYn,
+    billingBank, billingAccount, statementMethod, contractMethod, paperTermsYn,
+    billingDay, creditLimit, applyMethod, designId
   } = req.body
 
   if (!cardId || !applicantName || !birthDt || !phoneNo) {
@@ -37,10 +39,16 @@ router.post('/', authMiddleware, async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO card_applications
-        (user_id, card_id, applicant_name, birth_dt, phone_no, email, address, billing_day, credit_limit, apply_method, design_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [req.user.id, cardId, applicantName, birthDt, phoneNo,
-       email || null, address || null,
+        (user_id, card_id, applicant_name, birth_dt, phone_no, home_phone, email,
+         zip_code, address, residence_type, income_type, job_yn,
+         billing_bank, billing_account, statement_method, contract_method, paper_terms_yn,
+         billing_day, credit_limit, apply_method, design_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, cardId, applicantName, birthDt, phoneNo, homePhone || null,
+       email || null, zipCode || null, address || null,
+       residenceType || null, incomeType || null, jobYn || 'N',
+       billingBank || '부산은행', billingAccount || null,
+       statementMethod || 'EMAIL', contractMethod || 'EMAIL', paperTermsYn || 'N',
        billingDay || 15, creditLimit || 0,
        applyMethod || 'INTERNET', designId || null]
     )

@@ -250,8 +250,20 @@ CREATE TABLE IF NOT EXISTS card_applications (
   applicant_name  VARCHAR(100)  NOT NULL,
   birth_dt        DATE,
   phone_no        VARCHAR(20),
+  home_phone      VARCHAR(20),                        -- 자택전화 (선택)
   email           VARCHAR(100),
+  zip_code        VARCHAR(10),                        -- 우편번호
   address         TEXT,
+  -- 고객 추가정보 (심사용)
+  residence_type  ENUM('자가','전세','월세','기타'),    -- 주거형태
+  income_type     ENUM('근로소득','사업소득','기타'),   -- 소득분류
+  job_yn          CHAR(1)       DEFAULT 'N',           -- 직장유무 (Y/N)
+  -- 청구/계약 정보
+  billing_bank      VARCHAR(50)  DEFAULT '부산은행',    -- 결제은행
+  billing_account   VARCHAR(50),                       -- 결제 계좌번호
+  statement_method  ENUM('POST_HOME','POST_WORK','EMAIL','SMART') DEFAULT 'EMAIL',  -- 청구서 수령방법
+  contract_method   ENUM('SMS','EMAIL') DEFAULT 'EMAIL',  -- 계약서류 수령방법
+  paper_terms_yn    CHAR(1)     DEFAULT 'N',           -- 종이약관 추가수령 (Y/N)
   -- 카드 옵션
   billing_day     INT           DEFAULT 15,           -- 결제일 (매월 N일)
   credit_limit    INT           DEFAULT 0,            -- 한도 (체크카드=0)
