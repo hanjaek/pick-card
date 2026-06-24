@@ -26,6 +26,8 @@ volumes:
   master-data:
   replica-data:
   sentinel-data:
+  sentinel2-data:
+  sentinel3-data:
   redisinsight-data:
   mysql-data:
 
@@ -34,16 +36,16 @@ x-server-common: &server-common
   build:
     context: ../prototype/server
   image: pickard-server:local
+  env_file:
+    - ./.env                 # 비밀값(DB_PASSWORD·JWT_SECRET·SESSION_SECRET) 분리
   environment:
     PORT:              "4000"
     DB_HOST:           mysql
     DB_PORT:           "3306"
     DB_USER:           root
-    DB_PASSWORD:       "1234"
     DB_NAME:           bnk_card
-    JWT_SECRET:        pickard_bnk_jwt_secret_2024
-    SESSION_SECRET:    bnk-pickard-dev-secret
-    REDIS_SENTINELS:   redis-sentinel:26379
+    # 센티넬 3대 모두 등록 → 일부 죽어도 마스터 자동 추적
+    REDIS_SENTINELS:   redis-sentinel:26379,redis-sentinel-2:26379,redis-sentinel-3:26379
     REDIS_MASTER_NAME: mymaster
   depends_on:
     redis-master:
@@ -52,6 +54,13 @@ x-server-common: &server-common
       condition: service_started
     mysql:
       condition: service_healthy
+  # 헬스체크: /api/health 200 이어야 healthy (좀비 서버 감지)
+  healthcheck:
+    test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 20s
   networks:
     - redis-cluster
   restart: unless-stopped
@@ -63,8 +72,9 @@ services:
     image: mysql:8.0
     container_name: pickard-mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - ./.env                 # MYSQL_ROOT_PASSWORD (비밀값 분리)
     environment:
-      MYSQL_ROOT_PASSWORD: "1234"
       MYSQL_DATABASE: bnk_card
     volumes:
       - mysql-data:/var/lib/mysql
@@ -74,7 +84,7 @@ services:
       redis-cluster:
         ipv4_address: 172.28.0.20
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p1234 --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -148,7 +158,8 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ── Redis SENTINEL (172.28.0.12) ───────────────────────────────
+  # ── Redis SENTINEL 1 (172.28.0.12) ─────────────────────────────
+  #    센티넬 3대(홀수) + 쿼럼 2 = 표준 구성. 1대 죽어도 2대로 페일오버 판단
   redis-sentinel:
     image: redis:7-alpine
     container_name: redis-sentinel
@@ -166,6 +177,42 @@ services:
     networks:
       redis-cluster:
         ipv4_address: 172.28.0.12
+    restart: unless-stopped
+
+  # ── Redis SENTINEL 2 (172.28.0.14) ─────────────────────────────
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: redis-sentinel-2
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+      - sentinel2-data:/data
+    command: sh -c "cp /etc/redis/sentinel.conf /data/sentinel.conf && redis-server /data/sentinel.conf --sentinel"
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.14
+    restart: unless-stopped
+
+  # ── Redis SENTINEL 3 (172.28.0.15) ─────────────────────────────
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: redis-sentinel-3
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+      - sentinel3-data:/data
+    command: sh -c "cp /etc/redis/sentinel.conf /data/sentinel.conf && redis-server /data/sentinel.conf --sentinel"
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.15
     restart: unless-stopped
 
   # ── RedisInsight (172.28.0.13 · 시각화) ────────────────────────

@@ -11,6 +11,7 @@ yarn-error.log*
 .env
 .env.local
 .env.production
+docker/.env
 
 # ============================================================
 # Vite / React 빌드 결과물
