@@ -146,8 +146,28 @@
 /* ---- 인증 버튼 ---- */
 .header-auth {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-left: auto;
+}
+
+.btn-mypage {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bnk-gray);
+  transition: var(--transition);
+  padding: 0 4px;
+}
+.btn-mypage:hover,
+.btn-mypage.active {
+  color: var(--bnk-red);
+}
+.header.transparent .btn-mypage {
+  color: rgba(255,255,255,0.8);
+}
+.header.transparent .btn-mypage:hover,
+.header.transparent .btn-mypage.active {
+  color: #fff;
 }
 
 .btn-login {

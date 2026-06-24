@@ -46,7 +46,7 @@ function Header() {
         <div className="header-auth">
           {isLoggedIn ? (
             <>
-              <Link to="/mypage" className={`nav-link ${isActive('/mypage')}`}>My페이지</Link>
+              <Link to="/mypage" className={`btn-mypage ${isActive('/mypage')}`}>My페이지</Link>
               <button className="btn-logout" onClick={handleLogout}>로그아웃</button>
             </>
           ) : (
