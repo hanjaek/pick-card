@@ -41,6 +41,7 @@ function Header() {
         <nav className="header-nav">
           <Link to="/cards"   className={`nav-link ${isActive('/cards')}`}>카드</Link>
           <Link to="/support" className={`nav-link ${isActive('/support')}`}>고객센터</Link>
+          <Link to="/ocr" className={`nav-link ${isActive('/ocr')}`}>신분증 인식</Link>
         </nav>
 
         <div className="header-auth">

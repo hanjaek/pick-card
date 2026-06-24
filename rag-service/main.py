@@ -8,6 +8,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
+import pytesseract
+from PIL import Image
 
 load_dotenv()
 
@@ -51,6 +53,9 @@ class RecommendRequest(BaseModel):
     query: str
     model: str = "groq"
     top_k: int = 5
+
+class OCRRequest(BaseModel):
+    filepath: str
 
 
 # ── 인덱싱 ─────────────────────────────────────────────────────────────────
@@ -185,3 +190,18 @@ async def recommend(req: RecommendRequest):
 def health():
     collection = get_collection()
     return {"status": "ok", "indexed_cards": collection.count()}
+
+# ── OCR (신분증 인식) ──────────────────────────────────────────────────────
+
+@app.post("/ocr")
+def perform_ocr(req: OCRRequest):
+    try:
+        if not os.path.exists(req.filepath):
+            raise HTTPException(status_code=404, detail="이미지 파일을 찾을 수 없습니다.")
+        
+        # 한국어와 영어를 동시 인식하도록 lang="kor+eng" 설정
+        text = pytesseract.image_to_string(Image.open(req.filepath), lang="kor+eng")
+        return {"text": text.strip()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

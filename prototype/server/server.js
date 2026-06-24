@@ -11,6 +11,7 @@ const termsRoutes        = require('./routes/terms')
 const applicationsRoutes = require('./routes/applications')
 const designRoutes       = require('./routes/design')
 const recommendRoutes    = require('./routes/recommend')
+const ocrRouter = require('./routes/ocr')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -59,6 +60,7 @@ app.use('/api/terms',        termsRoutes)
 app.use('/api/applications', applicationsRoutes)
 app.use('/api/design',       designRoutes)
 app.use('/api/recommend',    recommendRoutes)
+app.use('/api/ocr',          ocrRouter)
 
 /* ================================================================
    정적 파일 서빙 (약관 PDF 등)
