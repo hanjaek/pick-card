@@ -37,10 +37,11 @@ app.use(session({
   secret:            process.env.SESSION_SECRET || 'bnk-pickard-dev-secret',
   resave:            false,
   saveUninitialized: false,
+  rolling:           true,   // 요청이 있을 때마다 만료시간 갱신(활동 중이면 유지)
   cookie: {
     httpOnly: true,    // JS에서 쿠키 접근 차단 (XSS 방어)
     secure:   false,   // HTTPS 환경에서는 true 로 변경
-    maxAge:   24 * 60 * 60 * 1000,   // 24시간
+    maxAge:   60 * 60 * 1000,   // 60분 (카드몰 기준, 미활동 시 자동 만료)
   },
 }))
 
