@@ -5,11 +5,19 @@
 #  실행:  docker compose up -d
 #  종료:  docker compose down
 #  로그:  docker compose logs -f
+#
+#  [고정 IP 사용 이유]
+#  Sentinel 이 컨테이너 "이름"(redis-master)으로 감시하면, 마스터가 죽었을 때
+#  그 이름이 DNS 에서 사라지고 → Sentinel 의 이름 조회가 멈춰(블로킹) → tilt mode
+#  로 빠져 페일오버가 안 끝난다. 그래서 각 노드에 고정 IP 를 박고 IP 로 감시한다.
 # ================================================================
 
 networks:
   redis-cluster:
-    driver: bridge   # 컨테이너끼리 DNS 이름(redis-master 등)으로 통신
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 
 volumes:
   master-data:       # 마스터 AOF / RDB 영속 저장
@@ -19,7 +27,7 @@ volumes:
 
 services:
 
-  # ── 1. MASTER ──────────────────────────────────────────────────
+  # ── 1. MASTER (172.28.0.10) ────────────────────────────────────
   #    모든 쓰기(SET, DEL …)의 출처 · 원본 장부
   redis-master:
     image: redis:7-alpine
@@ -31,7 +39,8 @@ services:
       - master-data:/data
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
-      - redis-cluster
+      redis-cluster:
+        ipv4_address: 172.28.0.10
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -39,7 +48,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ── 2. REPLICA ─────────────────────────────────────────────────
+  # ── 2. REPLICA (172.28.0.11) ───────────────────────────────────
   #    마스터 데이터 실시간 복제 · 읽기 전용 부하 분산
   #    마스터 장애 시 센티넬의 지시로 새 마스터로 승격
   redis-replica:
@@ -55,7 +64,8 @@ services:
       redis-master:
         condition: service_healthy
     networks:
-      - redis-cluster
+      redis-cluster:
+        ipv4_address: 172.28.0.11
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -63,7 +73,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ── 3. SENTINEL ────────────────────────────────────────────────
+  # ── 3. SENTINEL (172.28.0.12) ──────────────────────────────────
   #    마스터 감시 · 페일오버 지휘관
   #    마스터가 down-after-milliseconds 동안 응답 없으면
   #    레플리카를 새 마스터로 승격 (Failover)
@@ -86,13 +96,14 @@ services:
       redis-replica:
         condition: service_healthy
     networks:
-      - redis-cluster
+      redis-cluster:
+        ipv4_address: 172.28.0.12
     restart: unless-stopped
 
-  # ── 4. REDISINSIGHT (시각화 GUI) ──────────────────────────────
+  # ── 4. REDISINSIGHT (172.28.0.13 · 시각화 GUI) ────────────────
   #    브라우저에서 Redis 안의 키·값을 눈으로 확인하는 도구.
   #    발표 시 "세션이 Redis에 저장된다"를 시각적으로 보여주기 좋음.
-  #    접속: http://localhost:5540
+  #    접속: http://localhost:5540  (DB 연결 시 host = 172.28.0.10)
   redisinsight:
     image: redis/redisinsight:latest
     container_name: redisinsight
@@ -104,5 +115,6 @@ services:
       redis-master:
         condition: service_healthy
     networks:
-      - redis-cluster
+      redis-cluster:
+        ipv4_address: 172.28.0.13
     restart: unless-stopped
