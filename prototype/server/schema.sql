@@ -4,6 +4,10 @@
 -- 실행: mysql -u root -p < schema.sql
 -- ============================================================
 
+-- 초기화 시 클라이언트 연결 charset 을 utf8mb4 로 강제
+-- (없으면 일부 환경(도커 초기 시드 등)에서 한글이 latin1 로 해석돼 깨진 채 저장됨)
+SET NAMES utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS bnk_card
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
