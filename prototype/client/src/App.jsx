@@ -9,6 +9,7 @@ import CardDetail from './pages/CardDetail'
 import CardApply  from './pages/CardApply'
 import CardDesign  from './pages/CardDesign'
 import CardSearch  from './pages/CardSearch'
+import MyPage      from './pages/MyPage'
 import Admin       from './pages/Admin'
 
 function AdminRoute({ children }) {
@@ -41,6 +42,7 @@ function App() {
                   <Route path="/cards/:id"             element={<CardDetail />} />
                   <Route path="/cards/:id/apply"       element={<CardApply />}  />
                   <Route path="/cards/:id/design"      element={<CardDesign />} />
+                  <Route path="/mypage"                element={<MyPage />}     />
                   <Route path="/login"                 element={<Login />}      />
                   <Route path="/signup"                element={<Signup />}     />
                 </Routes>
