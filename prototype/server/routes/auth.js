@@ -104,9 +104,31 @@ router.post('/login', async (req, res) => {
    ====================================================== */
 router.get('/me', (req, res) => {
   if (req.session && req.session.user) {
-    return res.json({ loggedIn: true, user: req.session.user })
+    return res.json({
+      loggedIn:  true,
+      user:      req.session.user,
+      expiresIn: req.session.cookie.maxAge,   // 남은 시간(ms)
+    })
   }
   res.status(401).json({ loggedIn: false, message: '로그인 세션이 없습니다.' })
+})
+
+/* ======================================================
+   POST /api/auth/extend  -  세션 연장
+   사용자가 "연장" 버튼을 누르면 Redis 세션의 만료시간을 갱신.
+   남은 시간(ms)을 응답으로 돌려줘 프론트 카운트다운을 리셋함.
+   ====================================================== */
+router.post('/extend', (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ message: '로그인 세션이 없습니다.' })
+  }
+  // maxAge 를 다시 지정하면 express-session 이 만료시간을 갱신해 Redis에 저장
+  req.session.cookie.maxAge = 60 * 60 * 1000   // 60분
+  req.session.touch()
+  res.json({
+    message:   '세션이 연장되었습니다.',
+    expiresIn: req.session.cookie.maxAge,       // 남은 시간(ms)
+  })
 })
 
 /* ======================================================

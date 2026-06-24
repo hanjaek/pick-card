@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import SessionTimer from './SessionTimer'
 import './Header.css'
 
 function Header() {
@@ -24,6 +26,8 @@ function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('sessionExpiresAt')
+    axios.post('/api/auth/logout').catch(() => {})   // Redis 세션 삭제
     navigate('/')
   }
 
@@ -47,6 +51,7 @@ function Header() {
         <div className="header-auth">
           {isLoggedIn ? (
             <>
+              <SessionTimer onLogout={() => navigate('/')} />
               <Link to="/mypage" className={`btn-mypage ${isActive('/mypage')}`}>My페이지</Link>
               <button className="btn-logout" onClick={handleLogout}>로그아웃</button>
             </>
