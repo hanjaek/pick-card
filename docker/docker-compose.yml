@@ -1,14 +1,17 @@
 # ================================================================
-#  BNK Pickard — 전체 컨테이너 스택 (완전 정석 구성)
+#  BNK Pickard — 전체 컨테이너 스택 (모든 구성요소 컨테이너화)
 #
-#  [ nginx ] → [ server-1 / server-2 ] → [ Redis(master/replica/sentinel) ]
-#                                       → [ MySQL ]
+#  [ frontend(nginx) ] → [ server-1 / server-2 ] → [ Redis(master/replica/sentinel) ]
+#       localhost:3000                            → [ MySQL ]
 #
-#  - 서버 2대 + nginx 로드밸런서 → 한 대 죽어도 무중단 (세션은 Redis 공유)
+#  - frontend: React 정적 빌드 서빙 + /api 를 서버 2대로 로드밸런싱 (단일 진입점)
+#  - 서버 2대 → 한 대 죽어도 무중단 (세션은 Redis 공유)
 #  - Redis 마스터/레플리카/센티넬 → 캐시·세션 저장 + 자동 페일오버
+#  - MySQL → schema.sql 자동 시드
 #  - 모든 컨테이너 restart: unless-stopped → 죽으면 자동 재기동
 #
 #  실행:  docker compose up -d --build
+#  접속:  http://localhost:3000
 #  종료:  docker compose down
 # ================================================================
 
@@ -86,14 +89,15 @@ services:
     <<: *server-common
     container_name: pickard-server-2
 
-  # ── nginx 로드밸런서 (호스트 4000 → 서버 2대) ──────────────────
-  nginx:
-    image: nginx:alpine
-    container_name: pickard-nginx
+  # ── 프론트엔드 + nginx (단일 진입점, 호스트 3000) ───────────────
+  #    React 정적 빌드 서빙 + /api 를 서버 2대로 로드밸런싱
+  frontend:
+    build:
+      context: ../prototype/client
+    image: pickard-frontend:local
+    container_name: pickard-frontend
     ports:
-      - "4000:4000"          # 호스트 4000 → nginx → server-1/2
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - "3000:80"            # 호스트 3000 → nginx(80) → React + /api 분배
     depends_on:
       - pickard-server-1
       - pickard-server-2
