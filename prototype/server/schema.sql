@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   username       VARCHAR(50)   NOT NULL UNIQUE,   -- 로그인 아이디
   password       VARCHAR(255)  NOT NULL,           -- bcrypt 해시
   cust_nm        VARCHAR(100)  NOT NULL,           -- 고객명 (ERD: cust_nm)
-  cust_status_cd VARCHAR(20)   DEFAULT 'ACTIVE',  -- 고객 상태 (ACTIVE/INACTIVE)
+  cust_status_cd ENUM('ACTIVE','INACTIVE') DEFAULT 'ACTIVE',  -- 고객 상태
   is_admin       TINYINT(1)    DEFAULT 0,          -- 관리자 여부 (1=관리자)
   reg_dt         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   upd_dt         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS user_details (
   email         VARCHAR(100),
   real_name_yn  CHAR(1)       DEFAULT 'N',         -- 실명확인 완료 여부 (Y/N)
   reg_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -50,9 +51,9 @@ CREATE TABLE IF NOT EXISTS user_details (
 CREATE TABLE IF NOT EXISTS cards (
   id               BIGINT AUTO_INCREMENT PRIMARY KEY,
   prd_nm           VARCHAR(200)  NOT NULL,
-  card_type_cd     VARCHAR(20)   NOT NULL,
+  card_type_cd     ENUM('신용카드','체크카드')        NOT NULL,   -- 코드 무결성: 잘못된 값 차단
   annual_fee       INT           DEFAULT 0,
-  sale_status_cd   VARCHAR(20)   DEFAULT 'ON_SALE',
+  sale_status_cd   ENUM('ON_SALE','OFF_SALE')         DEFAULT 'ON_SALE',
   launch_dt        DATE,
   color_from       VARCHAR(20),
   color_to         VARCHAR(20),
@@ -61,7 +62,10 @@ CREATE TABLE IF NOT EXISTS cards (
   traffic_yn       CHAR(1)       DEFAULT 'N',
   product_feature  TEXT,
   image_url        VARCHAR(300),
-  reg_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+  reg_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- 목록 조회( WHERE sale_status_cd=? AND card_type_cd=? )용 복합 인덱스
+  INDEX idx_cards_status_type (sale_status_cd, card_type_cd)
 );
 
 -- ============================================================
@@ -76,6 +80,7 @@ CREATE TABLE IF NOT EXISTS card_benefits (
   discount_rate    DECIMAL(5,2),                   -- 할인율 (%)
   monthly_limit_amt INT,                           -- 월 한도 (원)
   reg_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
 );
 
@@ -91,6 +96,7 @@ CREATE TABLE IF NOT EXISTS card_descriptions (
   desc_content  TEXT,
   apply_dt      DATE,                             -- 적용 일자
   reg_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
 );
 
@@ -109,7 +115,10 @@ CREATE TABLE IF NOT EXISTS terms (
   effective_dt   DATE,                             -- 시행일자
   is_active      TINYINT(1)    DEFAULT 1,          -- 현행 약관 여부
   reg_dt         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
+  upd_dt         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE,
+  -- 카드별 현행 약관 조회용 인덱스
+  INDEX idx_terms_card_active (card_id, is_active)
 );
 
 -- ============================================================
@@ -138,6 +147,7 @@ CREATE TABLE IF NOT EXISTS disclosures (
   disclosure_dt   DATE,                            -- 공시일자
   dept_nm         VARCHAR(100),                    -- 담당 부서명
   reg_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
 );
 
@@ -245,15 +255,17 @@ CREATE TABLE IF NOT EXISTS card_applications (
   -- 카드 옵션
   billing_day     INT           DEFAULT 15,           -- 결제일 (매월 N일)
   credit_limit    INT           DEFAULT 0,            -- 한도 (체크카드=0)
-  apply_method    VARCHAR(20)   DEFAULT 'INTERNET',   -- INTERNET/MOBILE/BRANCH
+  apply_method    ENUM('INTERNET','MOBILE','BRANCH') DEFAULT 'INTERNET',
   -- AI 커스텀 디자인 연결 (선택)
   design_id       BIGINT,
   -- 상태
-  status          VARCHAR(20)   DEFAULT 'PENDING',    -- PENDING/APPROVED/CANCELLED
+  status          ENUM('PENDING','APPROVED','CANCELLED') DEFAULT 'PENDING',
   applied_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   processed_dt    TIMESTAMP     NULL,
   FOREIGN KEY (user_id)  REFERENCES users(id),
-  FOREIGN KEY (card_id)  REFERENCES cards(id)
+  FOREIGN KEY (card_id)  REFERENCES cards(id),
+  -- 내 신청내역 조회( WHERE user_id=? )용 인덱스
+  INDEX idx_app_user (user_id, status)
 );
 
 -- ============================================================
@@ -274,6 +286,7 @@ CREATE TABLE IF NOT EXISTS custom_designs (
   ai_description  TEXT,                               -- AI 디자인 설명
   design_data     JSON,                               -- 전체 파라미터 JSON
   created_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (card_id) REFERENCES cards(id)
 );
