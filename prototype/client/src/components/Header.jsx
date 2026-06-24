@@ -26,7 +26,8 @@ function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
-    localStorage.removeItem('sessionExpiresAt')
+    localStorage.removeItem('isAdmin')
+    localStorage.removeItem('userName')
     axios.post('/api/auth/logout').catch(() => {})   // Redis 세션 삭제
     navigate('/')
   }

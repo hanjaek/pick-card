@@ -24,8 +24,7 @@ function Login() {
       localStorage.setItem('token',    res.data.token)
       localStorage.setItem('isAdmin',  res.data.is_admin ? 'true' : 'false')
       localStorage.setItem('userName', res.data.name || '')
-      // 세션 만료 시각 저장 (60분 뒤) → SessionTimer 카운트다운 기준
-      localStorage.setItem('sessionExpiresAt', String(Date.now() + 60 * 60 * 1000))
+      // 세션 만료시각은 서버(Redis)가 관리 → SessionTimer가 /api/auth/me로 동기화
 
       // is_admin 이면 관리자 페이지로, 일반 사용자는 메인으로
       navigate(res.data.is_admin ? '/admin' : '/')

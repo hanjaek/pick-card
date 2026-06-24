@@ -37,11 +37,14 @@ app.use(session({
   secret:            process.env.SESSION_SECRET || 'bnk-pickard-dev-secret',
   resave:            false,
   saveUninitialized: false,
-  rolling:           true,   // 요청이 있을 때마다 만료시간 갱신(활동 중이면 유지)
+  // rolling=false: 만료시간은 세션 내부 expiresAt 으로만 관리.
+  // (단순 상태 조회 polling 이 세션을 자동 연장하지 않도록 함.
+  //  연장은 오직 명시적 /api/auth/extend 호출로만 일어남)
+  rolling:           false,
   cookie: {
     httpOnly: true,    // JS에서 쿠키 접근 차단 (XSS 방어)
     secure:   false,   // HTTPS 환경에서는 true 로 변경
-    maxAge:   60 * 60 * 1000,   // 60분 (카드몰 기준, 미활동 시 자동 만료)
+    maxAge:   60 * 60 * 1000,   // 60분 — Redis 키 TTL(안전망). 실제 만료 판정은 expiresAt
   },
 }))
 

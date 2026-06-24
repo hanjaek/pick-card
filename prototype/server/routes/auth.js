@@ -5,6 +5,9 @@ const pool   = require('../db')
 
 const SALT_ROUNDS = 10
 
+// 로그인 세션 유지 시간 (카드몰 기준 60분). 연장 시에도 이 값을 사용.
+const SESSION_DURATION_MS = 60 * 60 * 1000
+
 /* ======================================================
    POST /api/auth/register  -  회원가입
    ====================================================== */
@@ -85,6 +88,8 @@ router.post('/login', async (req, res) => {
       is_admin: !!user.is_admin,
       loginAt:  new Date().toISOString(),
     }
+    // 만료 시각을 세션에 명시적으로 기록 (만료 판정의 기준)
+    req.session.expiresAt = Date.now() + SESSION_DURATION_MS
 
     res.json({
       token,
@@ -103,31 +108,43 @@ router.post('/login', async (req, res) => {
    (세션이 Redis에 잘 저장/복원되는지 증명용 + 프론트 확인용)
    ====================================================== */
 router.get('/me', (req, res) => {
-  if (req.session && req.session.user) {
-    return res.json({
-      loggedIn:  true,
-      user:      req.session.user,
-      expiresIn: req.session.cookie.maxAge,   // 남은 시간(ms)
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ loggedIn: false, message: '로그인 세션이 없습니다.' })
+  }
+
+  // Redis 세션의 expiresAt 으로 남은 시간 계산 (서버가 유일한 기준)
+  const remaining = (req.session.expiresAt || 0) - Date.now()
+
+  // 이미 만료됐으면 세션 삭제 후 만료 응답
+  if (remaining <= 0) {
+    return req.session.destroy(() => {
+      res.status(401).json({ loggedIn: false, expired: true, message: '세션이 만료되었습니다.' })
     })
   }
-  res.status(401).json({ loggedIn: false, message: '로그인 세션이 없습니다.' })
+
+  res.json({
+    loggedIn:  true,
+    user:      req.session.user,
+    expiresIn: remaining,   // 남은 시간(ms) — 프론트 카운트다운의 기준값
+  })
 })
 
 /* ======================================================
    POST /api/auth/extend  -  세션 연장
-   사용자가 "연장" 버튼을 누르면 Redis 세션의 만료시간을 갱신.
-   남은 시간(ms)을 응답으로 돌려줘 프론트 카운트다운을 리셋함.
+   사용자가 "연장"을 누르면 Redis 세션의 만료시각을 다시 60분 뒤로 설정.
    ====================================================== */
 router.post('/extend', (req, res) => {
   if (!req.session || !req.session.user) {
     return res.status(401).json({ message: '로그인 세션이 없습니다.' })
   }
-  // maxAge 를 다시 지정하면 express-session 이 만료시간을 갱신해 Redis에 저장
-  req.session.cookie.maxAge = 60 * 60 * 1000   // 60분
-  req.session.touch()
+
+  // expiresAt 갱신 + 쿠키/Redis 키 TTL 도 함께 갱신 (세션이 수정되어 재저장됨)
+  req.session.expiresAt     = Date.now() + SESSION_DURATION_MS
+  req.session.cookie.maxAge = SESSION_DURATION_MS
+
   res.json({
     message:   '세션이 연장되었습니다.',
-    expiresIn: req.session.cookie.maxAge,       // 남은 시간(ms)
+    expiresIn: SESSION_DURATION_MS,
   })
 })
 
