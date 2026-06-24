@@ -2,11 +2,15 @@ const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const jwt    = require('jsonwebtoken')
 const pool   = require('../db')
+const { master } = require('../redis')   // 세션 키의 실제 TTL 조회용
 
 const SALT_ROUNDS = 10
 
 // 로그인 세션 유지 시간 (카드몰 기준 60분). 연장 시에도 이 값을 사용.
 const SESSION_DURATION_MS = 60 * 60 * 1000
+
+// connect-redis 가 세션을 저장할 때 쓰는 키 접두사 (기본값 'sess:')
+const SESSION_PREFIX = 'sess:'
 
 /* ======================================================
    POST /api/auth/register  -  회원가입
@@ -81,6 +85,8 @@ router.post('/login', async (req, res) => {
     // express-session 미들웨어가 이 객체를 직렬화해 Redis(Master)에 저장.
     // 이후 요청에서 쿠키(connect.sid)로 세션을 찾아 req.session 복원.
     // 서버가 여러 대여도 모두 같은 Redis를 보므로 로그인 상태가 공유됨.
+    // 세션에 사용자 정보 저장 → connect-redis 가 TTL=cookie.maxAge(60분)로 Redis에 기록.
+    // 만료 기준은 "Redis 키의 TTL" 하나로 통일 (별도 expiresAt 필드 두지 않음).
     req.session.user = {
       id:       user.id,
       username: user.username,
@@ -88,8 +94,6 @@ router.post('/login', async (req, res) => {
       is_admin: !!user.is_admin,
       loginAt:  new Date().toISOString(),
     }
-    // 만료 시각을 세션에 명시적으로 기록 (만료 판정의 기준)
-    req.session.expiresAt = Date.now() + SESSION_DURATION_MS
 
     res.json({
       token,
@@ -107,16 +111,21 @@ router.post('/login', async (req, res) => {
    쿠키로 Redis 세션을 찾아 로그인 상태를 반환.
    (세션이 Redis에 잘 저장/복원되는지 증명용 + 프론트 확인용)
    ====================================================== */
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   if (!req.session || !req.session.user) {
     return res.status(401).json({ loggedIn: false, message: '로그인 세션이 없습니다.' })
   }
 
-  // Redis 세션의 expiresAt 으로 남은 시간 계산 (서버가 유일한 기준)
-  const remaining = (req.session.expiresAt || 0) - Date.now()
+  // Redis 키의 실제 TTL(초) 조회 → 이게 유일한 만료 기준(source of truth)
+  let ttl
+  try {
+    ttl = await master.ttl(SESSION_PREFIX + req.sessionID)
+  } catch {
+    ttl = -2   // 조회 실패 시 만료로 간주
+  }
 
-  // 이미 만료됐으면 세션 삭제 후 만료 응답
-  if (remaining <= 0) {
+  // ttl: -2(키 없음/만료) · -1(만료 없음) · 양수(남은 초)
+  if (ttl === -2 || ttl === 0) {
     return req.session.destroy(() => {
       res.status(401).json({ loggedIn: false, expired: true, message: '세션이 만료되었습니다.' })
     })
@@ -125,26 +134,28 @@ router.get('/me', (req, res) => {
   res.json({
     loggedIn:  true,
     user:      req.session.user,
-    expiresIn: remaining,   // 남은 시간(ms) — 프론트 카운트다운의 기준값
+    expiresIn: ttl > 0 ? ttl * 1000 : SESSION_DURATION_MS,   // ms 단위로 변환
   })
 })
 
 /* ======================================================
    POST /api/auth/extend  -  세션 연장
-   사용자가 "연장"을 누르면 Redis 세션의 만료시각을 다시 60분 뒤로 설정.
+   세션을 다시 저장(save)하면 connect-redis 가 Redis 키 TTL 을 60분으로 재설정.
+   (TTL 이 곧 만료 기준이므로, TTL 갱신 = 세션 연장)
    ====================================================== */
 router.post('/extend', (req, res) => {
   if (!req.session || !req.session.user) {
     return res.status(401).json({ message: '로그인 세션이 없습니다.' })
   }
 
-  // expiresAt 갱신 + 쿠키/Redis 키 TTL 도 함께 갱신 (세션이 수정되어 재저장됨)
-  req.session.expiresAt     = Date.now() + SESSION_DURATION_MS
-  req.session.cookie.maxAge = SESSION_DURATION_MS
-
-  res.json({
-    message:   '세션이 연장되었습니다.',
-    expiresIn: SESSION_DURATION_MS,
+  req.session.cookie.maxAge = SESSION_DURATION_MS   // 새 TTL 기준
+  // save() 가 connect-redis 의 SET ... EX 를 호출 → Redis 키 TTL 갱신
+  req.session.save(err => {
+    if (err) {
+      console.error('[extend]', err)
+      return res.status(500).json({ message: '세션 연장 중 오류가 발생했습니다.' })
+    }
+    res.json({ message: '세션이 연장되었습니다.', expiresIn: SESSION_DURATION_MS })
   })
 })
 
