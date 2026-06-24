@@ -3,10 +3,10 @@ const router = require('express').Router()
 const RAG_URL = process.env.RAG_URL || 'http://localhost:8000'
 
 /* POST /api/recommend
-   body: { query: string, model?: "claude"|"gemini", top_k?: number } */
+   body: { query: string, model?: "claude"|"gemini"|"groq", top_k?: number } */
 router.post('/', async (req, res) => {
   try {
-    const { query, model = 'claude', top_k = 5 } = req.body
+    const { query, model = 'groq', top_k = 5 } = req.body
     if (!query) return res.status(400).json({ message: 'query가 필요합니다.' })
 
     const response = await fetch(`${RAG_URL}/recommend`, {

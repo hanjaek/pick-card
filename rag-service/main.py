@@ -2,7 +2,8 @@ import os
 import httpx
 import chromadb
 import anthropic
-import google.generativeai as genai
+import groq
+from google import genai
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
@@ -15,8 +16,8 @@ app = FastAPI(title="Pickard RAG Service")
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:4000")
 
 # 앱 시작 시 한 번만 로드
-_embedder: SentenceTransformer | None = None
-_chroma_client: chromadb.PersistentClient | None = None
+_embedder = None
+_chroma_client = None
 
 
 def get_embedder() -> SentenceTransformer:
@@ -48,7 +49,7 @@ def card_to_doc(card: dict) -> str:
 
 class RecommendRequest(BaseModel):
     query: str
-    model: str = "claude"   # "claude" | "gemini"
+    model: str = "groq"
     top_k: int = 5
 
 
@@ -121,17 +122,42 @@ async def recommend(req: RecommendRequest):
 {context}"""
 
     # 2. LLM 호출 (모델 선택)
-    if req.model == "gemini":
+    if req.model == "groq":
+        # 완전 무료 Groq API (Llama 3 모델) 사용
+        groq_key = os.getenv("GROQ_API_KEY")
+        if not groq_key:
+            raise HTTPException(status_code=500, detail="GROQ_API_KEY 환경변수가 없습니다")
+        client = groq.Groq(api_key=groq_key)
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": req.query}
+            ],
+            max_tokens=1024,
+            temperature=0.7
+        )
+        answer = response.choices[0].message.content
+
+    elif req.model == "gemini":
         google_key = os.getenv("GOOGLE_API_KEY")
         if not google_key:
             raise HTTPException(status_code=500, detail="GOOGLE_API_KEY 환경변수가 없습니다")
-        genai.configure(api_key=google_key)
-        gemini = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=system_prompt,
-        )
-        response = gemini.generate_content(req.query)
-        answer = response.text
+        try:
+            client = genai.Client(api_key=google_key)
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=req.query,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                )
+            )
+            answer = response.text
+        except Exception as e:
+            error_msg = str(e)
+            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                raise HTTPException(status_code=429, detail="구글 Gemini API의 무료 제공량(Quota)이 초과되었거나 해당 계정/지역에서 사용할 수 없습니다. 구글 AI Studio 설정을 확인해 주세요.")
+            raise HTTPException(status_code=500, detail=f"Gemini API 호출 중 에러가 발생했습니다: {error_msg}")
 
     else:  # claude (기본값)
         claude_key = os.getenv("ANTHROPIC_API_KEY")

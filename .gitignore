@@ -32,3 +32,8 @@ Thumbs.db
 .idea/
 *.suo
 *.user
+
+# Python
+__pycache__/
+venv/
+chroma_db/

@@ -11,6 +11,7 @@ import CardDesign  from './pages/CardDesign'
 import CardSearch  from './pages/CardSearch'
 import MyPage      from './pages/MyPage'
 import Admin       from './pages/Admin'
+import Chatbot     from './pages/Chatbot'
 
 function AdminRoute({ children }) {
   const isAdmin = localStorage.getItem('isAdmin') === 'true'
@@ -43,6 +44,7 @@ function App() {
                   <Route path="/cards/:id/apply"       element={<CardApply />}  />
                   <Route path="/cards/:id/design"      element={<CardDesign />} />
                   <Route path="/mypage"                element={<MyPage />}     />
+                  <Route path="/chatbot"               element={<Chatbot />}    />
                   <Route path="/login"                 element={<Login />}      />
                   <Route path="/signup"                element={<Signup />}     />
                 </Routes>
