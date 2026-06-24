@@ -32,8 +32,6 @@ function CardDetail() {
   const [card, setCard]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setTab]   = useState('info')
-  const [myDesigns, setMyDesigns] = useState([])
-  const [selectedDesign, setSelectedDesign] = useState(null)
 
   const token = localStorage.getItem('token')
 
@@ -44,23 +42,12 @@ function CardDetail() {
       .catch(() => { setLoading(false) })
   }, [id])
 
-  useEffect(() => {
-    if (!token) return
-    fetch('/api/design/mine', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => {
-        const forThisCard = (Array.isArray(data) ? data : []).filter(d => String(d.card_id) === String(id))
-        setMyDesigns(forThisCard)
-      })
-      .catch(() => {})
-  }, [id, token])
-
   if (loading) return <div className="cd-loading"><div className="spinner" /></div>
   if (!card)   return <div className="cd-error">카드 정보를 불러올 수 없습니다.</div>
 
   const handleApply = () => {
     if (!token) { navigate('/login'); return }
-    navigate(`/cards/${id}/apply`, { state: { design: selectedDesign } })
+    navigate(`/cards/${id}/apply`)
   }
 
   const billingDays = [10, 15, 20, 25]
@@ -87,10 +74,11 @@ function CardDetail() {
           {/* 탭 */}
           <div className="cd-tabs">
             {[
-              { key: 'info',      label: '상품정보' },
-              { key: 'benefits',  label: '혜택상세' },
-              { key: 'terms',     label: '약관' },
-              { key: 'disclosure',label: '공시정보' }
+              { key: 'info',    label: '상품안내' },
+              { key: 'service', label: '서비스안내' },
+              { key: 'fee',     label: '연회비·수수료' },
+              { key: 'etc',     label: '기타' },
+              { key: 'terms',   label: '상품약관' },
             ].map(t => (
               <button
                 key={t.key}
@@ -102,9 +90,19 @@ function CardDetail() {
             ))}
           </div>
 
-          {/* ---- 상품정보 탭 ---- */}
+          {/* ---- 상품안내 탭 ---- */}
           {activeTab === 'info' && (
             <div className="cd-tab-content">
+              {(card.benefits || []).length > 0 && (
+                <div className="cd-highlight-box">
+                  <p className="cd-highlight-title">{card.name} 혜택을 꼭!! 확인해 보세요.</p>
+                  <ul className="cd-highlight-list">
+                    {(card.benefits || []).map((b, i) => (
+                      <li key={i}>{b.desc}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <table className="cd-info-table">
                 <tbody>
                   <tr>
@@ -141,6 +139,14 @@ function CardDetail() {
                     <th>상품특징</th>
                     <td>{card.productFeature || '-'}</td>
                   </tr>
+                  <tr>
+                    <th>발급대상</th>
+                    <td>개인회원{card.type === '신용카드' ? '(가족카드 발급불가)' : ''}</td>
+                  </tr>
+                  <tr>
+                    <th>가입방법</th>
+                    <td>영업점, 인터넷, 스마트폰</td>
+                  </tr>
                   {card.disclosure && (
                     <tr>
                       <th>공시승인번호</th>
@@ -152,8 +158,8 @@ function CardDetail() {
             </div>
           )}
 
-          {/* ---- 혜택상세 탭 ---- */}
-          {activeTab === 'benefits' && (
+          {/* ---- 서비스안내 탭 ---- */}
+          {activeTab === 'service' && (
             <div className="cd-tab-content">
               <div className="cd-benefits-grid">
                 {(card.benefits || []).map((b, i) => (
@@ -161,63 +167,105 @@ function CardDetail() {
                     <span className="cd-bnft-badge">{b.type}</span>
                     <p className="cd-bnft-desc">{b.desc}</p>
                     <div className="cd-bnft-meta">
-                      {b.discountRate && <span>할인율 {b.discountRate}%</span>}
-                      {b.monthlyLimit && (
-                        <span>월 한도 {b.monthlyLimit.toLocaleString()}원</span>
+                      {b.discountRate > 0 && <span>할인율 {b.discountRate}%</span>}
+                      {b.monthlyLimit > 0 && (
+                        <span>월 한도 {Number(b.monthlyLimit).toLocaleString()}원</span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
+              <p className="cd-service-notice">
+                ※ 전월실적 및 서비스 세부조건은 상품안내장 및 홈페이지 참고<br />
+                ※ 서비스 제공 조건: 전월 실적 전 1일부터 말일까지(승인시점 기준) 국내외 가맹점에서의 원시점/부분 이용실적 기준으로 적립됩니다.
+              </p>
             </div>
           )}
 
-          {/* ---- 약관 탭 ---- */}
+          {/* ---- 연회비·수수료 탭 ---- */}
+          {activeTab === 'fee' && (
+            <div className="cd-tab-content">
+              <div className="cd-fee-section">
+                <h3 className="cd-fee-title">연회비</h3>
+                {card.type === '신용카드' ? (
+                  <ul className="cd-fee-list">
+                    <li>국내전용(국내 로컬) 개인회원 : {card.annualFee > 0 ? `${card.annualFee.toLocaleString()}원` : '없음'}</li>
+                    <li>국내외겸용(마스터) 개인회원 : {card.annualFee > 0 ? `${(card.annualFee + 3000).toLocaleString()}원` : '없음'}</li>
+                    <li>국내외겸용(비자) 개인회원 : {card.annualFee > 0 ? `${(card.annualFee + 3000).toLocaleString()}원` : '없음'}</li>
+                  </ul>
+                ) : (
+                  <ul className="cd-fee-list">
+                    <li>발급수수료 : 1,000원 (발급 시 1회 부과)</li>
+                    <li>연회비 : 없음</li>
+                  </ul>
+                )}
+              </div>
+              <div className="cd-fee-section">
+                <h3 className="cd-fee-title">연회비 반환조건 안내</h3>
+                <p className="cd-fee-text">
+                  카드 유효기간이 도래하기 전에 카드를 해지하는 경우 연회비 반환 금액은 계약을 해지한 날로부터 일할 계산하며, 10영업일 이내 반환 처리됩니다.
+                  다만 부가서비스 제공내역 확인에 시간이 소요되는 등의 불가피한 사유로 10영업일 이내에 반환하기 어려운 경우 계약서 해지일로부터 3개월 이내에 반환할 수 있습니다.
+                </p>
+              </div>
+              <div className="cd-fee-section">
+                <h3 className="cd-fee-title">해외이용 수수료 안내</h3>
+                <ul className="cd-fee-list">
+                  <li>해외 가맹점 이용 수수료 : 국제브랜드 수수료(1.0%) + 해외이용수수료(0.25%)</li>
+                  <li>해외 현금인출 조회수수료 : 거래 건당 USD 0.5$</li>
+                  <li>해외 현금인출 인출수수료 : 거래 건당 USD 3$ + 국제브랜드 수수료(1.0%)</li>
+                  <li>해외 현금인출 한도 : 계좌 잔액 범위 내 가능, 현금인출 등록 시 1일 500만원·월간 500만원 한도</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* ---- 기타 탭 ---- */}
+          {activeTab === 'etc' && (
+            <div className="cd-tab-content">
+              <div className="cd-etc-section">
+                <h3 className="cd-fee-title">회원님을 위한 기타 안내 사항</h3>
+                <ul className="cd-fee-list">
+                  <li>카드 이용 시 제공되는 포인트 및 할인혜택 등의 부가서비스는 상품출시일로부터 3년 이상 축소·폐지 없이 유지됩니다.</li>
+                  <li>2개 이상의 복수카드 소지자 정보는 한국신용정보원을 통해 신용사간 공유됨에 따라 본인의 신용등급 또는 개인신용평점에 영향을 줄 수 있습니다.</li>
+                  <li>결제계좌 개설기관의 영업 마감시간(16시) 이후 결제계좌에 입금된 금액에 대해서는 당일 출금되지 못하여 연체로 처리될 수 있으므로 유의하시기 바랍니다.</li>
+                  <li>자동납부 업무 마감시간 이후 카드 대금결제는 BNK부산은행 홈페이지 및 부산은행 모바일 앱 등에서 즉시 결제 또는 가상계좌 입금(송금납부)을 통해 당일 결제가 가능합니다.</li>
+                </ul>
+              </div>
+              <div className="cd-etc-section">
+                <h3 className="cd-fee-title">유의사항</h3>
+                <ul className="cd-fee-list cd-fee-list--notice">
+                  <li>※ 상환능력에 비해 신용카드 사용액이 과도할 경우, 귀하의 개인신용평점이 하락할 수 있습니다.</li>
+                  <li>※ 개인신용평점 하락 시 금융거래와 관련된 불이익이 발생할 수 있습니다.</li>
+                  <li>※ 일정기간 납부대금 등을 연체할 경우, 모든 원리금을 변제할 의무가 발생할 수 있습니다.</li>
+                  <li>※ 신용카드 발급이 부적정한 경우(연체금 보유, 신용점수 등 낮음) 카드발급이 제한될 수 있습니다.</li>
+                  <li>※ 연체이자율(약정이율+최대 3%)은 정상 이자율에 따라 차등 적용되며, 법정 최고금리(연 20%)를 초과하지 않습니다.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* ---- 상품약관 탭 ---- */}
           {activeTab === 'terms' && (
             <div className="cd-tab-content">
-              {card.terms ? (
-                <div className="cd-terms">
-                  <div className="cd-terms-header">
-                    <h3>{card.terms.title}</h3>
-                    <span className="cd-terms-version">{card.terms.version}</span>
-                    <span className="cd-terms-date">시행일: {card.terms.effectiveDt?.slice(0, 10)}</span>
-                  </div>
-                  {card.terms.content && (
-                    <div className="cd-terms-body">{card.terms.content}</div>
-                  )}
-                  {card.terms.pdfPath && (
-                    <a
-                      className="btn-pdf"
-                      href={`/uploads/terms/${card.terms.pdfPath}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      약관 PDF 다운로드
-                    </a>
-                  )}
-                  {!card.terms.content && !card.terms.pdfPath && (
-                    <p className="cd-no-content">약관 내용이 아직 등록되지 않았습니다.</p>
-                  )}
-                </div>
-              ) : (
-                <p className="cd-no-content">등록된 약관이 없습니다.</p>
-              )}
-            </div>
-          )}
-
-          {/* ---- 공시정보 탭 ---- */}
-          {activeTab === 'disclosure' && (
-            <div className="cd-tab-content">
-              {card.disclosure ? (
-                <table className="cd-info-table">
-                  <tbody>
-                    <tr><th>공시 승인번호</th><td>{card.disclosure.approvalCode}</td></tr>
-                    <tr><th>공시일자</th><td>{card.disclosure.disclosureDt?.slice(0, 10)}</td></tr>
-                    <tr><th>담당부서</th><td>{card.disclosure.deptNm}</td></tr>
-                  </tbody>
-                </table>
-              ) : (
-                <p className="cd-no-content">공시 정보가 없습니다.</p>
+              <ul className="cd-terms-accordion">
+                {[
+                  '상품안내장',
+                  'BNK부산은행 개인회원 표준약관',
+                  'BNK부산은행 개인회원 부속약관',
+                  '개인신용평점 하락 가능성 등에 대한 설명 확인서',
+                  '포인트이용약관',
+                ].map((item, i) => (
+                  <li key={i} className="cd-terms-row">
+                    <span>{item}</span>
+                    <span className="cd-terms-arrow">›</span>
+                  </li>
+                ))}
+              </ul>
+              {card.disclosure && (
+                <p className="cd-service-notice" style={{ marginTop: 20 }}>
+                  공시승인번호: {card.disclosure.approvalCode}
+                  {card.disclosure.disclosureDt && ` (공시일자: ${card.disclosure.disclosureDt.slice(0, 10)})`}
+                </p>
               )}
             </div>
           )}
@@ -235,51 +283,13 @@ function CardDetail() {
 
         {/* ===== 우측: 카드 비주얼 + 신청 ===== */}
         <div className="cd-sidebar">
-          <CardVisual card={card} design={selectedDesign} />
-
-          {/* 내 저장 디자인 */}
-          {myDesigns.length > 0 && (
-            <div className="cd-my-designs">
-              <p className="cd-my-designs-label">저장된 내 디자인</p>
-              <div className="cd-design-list">
-                <button
-                  className={`cd-design-item ${!selectedDesign ? 'selected' : ''}`}
-                  onClick={() => setSelectedDesign(null)}
-                >
-                  <div
-                    className="cd-design-swatch"
-                    style={{ background: `linear-gradient(135deg, ${card.colorFrom}, ${card.colorTo})` }}
-                  />
-                  <span>기본</span>
-                </button>
-                {myDesigns.map(d => (
-                  <button
-                    key={d.id}
-                    className={`cd-design-item ${selectedDesign?.id === d.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedDesign(d)}
-                  >
-                    <div
-                      className="cd-design-swatch"
-                      style={{ background: `linear-gradient(135deg, ${d.color_from}, ${d.color_to})` }}
-                    />
-                    <span>{d.theme_name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <CardVisual card={card} design={null} />
 
           {/* 신청 버튼들 */}
           <div className="cd-actions">
             <button className="cd-btn-primary" onClick={handleApply}>
               인터넷 신청
             </button>
-            <Link
-              to={`/cards/${id}/design`}
-              className="cd-btn-design"
-            >
-              ✨ AI 커스텀 디자인 만들기
-            </Link>
             <button className="cd-btn-secondary">상담 신청</button>
           </div>
 
