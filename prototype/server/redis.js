@@ -1,77 +1,79 @@
 /**
- * Redis 클라이언트 — Master(쓰기) / Replica(읽기) 분리
+ * Redis 클라이언트 — 2가지 연결 모드 지원
  *
- * [연결 방식 안내]
- * 이 Node 서버는 "도커 밖(호스트)"에서 실행되므로, 도커가 외부로 열어둔
- * 포트에 직접 연결한다.
- *   - Master  : localhost:6379  (docker-compose 에서 6379:6379 매핑)
- *   - Replica : localhost:6380  (docker-compose 에서 6380:6379 매핑)
+ * ① Sentinel 모드 (정석 · 앱이 도커 네트워크 안에서 실행될 때)
+ *    - REDIS_SENTINELS 환경변수가 있으면 활성화 (예: "redis-sentinel:26379")
+ *    - ioredis 가 센티넬에 물어 현재 마스터를 자동으로 찾고,
+ *      페일오버(마스터 교체) 시 새 마스터로 자동 재연결 → 무중단
  *
- * Sentinel 자동탐색(role 기반 master 찾기)은 "앱도 같은 도커 네트워크
- * 안의 컨테이너로 띄울 때" 사용한다. 그때는 아래 SENTINEL 설정을 쓰면 된다.
- * 호스트에서 센티넬에 물으면 'redis-master' 같은 내부 호스트명을 돌려줘서
- * 호스트가 해석하지 못한다. 그래서 호스트 개발 환경에서는 직접 연결한다.
- * (Sentinel 자동 페일오버 자체는 클러스터 레벨에서 정상 동작 — CLI로 확인 가능)
+ * ② 직접 연결 모드 (호스트에서 npm run dev 로 실행할 때)
+ *    - 환경변수 없으면 localhost:6379(쓰기) / localhost:6380(읽기) 직접 연결
+ *
+ * 두 모드 모두: 쓰기=master, 읽기=replica 로 분리.
  */
 
 const Redis = require('ioredis')
 
-const RETRY = (times) => Math.min(times * 200, 5000)
+const RETRY       = (times) => Math.min(times * 200, 5000)
+const MASTER_NAME = process.env.REDIS_MASTER_NAME || 'mymaster'
+const SENTINELS   = process.env.REDIS_SENTINELS   // 예: "redis-sentinel:26379"
 
-const baseOpts = {
-  retryStrategy:        RETRY,
-  maxRetriesPerRequest: 2,
-  lazyConnect:          false,
-  enableReadyCheck:     true,
+let master, replica
+
+if (SENTINELS) {
+  /* ── ① Sentinel 모드 (자동 페일오버) ── */
+  const sentinels = SENTINELS.split(',').map(s => {
+    const [host, port] = s.trim().split(':')
+    return { host, port: Number(port) || 26379 }
+  })
+
+  const common = {
+    sentinels,
+    name:                  MASTER_NAME,
+    sentinelRetryStrategy: RETRY,
+    enableReadyCheck:      true,
+  }
+
+  master  = new Redis({ ...common, role: 'master' })   // 쓰기 (마스터 자동추적)
+  replica = new Redis({ ...common, role: 'slave'  })   // 읽기 (레플리카)
+
+  master.on('+switch-master', (m) => console.log('[Redis] 페일오버 감지 → 새 마스터로 전환:', m))
+  console.log('[Redis] Sentinel 모드 활성화 (auto-failover):', SENTINELS)
+} else {
+  /* ── ② 직접 연결 모드 (호스트 개발) ── */
+  const common = { retryStrategy: RETRY, maxRetriesPerRequest: 2, enableReadyCheck: true }
+
+  master  = new Redis({ host: process.env.REDIS_MASTER_HOST || '127.0.0.1',
+                        port: Number(process.env.REDIS_MASTER_PORT) || 6379, ...common })
+  replica = new Redis({ host: process.env.REDIS_REPLICA_HOST || '127.0.0.1',
+                        port: Number(process.env.REDIS_REPLICA_PORT) || 6380, ...common })
+
+  console.log('[Redis] 직접 연결 모드 (localhost 6379/6380)')
 }
 
-/* ── 마스터 연결 (쓰기 전용) ── */
-const master = new Redis({
-  host: process.env.REDIS_MASTER_HOST || '127.0.0.1',
-  port: Number(process.env.REDIS_MASTER_PORT) || 6379,
-  ...baseOpts,
-})
+/* ── 공통 이벤트 로그 ── */
+master.on('ready',  () => console.log('[Redis Master]  준비 완료'))
+master.on('error',  (e) => { if (!e.message.includes('ECONNREFUSED')) console.error('[Redis Master]  오류:', e.message) })
+replica.on('ready', () => console.log('[Redis Replica] 준비 완료'))
+replica.on('error', (e) => { if (!e.message.includes('ECONNREFUSED')) console.error('[Redis Replica] 오류:', e.message) })
 
-/* ── 레플리카 연결 (읽기 전용) ── */
-const replica = new Redis({
-  host: process.env.REDIS_REPLICA_HOST || '127.0.0.1',
-  port: Number(process.env.REDIS_REPLICA_PORT) || 6380,
-  ...baseOpts,
-})
-
-/* ── 연결 이벤트 로그 ── */
-master.on('ready',  () => console.log('[Redis Master]  준비 완료 (localhost:6379)'))
-master.on('error',  (e) => {
-  if (!e.message.includes('ECONNREFUSED')) console.error('[Redis Master]  오류:', e.message)
-})
-
-replica.on('ready', () => console.log('[Redis Replica] 준비 완료 (localhost:6380)'))
-replica.on('error', (e) => {
-  if (!e.message.includes('ECONNREFUSED')) console.error('[Redis Replica] 오류:', e.message)
-})
-
-/* ── 캐시 헬퍼 ────────────────────────────────────────────────────
-   읽기는 Replica, 쓰기는 Master 로 분리해 마스터 부하를 낮춘다.
-   Redis 장애 시에도 앱이 죽지 않도록 모든 작업을 try/catch 로 감싼다.
-   ─────────────────────────────────────────────────────────────── */
+/* ── 캐시 헬퍼 (읽기=replica, 쓰기=master) ── */
 const cache = {
   async get(key) {
     try {
-      const val = await replica.get(key)        // 읽기 → 레플리카
+      const val = await replica.get(key)
       return val ? JSON.parse(val) : null
     } catch {
-      return null   // 캐시 실패 시 null → 호출부는 DB로 폴백
+      return null
     }
   },
-
   async set(key, value, ttlSeconds = 60) {
     try {
-      await master.set(key, JSON.stringify(value), 'EX', ttlSeconds)  // 쓰기 → 마스터
+      await master.set(key, JSON.stringify(value), 'EX', ttlSeconds)
     } catch (e) {
       console.error('[Cache] SET 실패:', e.message)
     }
   },
-
   async del(key) {
     try {
       await master.del(key)
