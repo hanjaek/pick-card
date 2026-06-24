@@ -1,112 +1,196 @@
+/* ================================================================
+   Cards Page — BNK Pickard (신한카드 스타일 · 간결한 그리드)
+   ================================================================ */
+
 .cards-page {
   padding-top: 70px;
   min-height: 100vh;
+  background: var(--bnk-bg);
 }
 
-/* 상단 배너: 레드 그라디언트 */
+/* ── Hero ─────────────────────────────────────────────────────── */
 .cards-hero {
-  background: linear-gradient(135deg, var(--bnk-dark-red), var(--bnk-red), #E84040);
-  padding: 60px 10%;
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-red) 55%, #E84040 100%);
+  padding: 52px 10%;
   text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.cards-hero-title {
-  font-size: 40px;
+.cards-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 70% at 80% 50%, rgba(255,255,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cards-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 16px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+
+.cards-title {
+  font-size: 38px;
   font-weight: 900;
   color: #fff;
-  margin-bottom: 14px;
+  letter-spacing: -1.5px;
+  margin-bottom: 10px;
+  word-break: keep-all;
 }
 
-.cards-hero-sub {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
+.cards-sub {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.cards-inner {
-  max-width: 1280px;
+/* ── Body ─────────────────────────────────────────────────────── */
+.cards-body {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 50px 40px 80px;
+  padding: 40px 40px 90px;
 }
 
-/* ---- 필터 탭 ---- */
-.filter-tabs {
+/* ── Filter Tabs ──────────────────────────────────────────────── */
+.cards-tabs {
   display: flex;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 32px;
 }
 
-.filter-tab {
+.cards-tab {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 26px;
-  border-radius: 30px;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bnk-gray);
   background: #fff;
   border: 1.5px solid var(--bnk-border);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--bnk-gray);
-  font-family: inherit;
+  cursor: pointer;
   transition: var(--transition);
+  font-family: 'SUIT Variable', 'SUIT', sans-serif;
 }
 
-.filter-tab:hover {
+.cards-tab:hover {
   border-color: var(--bnk-red);
   color: var(--bnk-red);
 }
 
-.filter-tab.active {
+.cards-tab.on {
   background: var(--bnk-red);
   border-color: var(--bnk-red);
   color: #fff;
 }
 
-.filter-count {
+.cards-tab-cnt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 20px;
   font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.filter-tab:not(.active) .filter-count {
+  font-weight: 800;
   background: var(--bnk-bg);
-  color: var(--bnk-gray);
-}
-
-.hover-hint {
-  font-size: 13px;
   color: var(--bnk-light-gray);
-  margin-bottom: 36px;
+  transition: var(--transition);
 }
 
+.cards-tab.on .cards-tab-cnt {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+/* ── Card Grid ────────────────────────────────────────────────── */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 44px 28px;
-  justify-items: center;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 20px;
 }
 
+/* ── Loading ──────────────────────────────────────────────────── */
 .cards-loading {
   display: flex;
   justify-content: center;
   padding: 80px 0;
 }
 
-.spinner {
-  width: 44px;
-  height: 44px;
-  border: 4px solid var(--bnk-bg);
+.cards-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--bnk-border);
   border-top-color: var(--bnk-red);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: cards-spin 0.8s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes cards-spin { to { transform: rotate(360deg); } }
 
-.cards-error {
+/* ── Bottom CTA ───────────────────────────────────────────────── */
+.cards-bottom-cta {
   text-align: center;
-  padding: 60px;
-  color: var(--bnk-red);
+  margin-top: 60px;
+  padding-top: 52px;
+  border-top: 1px solid var(--bnk-border);
+}
+
+.cards-cta-label {
   font-size: 15px;
+  color: var(--bnk-gray);
+  margin-bottom: 20px;
+  word-break: keep-all;
+}
+
+.cards-find-link {
+  display: inline-block;
+  padding: 16px 52px;
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-gold) 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 50px;
+  letter-spacing: -0.3px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.cards-find-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, rgba(255,255,255,0.15) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.cards-find-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(137, 110, 74, 0.35);
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cards-body  { padding: 32px 24px 60px; }
+  .cards-title { font-size: 30px; }
+}
+
+@media (max-width: 640px) {
+  .cards-hero  { padding: 44px 6%; }
+  .cards-title { font-size: 24px; }
+  .cards-body  { padding: 24px 14px 50px; }
+  .cards-grid  { grid-template-columns: 1fr; }
+  .cards-tabs  { flex-wrap: wrap; }
 }

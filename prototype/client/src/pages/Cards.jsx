@@ -1,69 +1,82 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import CardItem from '../components/CardItem'
+import { Link } from 'react-router-dom'
+import CardSearchItem from '../components/CardSearchItem'
 import './Cards.css'
 
 const FILTERS = ['전체', '신용카드', '체크카드']
 
-function Cards() {
+export default function Cards() {
+  const [allCards, setAllCards]       = useState([])
+  const [loading, setLoading]         = useState(true)
   const [activeFilter, setActiveFilter] = useState('전체')
-  const [cards, setCards]               = useState([])
-  const [loading, setLoading]           = useState(true)
-  const [error, setError]               = useState(null)
-  const navigate = useNavigate()
 
   useEffect(() => {
-    const params = activeFilter !== '전체' ? `?type=${encodeURIComponent(activeFilter)}` : ''
-    setLoading(true)
-    fetch(`/api/cards${params}`)
+    fetch('/api/cards')
       .then(r => r.json())
-      .then(data => { setCards(data); setLoading(false) })
-      .catch(() => { setError('카드 목록을 불러오지 못했습니다.'); setLoading(false) })
-  }, [activeFilter])
+      .then(d => { setAllCards(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
 
-  const countFor = (f) => {
-    if (f === '전체') return cards.length
-    return cards.filter(c => c.type === f).length
-  }
+  const displayed = activeFilter === '전체'
+    ? allCards
+    : allCards.filter(c => c.type === activeFilter)
 
-  const handleCardClick = (cardId) => navigate(`/cards/${cardId}`)
+  const countFor = f =>
+    f === '전체' ? allCards.length : allCards.filter(c => c.type === f).length
 
   return (
     <div className="cards-page">
+
+      {/* Hero */}
       <div className="cards-hero">
-        <h1 className="cards-hero-title">카드 상품</h1>
-        <p className="cards-hero-sub">BNK 부산은행의 다양한 카드 혜택을 비교해보세요</p>
+        <p className="cards-eyebrow">카드 상품</p>
+        <h1 className="cards-title">BNK 카드 전체 보기</h1>
+        <p className="cards-sub">BNK 부산은행의 다양한 카드 혜택을 비교해보세요</p>
       </div>
 
-      <div className="cards-inner">
-        <div className="filter-tabs">
+      <div className="cards-body">
+
+        {/* 탭 필터 */}
+        <div className="cards-tabs">
           {FILTERS.map(f => (
             <button
               key={f}
-              className={`filter-tab ${activeFilter === f ? 'active' : ''}`}
+              className={`cards-tab${activeFilter === f ? ' on' : ''}`}
               onClick={() => setActiveFilter(f)}
             >
               {f}
-              {!loading && <span className="filter-count">{countFor(f)}</span>}
+              {!loading && (
+                <span className="cards-tab-cnt">{countFor(f)}</span>
+              )}
             </button>
           ))}
         </div>
 
-        <p className="hover-hint">카드를 클릭하면 상세 정보를 확인할 수 있습니다</p>
+        {/* 로딩 */}
+        {loading && (
+          <div className="cards-loading">
+            <div className="cards-spinner" />
+          </div>
+        )}
 
-        {loading && <div className="cards-loading"><div className="spinner" /></div>}
-        {error   && <p className="cards-error">{error}</p>}
-
-        {!loading && !error && (
+        {/* 카드 그리드 */}
+        {!loading && (
           <div className="cards-grid">
-            {cards.map(card => (
-              <CardItem key={card.id} card={card} onClick={() => handleCardClick(card.id)} />
+            {displayed.map(card => (
+              <CardSearchItem key={card.id} card={card} />
             ))}
           </div>
         )}
+
+        {/* 하단 CTA */}
+        {!loading && (
+          <div className="cards-bottom-cta">
+            <p className="cards-cta-label">내 소비에 맞는 카드를 찾고 계신가요?</p>
+            <Link to="/search" className="cards-find-link">✦ 내게 맞는 카드 찾기</Link>
+          </div>
+        )}
+
       </div>
     </div>
   )
 }
-
-export default Cards
