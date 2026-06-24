@@ -212,7 +212,7 @@ export default function MyPage() {
                         .map((b, i) => <li key={i}>{b.desc}</li>)}
                     </ul>
                   </div>
-                  <Link to={`/cards/${card.id}/apply`} className="mp-apply-btn">신청하기</Link>
+                  <Link to={`/cards/${card.id}`} className="mp-apply-btn">상세보기</Link>
                 </div>
               ))}
             </div>
