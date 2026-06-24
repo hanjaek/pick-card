@@ -74,6 +74,18 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     )
 
+    // ── Redis 세션 저장 ──────────────────────────────────────────
+    // express-session 미들웨어가 이 객체를 직렬화해 Redis(Master)에 저장.
+    // 이후 요청에서 쿠키(connect.sid)로 세션을 찾아 req.session 복원.
+    // 서버가 여러 대여도 모두 같은 Redis를 보므로 로그인 상태가 공유됨.
+    req.session.user = {
+      id:       user.id,
+      username: user.username,
+      name:     user.cust_nm,
+      is_admin: !!user.is_admin,
+      loginAt:  new Date().toISOString(),
+    }
+
     res.json({
       token,
       name:     user.cust_nm,
@@ -83,6 +95,33 @@ router.post('/login', async (req, res) => {
     console.error('[login]', err)
     res.status(500).json({ message: '서버 오류가 발생했습니다.' })
   }
+})
+
+/* ======================================================
+   GET /api/auth/me  -  현재 세션 정보 조회
+   쿠키로 Redis 세션을 찾아 로그인 상태를 반환.
+   (세션이 Redis에 잘 저장/복원되는지 증명용 + 프론트 확인용)
+   ====================================================== */
+router.get('/me', (req, res) => {
+  if (req.session && req.session.user) {
+    return res.json({ loggedIn: true, user: req.session.user })
+  }
+  res.status(401).json({ loggedIn: false, message: '로그인 세션이 없습니다.' })
+})
+
+/* ======================================================
+   POST /api/auth/logout  -  로그아웃 (Redis 세션 삭제)
+   ====================================================== */
+router.post('/logout', (req, res) => {
+  if (!req.session) return res.json({ message: '이미 로그아웃 상태입니다.' })
+  req.session.destroy(err => {
+    if (err) {
+      console.error('[logout]', err)
+      return res.status(500).json({ message: '로그아웃 처리 중 오류가 발생했습니다.' })
+    }
+    res.clearCookie('connect.sid')
+    res.json({ message: '로그아웃되었습니다.' })
+  })
 })
 
 module.exports = router

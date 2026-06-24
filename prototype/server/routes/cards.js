@@ -1,13 +1,27 @@
 const router = require('express').Router()
 const pool   = require('../db')
+const { cache } = require('../redis')
 
 /* ======================================================
    GET /api/cards  -  카드 목록 (혜택 배열 포함)
    ?type=신용카드 | 체크카드
+
+   [Redis 캐싱 흐름]
+   1. 캐시 조회(replica에서 읽기) → 있으면 즉시 반환 (DB 안 감)
+   2. 없으면 DB 조회 → 결과를 캐시(master에 쓰기, TTL 60초)
+   카드 목록은 자주 바뀌지 않으므로 캐싱 효과가 큼.
    ====================================================== */
 router.get('/', async (req, res) => {
   try {
     const { type } = req.query
+    const cacheKey = `cards:list:${type || 'all'}`
+
+    // 1) 캐시 먼저 확인 (Redis Replica에서 읽기)
+    const cached = await cache.get(cacheKey)
+    if (cached) {
+      res.set('X-Cache', 'HIT')   // 응답 헤더로 캐시 적중 여부 확인 가능
+      return res.json(cached)
+    }
 
     let sql = `
       SELECT
@@ -48,6 +62,10 @@ router.get('/', async (req, res) => {
         : (row.benefits || [])
     }))
 
+    // 2) DB 결과를 캐시에 저장 (Redis Master에 쓰기, 60초 후 만료)
+    await cache.set(cacheKey, cards, 60)
+
+    res.set('X-Cache', 'MISS')
     res.json(cards)
   } catch (err) {
     console.error('[cards GET /]', err)
