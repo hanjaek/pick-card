@@ -2,7 +2,7 @@
 
 .card-wrapper {
   width: 320px;
-  height: 200px;
+  height: 270px;
   perspective: 1000px;
   cursor: pointer;
 }
@@ -111,10 +111,10 @@
 .card-back {
   transform: rotateY(180deg);
   background: #fff;
-  padding: 18px 22px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   box-shadow: var(--shadow-card);
 }
 

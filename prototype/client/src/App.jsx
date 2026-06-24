@@ -7,8 +7,9 @@ import Signup     from './pages/Signup'
 import Cards      from './pages/Cards'
 import CardDetail from './pages/CardDetail'
 import CardApply  from './pages/CardApply'
-import CardDesign from './pages/CardDesign'
-import Admin      from './pages/Admin'
+import CardDesign  from './pages/CardDesign'
+import CardSearch  from './pages/CardSearch'
+import Admin       from './pages/Admin'
 
 function AdminRoute({ children }) {
   const isAdmin = localStorage.getItem('isAdmin') === 'true'
@@ -36,6 +37,7 @@ function App() {
                 <Routes>
                   <Route path="/"                      element={<Home />}       />
                   <Route path="/cards"                 element={<Cards />}      />
+                  <Route path="/search"                element={<CardSearch />} />
                   <Route path="/cards/:id"             element={<CardDetail />} />
                   <Route path="/cards/:id/apply"       element={<CardApply />}  />
                   <Route path="/cards/:id/design"      element={<CardDesign />} />

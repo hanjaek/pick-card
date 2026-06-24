@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import './Home.css'
 
 const FILTERS = [
-  { label: '전체',         value: 'all' },
   { label: '어디서나',     value: '어디서나' },
   { label: '카페/베이커리', value: '카페' },
   { label: '할인',         value: '할인' },
@@ -14,14 +13,14 @@ const FILTERS = [
 ]
 
 const CARD_COLORS = [
-  ['#FF6B6B', '#FF8E53'],
-  ['#4158D0', '#C850C0'],
-  ['#D71919', '#FF6B35'],
-  ['#0F2027', '#2C5364'],
-  ['#00B09B', '#96C93D'],
-  ['#8E2DE2', '#4A00E0'],
-  ['#0052D4', '#4364F7'],
-  ['#F7971E', '#FFD200'],
+  ['#1B3A5C', '#2D6195'],  // Young: 스틸블루
+  ['#1C1C2E', '#2D2D3E'],  // 마이플러스: 다크챠콜
+  ['#7A1515', '#B82020'],  // 부산사랑: 딥레드
+  ['#111111', '#222222'],  // 하이라이프: 럭셔리블랙
+  ['#0F3D28', '#1B6340'],  // 그린라이프: 포레스트그린
+  ['#280B42', '#4A1578'],  // 쇼핑플러스: 딥바이올렛
+  ['#0A1628', '#122240'],  // 트래블: 딥네이비
+  ['#5C3A1E', '#8A5C2E'],  // 알뜰: 브론즈
 ]
 
 const PARTNERS = [
@@ -140,11 +139,17 @@ export default function Home() {
             카드를 찾아보세요
           </h2>
           <div className="filter-chips">
+            <button
+              className="fchip fchip-find"
+              onClick={() => navigate('/search')}
+            >
+              ✦ 내게 맞는 카드 찾기
+            </button>
             {FILTERS.map(f => (
               <button
                 key={f.value}
                 className={`fchip${filter === f.value ? ' on' : ''}`}
-                onClick={() => setFilter(f.value)}
+                onClick={() => setFilter(filter === f.value ? 'all' : f.value)}
               >
                 {f.label}
               </button>

@@ -222,6 +222,31 @@
   color: #fff;
 }
 
+/* 내게 맞는 카드 찾기 — 강조 칩 */
+.fchip-find {
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-gold) 100%);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  position: relative;
+  overflow: hidden;
+}
+.fchip-find::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, rgba(255,255,255,0.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+.fchip-find:hover {
+  border-color: transparent;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(137,110,74,0.38);
+  opacity: 0.93;
+}
+
 /* ----------------------------------------------------------------
    Card Slider
    ---------------------------------------------------------------- */
