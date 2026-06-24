@@ -26,7 +26,9 @@ try {
   const connectRedis = require('connect-redis')
   const { master }   = require('./redis')
   const RedisStore   = connectRedis(session)
-  sessionStore       = new RedisStore({ client: master })
+  // disableTouch: 요청마다 TTL 자동연장 끔 → 고정 60분 만료.
+  // 연장은 오직 명시적 /api/auth/extend 호출로만 발생 (카운트다운 타이머가 의미를 가짐)
+  sessionStore       = new RedisStore({ client: master, disableTouch: true })
   console.log('[Session] Redis 세션 스토어 사용')
 } catch {
   console.log('[Session] MemoryStore 사용 (Redis 미연결)')
