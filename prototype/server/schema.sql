@@ -8,6 +8,11 @@
 -- (없으면 일부 환경(도커 초기 시드 등)에서 한글이 latin1 로 해석돼 깨진 채 저장됨)
 SET NAMES utf8mb4;
 
+-- 항상 깨끗한 상태로 재생성 (테이블/컬럼이 바뀌어도 매 실행 시 최신 스키마 보장)
+-- ※ 기존 데이터는 초기화되지만, 카드·관리자·약관 등 시드가 아래에 포함돼 자동 복구됨
+-- ※ 도커는 최초 1회만 실행되므로 영향 없음 (워크벤치 재실행 시에도 에러 없이 동작)
+DROP DATABASE IF EXISTS bnk_card;
+
 CREATE DATABASE IF NOT EXISTS bnk_card
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
