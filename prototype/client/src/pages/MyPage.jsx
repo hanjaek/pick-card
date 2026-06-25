@@ -235,7 +235,7 @@ export default function MyPage() {
               <p className="mp-empty-icon">✦</p>
               <p className="mp-empty-title">아직 신청한 카드가 없어요</p>
               <p className="mp-empty-sub">내 소비 패턴에 맞는 BNK 카드를 찾아보세요</p>
-              <Link to="/search" className="mp-empty-btn">내게 맞는 카드 찾기</Link>
+              <Link to="/cards" className="mp-empty-btn">내게 맞는 카드 찾기</Link>
             </div>
           </section>
         )}
