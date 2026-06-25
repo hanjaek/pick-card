@@ -72,6 +72,63 @@ router.get('/cards', requireAdmin, async (req, res) => {
 })
 
 /* ======================================================
+   POST /api/admin/cards  -  카드 신규 등록 (혜택 함께)
+   ====================================================== */
+router.post('/cards', requireAdmin, async (req, res) => {
+  const {
+    name, type, annualFee, network, colorFrom, colorTo,
+    brand, trafficYn, productFeature, benefits,
+  } = req.body
+
+  if (!name || !type) {
+    return res.status(400).json({ message: '카드명과 종류는 필수입니다.' })
+  }
+  if (!['신용카드', '체크카드'].includes(type)) {
+    return res.status(400).json({ message: '카드 종류가 올바르지 않습니다.' })
+  }
+
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+
+    // 1) 카드 본체 등록 (등록 직후엔 판매중지 상태로 시작 — 검수 후 판매중 전환)
+    const [result] = await conn.query(
+      `INSERT INTO cards
+        (prd_nm, card_type_cd, annual_fee, network, color_from, color_to,
+         brand, traffic_yn, product_feature, sale_status_cd, launch_dt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'OFF_SALE', CURDATE())`,
+      [name, type, annualFee || 0, network || 'VISA',
+       colorFrom || '#1C1C2E', colorTo || '#2D2D3E',
+       brand || '국내전용', trafficYn || 'N', productFeature || null]
+    )
+    const cardId = result.insertId
+
+    // 2) 혜택 등록 (선택, 배열)
+    if (Array.isArray(benefits)) {
+      for (const b of benefits) {
+        if (!b.desc) continue
+        await conn.query(
+          `INSERT INTO card_benefits (card_id, bnft_type_cd, bnft_desc, discount_rate, monthly_limit_amt)
+           VALUES (?, ?, ?, ?, ?)`,
+          [cardId, b.type || '할인', b.desc, b.discountRate || null, b.monthlyLimit || null]
+        )
+      }
+    }
+
+    await conn.commit()
+    await writeLog(req.admin, 'CARD_CREATE', 'CARD', cardId, `카드 등록: ${name} (판매중지 상태로 생성)`)
+    await bustCardCache()
+    res.status(201).json({ id: cardId, message: '카드가 등록되었습니다. (판매중지 상태 — 검수 후 판매중으로 전환하세요)' })
+  } catch (err) {
+    await conn.rollback()
+    console.error('[admin POST /cards]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  } finally {
+    conn.release()
+  }
+})
+
+/* ======================================================
    PUT /api/admin/cards/:id  -  카드 정보 수정
    ====================================================== */
 router.put('/cards/:id', requireAdmin, async (req, res) => {
