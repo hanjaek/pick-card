@@ -246,6 +246,8 @@ def perform_ocr(req: OCRRequest):
         
         # 추출된 텍스트의 앞뒤 공백을 제거하고 응답합니다.
         return {"text": text.strip()}
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
