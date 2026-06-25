@@ -10,7 +10,7 @@ const DECO_CARDS = [
 
 const STEPS = [
   { key: 'idCapture', title: '신분증을 촬영해주세요',             sub: '주민등록증 또는 운전면허증을 준비해주세요' },
-  { key: 'idConfirm', title: '정보를 확인해주세요',               sub: '신분증에서 읽어낸 정보입니다' },
+  { key: 'idConfirm', title: '이름을 입력해주세요',               sub: '주민등록번호가 확인되었습니다' },
   { key: 'username',  title: '사용할 아이디를\n입력해주세요',      sub: '영문/숫자 조합 6자 이상' },
   { key: 'password',  title: '비밀번호를\n설정해주세요',           sub: '8자 이상으로 입력해주세요' },
   { key: 'email',     title: '이메일 주소를\n입력해주세요',        sub: '카드 발급 안내를 받을 주소예요' },
@@ -501,7 +501,7 @@ export default function Signup() {
                 </div>
 
                 <div className="auth-field" style={{ marginTop: 16 }}>
-                  <label className="auth-label">이름을 확인해주세요</label>
+                  <label className="auth-label">이름</label>
                   <input
                     ref={inputRef}
                     className="auth-input"
@@ -512,7 +512,6 @@ export default function Signup() {
                     onKeyDown={handleKeyDown}
                   />
                   {error && <p className="auth-hint error">{error}</p>}
-                  <p className="auth-hint error">OCR 인식 결과가 부정확할 수 있습니다. 실명으로 수정해주세요.</p>
                 </div>
 
                 <div className="auth-btn-area">

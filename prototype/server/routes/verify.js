@@ -44,19 +44,36 @@ function parseIdCardText(text) {
     '주민등록증', '대한민국', '운전면허증', '주민등록', '면허증', '자동차',
     '특별시', '광역시', '특별자치', '적성검사', '경찰청장', '경찰서장',
     '종보통', '종대형', '종소형', '종수동', '종보동', '종수령',
+    // 구/동/로/시 등 주소 단어
+    '서구', '동구', '남구', '북구', '중구', '달서', '수성', '달성',
+    '해운대', '사하', '금정', '연제', '수영', '사상', '강서',
+    '서대문', '동대문', '성동', '광진', '성북', '강북', '도봉', '노원',
+    '은평', '마포', '양천', '강남', '서초', '송파', '강동', '관악', '구로', '금천',
+    '영등포', '동작', '용산', '종로', '중랑',
+    '미근동', '통일로',
   ])
   const excludePartial = [
     '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
     '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
     '통일', '조회', '기간', '발급', '검사', '특수', '보통', '수동',
-    '면허', '도로', '교통', '안전', '공단',
+    '면허', '도로', '교통', '안전', '공단', '경찰',
+    '특별', '광역', '청장',
   ]
 
+  const SURNAMES = '김이박최정강조윤장임한오서신권황안송류전홍고문양손배백허유남심노하곽성차주우구신임나전민유진지엄채원천방공강현함변염양변여추도소석선설마주길위표명기반왕금옥육인맹제모탁국어은편'
   const isNameCandidate = (w) => {
-    if (w.length < 2 || w.length > 5) return false
+    if (w.length < 2 || w.length > 4) return false
     if (excludeExact.has(w)) return false
     if (excludePartial.some(e => w.includes(e))) return false
     if (/\d/.test(w)) return false
+    if (/[()（）]/.test(w)) return false
+    // 주소 패턴 제외 (4글자 이상 + 주소 접미사)
+    if (w.length >= 3 && /[로길]$/.test(w)) return false
+    if (w.length >= 4 && /대로$/.test(w)) return false
+    // 2~3글자 + 성씨로 시작하면 이름으로 인정
+    if (w.length <= 3 && SURNAMES.includes(w[0])) return true
+    // 그 외 주소 접미사 제외
+    if (/[구시군읍면]$/.test(w) && w.length >= 3) return false
     return true
   }
 
@@ -155,8 +172,8 @@ router.post('/id-card', async (req, res) => {
 
     const parsed = parseIdCardText(ocrText)
 
-    if (!parsed.name && !parsed.idNumber) {
-      return res.status(422).json({ success: false, message: '신분증 정보를 추출할 수 없습니다. 신분증이 맞는지 확인 후 다시 촬영해주세요.' })
+    if (!parsed.idNumber) {
+      return res.status(422).json({ success: false, message: '주민등록번호를 인식하지 못했습니다. 다시 촬영해주세요.' })
     }
 
     res.json({
