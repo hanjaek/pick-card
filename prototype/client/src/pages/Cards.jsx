@@ -76,7 +76,8 @@ export default function Cards() {
 
   const filtered = allCards.filter(card => {
     if (cardType && card.type !== cardType) return false
-    if (card.annualFee > maxFee) return false
+    // 슬라이더가 최대('5만원 이상')면 상한 없음 → 그 이상 연회비 카드도 노출
+    if (maxFee < MAX_FEE && card.annualFee > maxFee) return false
 
     if (selectedBenefitTypes.size > 0) {
       const matchTypes = BENEFIT_TYPE_OPTIONS
