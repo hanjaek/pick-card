@@ -178,7 +178,9 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  scrollbar-width: none;
 }
+.auth-form-side::-webkit-scrollbar { display: none; }
 
 /* Back button */
 .auth-back {
