@@ -39,23 +39,39 @@ function parseIdCardText(text) {
     }
   }
 
-  // 이름: 주민번호가 있는 줄의 바로 윗줄에서 한글 이름 추출
-  const exclude = ['주민등록증', '대한민국', '운전면허증', '주민등록', '면허증',
-                   '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
-                   '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
-                   '특별시', '광역시', '특별자치', '적성검사', '기간', '통일', '조회']
+  // 이름 추출
+  const excludeExact = new Set([
+    '주민등록증', '대한민국', '운전면허증', '주민등록', '면허증', '자동차',
+    '특별시', '광역시', '특별자치', '적성검사', '경찰청장', '경찰서장',
+    '종보통', '종대형', '종소형', '종수동', '종보동', '종수령',
+  ])
+  const excludePartial = [
+    '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
+    '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
+    '통일', '조회', '기간', '발급', '검사', '특수', '보통', '수동',
+    '면허', '도로', '교통', '안전', '공단',
+  ]
 
-  // 1차: 주민번호 줄 기준으로 위쪽에서 이름 찾기
+  const isNameCandidate = (w) => {
+    if (w.length < 2 || w.length > 5) return false
+    if (excludeExact.has(w)) return false
+    if (excludePartial.some(e => w.includes(e))) return false
+    if (/\d/.test(w)) return false
+    return true
+  }
+
+  // 1차: 주민번호 줄 기준으로 위 2줄 범위에서 이름 찾기
   let idLineIdx = -1
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].match(/\d{6}\s*[-–—]?\s*\d/)) { idLineIdx = i; break }
   }
   if (idLineIdx > 0) {
-    for (let i = idLineIdx - 1; i >= 0; i--) {
+    const searchStart = Math.max(0, idLineIdx - 2)
+    for (let i = idLineIdx - 1; i >= searchStart; i--) {
       const words = lines[i].split(/\s+/)
       for (const w of words) {
-        const m = w.match(/^([가-힣]{2,5})$/)
-        if (m && !exclude.some(e => m[1].includes(e))) {
+        const m = w.match(/([가-힣]{2,5})/)
+        if (m && isNameCandidate(m[1])) {
           name = m[1]
           break
         }
@@ -64,14 +80,28 @@ function parseIdCardText(text) {
     }
   }
 
-  // 2차 fallback: 전체 줄에서 한글 2~4자 단어 찾기 (주소/키워드 제외)
+  // 2차: 주민번호 줄 자체에서 한글 이름 찾기 (주민번호 앞에 이름이 붙는 경우)
+  if (!name && idLineIdx >= 0) {
+    const idLine = lines[idLineIdx]
+    const beforeId = idLine.split(/\d{6}/)[0]
+    const words = beforeId.split(/\s+/)
+    for (const w of words) {
+      const m = w.match(/([가-힣]{2,5})/)
+      if (m && isNameCandidate(m[1])) {
+        name = m[1]
+        break
+      }
+    }
+  }
+
+  // 3차 fallback: 전체에서 검색
   if (!name) {
     for (const line of lines) {
       if (name) break
       const words = line.split(/\s+/)
       for (const w of words) {
         const m = w.match(/^([가-힣]{2,4})$/)
-        if (m && !exclude.some(e => m[1].includes(e))) {
+        if (m && isNameCandidate(m[1])) {
           name = m[1]
           break
         }
@@ -104,11 +134,12 @@ router.post('/id-card', async (req, res) => {
     tmpPath = path.join(UPLOAD_DIR, fileName)
     fs.writeFileSync(tmpPath, Buffer.from(base64Data, 'base64'))
 
-    // RAG OCR 서비스 호출
+    // RAG OCR 서비스 호출 (도커 환경: /app/uploads → /tmp/bnk-uploads 변환)
+    const ocrPath = tmpPath.replace('/app/uploads', '/tmp/bnk-uploads')
     const response = await fetch(`${RAG_URL}/ocr`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filepath: tmpPath }),
+      body: JSON.stringify({ filepath: ocrPath }),
     })
 
     if (!response.ok) {

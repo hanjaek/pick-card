@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageFilter, ImageEnhance, ImageOps
 
 # .env 파일에서 환경 변수를 불러옵니다 (API 키 등)
 load_dotenv()
@@ -239,12 +239,25 @@ def perform_ocr(req: OCRRequest):
     try:
         if not os.path.exists(req.filepath):
             raise HTTPException(status_code=404, detail="이미지 파일을 찾을 수 없습니다.")
-        
-        # 한국어(kor)와 영어(eng)를 동시 인식하도록 lang="kor+eng" 설정
-        # PIL.Image로 파일을 열어 pytesseract에 전달합니다.
-        text = pytesseract.image_to_string(Image.open(req.filepath), lang="kor+eng")
-        
-        # 추출된 텍스트의 앞뒤 공백을 제거하고 응답합니다.
+
+        original = Image.open(req.filepath)
+
+        # 해상도가 낮으면 2배 확대
+        if original.width < 1000:
+            original = original.resize((original.width * 2, original.height * 2), Image.LANCZOS)
+
+        # 1차: 원본 그대로 OCR (이름 등 큰 글자 인식에 유리)
+        text1 = pytesseract.image_to_string(original, lang="kor+eng", config='--psm 6')
+
+        # 2차: 전처리 후 OCR (주민번호 등 작은 숫자 인식에 유리)
+        gray = ImageOps.grayscale(original)
+        gray = ImageEnhance.Contrast(gray).enhance(1.5)
+        gray = gray.filter(ImageFilter.SHARPEN)
+        text2 = pytesseract.image_to_string(gray, lang="kor+eng", config='--psm 6')
+
+        # 두 결과 합침 (더 많은 정보 추출)
+        text = text1 + "\n" + text2
+
         return {"text": text.strip()}
     except HTTPException as he:
         raise he
