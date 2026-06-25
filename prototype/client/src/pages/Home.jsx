@@ -3,13 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import './Home.css'
 
 const FILTERS = [
-  { label: '어디서나',     value: '어디서나' },
-  { label: '카페/베이커리', value: '카페' },
-  { label: '할인',         value: '할인' },
-  { label: '여행/숙박',    value: '여행' },
-  { label: '주유',         value: '주유' },
-  { label: '쇼핑',         value: '쇼핑' },
-  { label: '교통',         value: '교통' },
+  { label: '카페/베이커리', keywords: ['카페', '커피', '스타벅스', '베이커리'] },
+  { label: '할인',         keywords: ['할인'] },
+  { label: '여행/숙박',    keywords: ['여행', '해외', '호텔', '리조트', '면세', '라운지', '공항'] },
+  { label: '주유',         keywords: ['주유'] },
+  { label: '쇼핑',         keywords: ['쇼핑', '쿠팡', '무신사', 'SSG', '올리브영', '마트'] },
+  { label: '교통',         keywords: ['교통', '버스', '지하철', 'KTX', '전기차', '킥보드'] },
 ]
 
 const CARD_COLORS = [
@@ -107,7 +106,15 @@ export default function Home() {
 
   const displayed = filter === 'all'
     ? allCards
-    : allCards.filter(c => (c.benefit_category || '').includes(filter))
+    : allCards.filter(c => {
+        const f = FILTERS.find(f => f.label === filter)
+        if (!f) return true
+        const text = [
+          c.productFeature || '',
+          ...(c.benefits || []).map(b => b.desc || ''),
+        ].join(' ')
+        return f.keywords.some(kw => text.includes(kw))
+      })
 
   return (
     <div className="home">
@@ -147,9 +154,9 @@ export default function Home() {
             </button>
             {FILTERS.map(f => (
               <button
-                key={f.value}
-                className={`fchip${filter === f.value ? ' on' : ''}`}
-                onClick={() => setFilter(filter === f.value ? 'all' : f.value)}
+                key={f.label}
+                className={`fchip${filter === f.label ? ' on' : ''}`}
+                onClick={() => setFilter(filter === f.label ? 'all' : f.label)}
               >
                 {f.label}
               </button>
