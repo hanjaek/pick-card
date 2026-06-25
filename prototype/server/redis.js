@@ -43,12 +43,15 @@ if (SENTINELS) {
   console.log('[Redis] Sentinel 모드 활성화 (auto-failover):', SENTINELS)
 } else {
   /* ── ② 직접 연결 모드 (호스트 개발) ── */
-  const common = { retryStrategy: RETRY, maxRetriesPerRequest: 1, enableReadyCheck: true, commandTimeout: 2000 }
+  const common = { retryStrategy: RETRY, maxRetriesPerRequest: 1, connectTimeout: 2000, commandTimeout: 2000, enableReadyCheck: true, lazyConnect: true }
 
   master  = new Redis({ host: process.env.REDIS_MASTER_HOST || '127.0.0.1',
                         port: Number(process.env.REDIS_MASTER_PORT) || 6379, ...common })
   replica = new Redis({ host: process.env.REDIS_REPLICA_HOST || '127.0.0.1',
                         port: Number(process.env.REDIS_REPLICA_PORT) || 6380, ...common })
+
+  master.connect().catch(() => {})
+  replica.connect().catch(() => {})
 
   console.log('[Redis] 직접 연결 모드 (localhost 6379/6380)')
 }
@@ -60,8 +63,14 @@ replica.on('ready', () => console.log('[Redis Replica] 준비 완료'))
 replica.on('error', (e) => { if (!e.message.includes('ECONNREFUSED')) console.error('[Redis Replica] 오류:', e.message) })
 
 /* ── 캐시 헬퍼 (읽기=replica, 쓰기=master) ── */
+let redisReady = false
+replica.on('ready', () => { redisReady = true })
+replica.on('error', () => { redisReady = false })
+replica.on('close', () => { redisReady = false })
+
 const cache = {
   async get(key) {
+    if (!redisReady) return null
     try {
       const val = await replica.get(key)
       return val ? JSON.parse(val) : null
@@ -70,6 +79,7 @@ const cache = {
     }
   },
   async set(key, value, ttlSeconds = 60) {
+    if (!redisReady) return
     try {
       await master.set(key, JSON.stringify(value), 'EX', ttlSeconds)
     } catch (e) {
@@ -77,6 +87,7 @@ const cache = {
     }
   },
   async del(key) {
+    if (!redisReady) return
     try {
       await master.del(key)
     } catch (e) {

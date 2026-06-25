@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Header     from './components/Header'
 import Footer     from './components/Footer'
 import Home       from './pages/Home'
@@ -11,9 +12,15 @@ import CardDesign  from './pages/CardDesign'
 import CardSearch  from './pages/CardSearch'
 import MyPage      from './pages/MyPage'
 import Terms       from './pages/Terms'
+import Support     from './pages/Support'
 import Chatbot     from './pages/Chatbot'
-import IdCardOcr   from './pages/IdCardOcr'
 import Admin       from './pages/Admin'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 
 function AdminRoute({ children }) {
   const isAdmin = localStorage.getItem('isAdmin') === 'true'
@@ -23,6 +30,7 @@ function AdminRoute({ children }) {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route
           path="/admin"
@@ -30,6 +38,15 @@ function App() {
             <AdminRoute>
               <Admin />
             </AdminRoute>
+          }
+        />
+        <Route
+          path="/chatbot"
+          element={
+            <>
+              <Header />
+              <Chatbot />
+            </>
           }
         />
         <Route
@@ -47,8 +64,7 @@ function App() {
                   <Route path="/cards/:id/design"      element={<CardDesign />} />
                   <Route path="/mypage"                element={<MyPage />}     />
                   <Route path="/terms"                 element={<Terms />}      />
-                  <Route path="/chatbot"               element={<Chatbot />}    />
-                  <Route path="/ocr"                   element={<IdCardOcr />}  />
+                  <Route path="/support"               element={<Support />}    />
                   <Route path="/login"                 element={<Login />}      />
                   <Route path="/signup"                element={<Signup />}     />
                 </Routes>

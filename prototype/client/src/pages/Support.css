@@ -1,0 +1,337 @@
+/* ================================================================
+   Support Page — BNK Pickard 고객센터
+   ================================================================ */
+.sp-page {
+  padding-top: 70px;
+  min-height: 100vh;
+  background: var(--bnk-bg);
+}
+
+/* ── Hero ── */
+.sp-hero {
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-red) 55%, #E84040 100%);
+  padding: 56px 10%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.sp-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 70% at 80% 50%, rgba(255,255,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.sp-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 16px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+.sp-hero-title {
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1.5px;
+  margin-bottom: 10px;
+}
+.sp-hero-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ── Body ── */
+.sp-body {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 40px 80px;
+}
+
+.sp-section {
+  margin-bottom: 48px;
+}
+.sp-section-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--bnk-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+}
+
+/* ── Quick Menu Grid ── */
+.sp-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.sp-quick-card {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 18px;
+  padding: 24px 20px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition);
+  cursor: pointer;
+}
+.sp-quick-card:hover {
+  border-color: var(--bnk-red);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(215,25,25,0.08);
+}
+.sp-quick-icon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 12px;
+}
+.sp-quick-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--bnk-text);
+  margin-bottom: 4px;
+}
+.sp-quick-desc {
+  font-size: 12px;
+  color: var(--bnk-light-gray);
+}
+
+/* ── Contact ── */
+.sp-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+.sp-contact-card {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 18px;
+  padding: 24px;
+  transition: var(--transition);
+}
+.sp-contact-card:hover {
+  border-color: var(--bnk-gold);
+}
+.sp-contact-main {
+  background: linear-gradient(135deg, var(--bnk-red), var(--bnk-dark-red));
+  border-color: transparent;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.sp-contact-main:hover {
+  border-color: transparent;
+  box-shadow: 0 10px 28px rgba(215,25,25,0.2);
+}
+.sp-contact-main .sp-contact-label { color: rgba(255,255,255,0.7); }
+.sp-contact-main .sp-contact-hours { color: rgba(255,255,255,0.5); }
+
+.sp-contact-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sp-contact-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bnk-gray);
+  margin-bottom: 4px;
+}
+.sp-contact-number {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.sp-contact-number-sm {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--bnk-text);
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+.sp-contact-hours {
+  font-size: 12px;
+  color: var(--bnk-light-gray);
+}
+
+/* ── FAQ ── */
+.sp-faq-cats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.sp-faq-cat {
+  padding: 9px 22px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--bnk-gray);
+  background: #fff;
+  border: 1.5px solid var(--bnk-border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.sp-faq-cat:hover {
+  border-color: var(--bnk-red);
+  color: var(--bnk-red);
+}
+.sp-faq-cat.on {
+  background: var(--bnk-red);
+  border-color: var(--bnk-red);
+  color: #fff;
+}
+
+.sp-faq-list {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.sp-faq-item {
+  border-bottom: 1px solid var(--bnk-border);
+}
+.sp-faq-item:last-child { border-bottom: none; }
+
+.sp-faq-q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--bnk-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+.sp-faq-q:hover { background: rgba(215,25,25,0.02); }
+
+.sp-faq-q-badge {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--bnk-red);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sp-faq-q-text { flex: 1; }
+.sp-faq-arrow {
+  flex-shrink: 0;
+  color: var(--bnk-light-gray);
+  transition: transform 0.25s ease;
+}
+.sp-faq-item.open .sp-faq-arrow { transform: rotate(180deg); }
+
+.sp-faq-a {
+  display: flex;
+  gap: 12px;
+  padding: 0 22px 20px;
+  animation: spFaqOpen 0.25s ease;
+}
+@keyframes spFaqOpen {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sp-faq-a-badge {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--bnk-bg);
+  color: var(--bnk-gray);
+  font-size: 13px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sp-faq-a p {
+  font-size: 14px;
+  color: var(--bnk-gray);
+  line-height: 1.75;
+}
+
+/* ── Notices ── */
+.sp-notice-list {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.sp-notice-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--bnk-border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sp-notice-row:last-child { border-bottom: none; }
+.sp-notice-row:hover { background: rgba(215,25,25,0.02); }
+
+.sp-notice-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.sp-notice-tag.혜택 { background: rgba(215,25,25,0.08); color: var(--bnk-red); }
+.sp-notice-tag.점검 { background: rgba(137,110,74,0.1);  color: var(--bnk-gold); }
+.sp-notice-tag.약관 { background: rgba(101,92,79,0.08);  color: var(--bnk-gray); }
+
+.sp-notice-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bnk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-notice-date {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--bnk-light-gray);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .sp-body { padding: 32px 24px 60px; }
+  .sp-hero-title { font-size: 30px; }
+  .sp-quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .sp-contact-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .sp-hero { padding: 44px 6%; }
+  .sp-hero-title { font-size: 24px; }
+  .sp-body { padding: 24px 14px 48px; }
+  .sp-quick-grid { grid-template-columns: 1fr 1fr; }
+  .sp-notice-row { flex-wrap: wrap; gap: 6px; }
+}
