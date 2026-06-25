@@ -645,3 +645,5 @@
   cursor: pointer; font-family: inherit; transition: var(--transition);
 }
 .btn-terms-del:hover { background: #FEF2F2; }
+
+.upload-box-card { font-size: 14px; font-weight: 700; color: var(--bnk-gray); }

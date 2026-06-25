@@ -241,13 +241,13 @@ function Admin() {
               <div className="admin-section-header">
                 <div>
                   <h2 className="admin-section-title">{selectedCard.prd_nm}</h2>
-                  <span className="admin-section-sub">약관 목록 및 이력 관리</span>
+                  <span className="admin-section-sub">이 카드의 약관 · 추가 / 수정(새 버전) / 삭제</span>
                 </div>
                 <button
                   className="btn-new-terms"
                   onClick={() => { setShowUpload(true); setMessage('') }}
                 >
-                  + 새 약관 등록
+                  + 이 카드에 약관 추가
                 </button>
               </div>
 
@@ -262,7 +262,7 @@ function Admin() {
               {showUpload && (
                 <div className="upload-box">
                   <div className="upload-box-header">
-                    <h3>새 약관 PDF 등록</h3>
+                    <h3>새 약관 PDF 등록 <span className="upload-box-card">— {selectedCard.prd_nm}</span></h3>
                     <button className="btn-close" onClick={() => setShowUpload(false)}>X</button>
                   </div>
                   <form onSubmit={handleUpload} className="upload-form">
