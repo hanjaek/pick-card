@@ -549,3 +549,28 @@
 .history-table tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* ── 관리자 탭 ── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 32px;
+  background: #fff;
+  border-bottom: 1px solid var(--bnk-border);
+}
+.admin-tab {
+  padding: 14px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bnk-gray);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.admin-tab:hover { color: var(--bnk-red); }
+.admin-tab.on { color: var(--bnk-red); border-bottom-color: var(--bnk-red); }
+
+.admin-tab-panel { padding: 28px 32px; }

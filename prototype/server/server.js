@@ -14,6 +14,7 @@ const recommendRoutes    = require('./routes/recommend')
 const ocrRouter          = require('./routes/ocr')
 const chatbotRoutes      = require('./routes/chatbot')
 const verifyRoutes       = require('./routes/verify')
+const adminRoutes        = require('./routes/admin')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -66,6 +67,7 @@ app.use('/api/recommend',    recommendRoutes)
 app.use('/api/ocr',          ocrRouter)
 app.use('/api/chatbot',      chatbotRoutes)
 app.use('/api/verify',       verifyRoutes)
+app.use('/api/admin',        adminRoutes)
 
 /* ================================================================
    정적 파일 서빙 (약관 PDF 등)

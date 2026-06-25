@@ -159,6 +159,9 @@ router.get('/:id', async (req, res) => {
 
     if (!card) return res.status(404).json({ message: '카드를 찾을 수 없습니다.' })
 
+    // 조회수 +1 (모니터링용, fire-and-forget — 응답 지연 없음)
+    pool.query('UPDATE cards SET view_count = view_count + 1 WHERE id = ?', [id]).catch(() => {})
+
     const [benefits] = await pool.query(
       'SELECT id, bnft_type_cd AS type, bnft_desc AS `desc`, discount_rate AS discountRate, monthly_limit_amt AS monthlyLimit FROM card_benefits WHERE card_id = ? ORDER BY id',
       [id]

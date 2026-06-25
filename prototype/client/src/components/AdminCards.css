@@ -1,0 +1,78 @@
+/* ── 관리자 카드 관리 ── */
+.ac-wrap { padding: 4px; }
+.ac-head { margin-bottom: 18px; }
+.ac-title { font-size: 20px; font-weight: 900; color: var(--bnk-text); }
+.ac-sub   { font-size: 13px; color: var(--bnk-gray); }
+
+.ac-msg {
+  background: #EEF7EE; border: 1px solid #BFE0BF; color: #1F7A1F;
+  padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;
+}
+.ac-loading { padding: 40px; text-align: center; color: var(--bnk-gray); }
+
+.ac-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; }
+.ac-table th {
+  text-align: left; padding: 12px 14px; background: var(--bnk-bg);
+  color: var(--bnk-gray); font-weight: 700; font-size: 13px; border-bottom: 2px solid var(--bnk-border);
+}
+.ac-table td { padding: 12px 14px; border-bottom: 1px solid var(--bnk-border); vertical-align: middle; }
+.ac-row-dim { opacity: 0.55; }
+.ac-name { font-weight: 700; color: var(--bnk-text); }
+.ac-num  { text-align: center; font-variant-numeric: tabular-nums; }
+
+.ac-dot { display: block; width: 30px; height: 20px; border-radius: 4px; }
+
+/* 상태 셀렉트 */
+.ac-status {
+  padding: 5px 10px; border-radius: 50px; font-size: 12px; font-weight: 800;
+  border: 1.5px solid; cursor: pointer; font-family: inherit;
+}
+.ac-status--on    { color: #166534; border-color: #166534; background: #F0FFF4; }
+.ac-status--off   { color: #991B1B; border-color: #991B1B; background: #FEF2F2; }
+.ac-status--maint { color: #92400E; border-color: #92400E; background: #FFFBEB; }
+
+.ac-actions { white-space: nowrap; }
+.ac-btn-edit, .ac-btn-del {
+  padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit; border: 1px solid var(--bnk-border); background: #fff;
+}
+.ac-btn-edit { color: var(--bnk-text); margin-right: 6px; }
+.ac-btn-edit:hover { border-color: var(--bnk-red); color: var(--bnk-red); }
+.ac-btn-del { color: #991B1B; border-color: #f0c0c0; }
+.ac-btn-del:hover { background: #FEF2F2; }
+
+/* 수정 모달 */
+.ac-modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.ac-modal {
+  background: #fff; border-radius: 16px; padding: 28px; width: 100%; max-width: 460px;
+  max-height: 90vh; overflow-y: auto;
+}
+.ac-modal-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; color: var(--bnk-text); }
+
+.ac-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.ac-field > span { font-size: 13px; font-weight: 700; color: var(--bnk-gray); }
+.ac-field input, .ac-field textarea, .ac-field select {
+  padding: 10px 12px; border: 1.5px solid var(--bnk-border); border-radius: 8px;
+  font-size: 14px; font-family: inherit; resize: vertical;
+}
+.ac-field input:focus, .ac-field textarea:focus { outline: none; border-color: var(--bnk-red); }
+.ac-field-row { display: flex; gap: 12px; }
+.ac-field-row .ac-field { flex: 1; }
+
+.ac-preview {
+  height: 56px; border-radius: 10px; margin-bottom: 14px;
+  display: flex; align-items: center; padding: 0 16px;
+  color: #fff; font-weight: 800; font-size: 13px;
+}
+
+.ac-modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+.ac-btn-cancel, .ac-btn-save {
+  flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 800;
+  cursor: pointer; font-family: inherit; border: none;
+}
+.ac-btn-cancel { background: var(--bnk-bg); color: var(--bnk-gray); border: 1px solid var(--bnk-border); }
+.ac-btn-save   { background: var(--bnk-red); color: #fff; }
+.ac-btn-save:hover { background: var(--bnk-dark-red); }

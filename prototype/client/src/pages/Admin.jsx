@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import AdminCards from '../components/AdminCards'
 import './Admin.css'
 
 // 인증 헤더 생성 헬퍼: 모든 관리자 API 요청에 Bearer 토큰 첨부
@@ -24,6 +25,7 @@ function Admin() {
   const [file,     setFile]    = useState(null)
   const [loading,  setLoading] = useState(false)
   const [message,  setMessage] = useState('')
+  const [tab,      setTab]     = useState('cards')   // 'cards' | 'terms'
   const fileRef = useRef()
 
   // ---- 초기 로드 ----
@@ -118,6 +120,21 @@ function Admin() {
         </div>
       </header>
 
+      {/* 탭 네비게이션 */}
+      <div className="admin-tabs">
+        <button className={`admin-tab ${tab === 'cards' ? 'on' : ''}`} onClick={() => setTab('cards')}>카드 관리</button>
+        <button className={`admin-tab ${tab === 'terms' ? 'on' : ''}`} onClick={() => setTab('terms')}>약관 관리</button>
+      </div>
+
+      {/* ===== 카드 관리 탭 ===== */}
+      {tab === 'cards' && (
+        <div className="admin-tab-panel">
+          <AdminCards />
+        </div>
+      )}
+
+      {/* ===== 약관 관리 탭 ===== */}
+      {tab === 'terms' && (
       <div className="admin-body">
 
         {/* ---- 좌측 사이드바: 카드 상품 목록 ---- */}
@@ -367,6 +384,7 @@ function Admin() {
         </main>
 
       </div>
+      )}
     </div>
   )
 }

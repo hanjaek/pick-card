@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS cards (
   prd_nm           VARCHAR(200)  NOT NULL,
   card_type_cd     ENUM('신용카드','체크카드')        NOT NULL,   -- 코드 무결성: 잘못된 값 차단
   annual_fee       INT           DEFAULT 0,
-  sale_status_cd   ENUM('ON_SALE','OFF_SALE')         DEFAULT 'ON_SALE',
+  sale_status_cd   ENUM('ON_SALE','OFF_SALE','MAINTENANCE') DEFAULT 'ON_SALE',  -- 판매중/판매중지/점검중
+  view_count       INT           DEFAULT 0,           -- 상세 조회수 (모니터링용)
   launch_dt        DATE,
   color_from       VARCHAR(20),
   color_to         VARCHAR(20),
@@ -301,4 +302,21 @@ CREATE TABLE IF NOT EXISTS custom_designs (
   upd_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (card_id) REFERENCES cards(id)
+);
+
+-- ============================================================
+-- 11. admin_logs  (관리자 활동 로그 - 감사 추적)
+--     누가/언제/무엇을/어떤 대상에 했는지 기록
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  admin_id     BIGINT        NOT NULL,                -- 수행한 관리자 (users.id)
+  admin_name   VARCHAR(100),                          -- 관리자명 (조회 편의)
+  action       VARCHAR(50)   NOT NULL,                -- CARD_UPDATE/CARD_STATUS/CARD_DELETE/APP_PROCESS 등
+  target_type  VARCHAR(30),                           -- CARD / APPLICATION / BENEFIT
+  target_id    BIGINT,                                -- 대상 ID
+  detail       TEXT,                                  -- 변경 내용 요약
+  created_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES users(id),
+  INDEX idx_adminlog_created (created_at)
 );
