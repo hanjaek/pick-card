@@ -39,7 +39,7 @@ x-server-common: &server-common
     context: ../prototype/server
   image: pickard-server:local
   volumes:
-    - uploads-data:/app/uploads   # 업로드 파일 공유 (서버 2대 동일 파일 접근)
+    - /tmp/bnk-uploads:/app/uploads   # 호스트 바인드 마운트 (RAG OCR 파일 공유)
   env_file:
     - ./.env                 # 비밀값(DB_PASSWORD·JWT_SECRET·SESSION_SECRET) 분리
   environment:
@@ -48,7 +48,7 @@ x-server-common: &server-common
     DB_PORT:           "3306"
     DB_USER:           root
     DB_NAME:           bnk_card
-    RAG_URL:           "http://pickard-rag:8000"
+    RAG_URL:           "http://host.docker.internal:8000"
     # 센티넬 3대 모두 등록 → 일부 죽어도 마스터 자동 추적
     REDIS_SENTINELS:   redis-sentinel:26379,redis-sentinel-2:26379,redis-sentinel-3:26379
     REDIS_MASTER_NAME: mymaster
