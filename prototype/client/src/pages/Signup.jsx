@@ -378,7 +378,7 @@ export default function Signup() {
                       <img src={captured} alt="신분증" className="id-preview-img" />
                       <div className="id-preview-badge">촬영 완료</div>
                     </div>
-                    {error && <p className="auth-hint error">{error}</p>}
+                    {error && <div className="auth-error" style={{ marginTop: 16 }}>{error}</div>}
                     <div className="auth-btn-area">
                       <button className="auth-btn auth-btn-primary" onClick={verifyIdCard} disabled={verifying}>
                         {verifying ? '확인 중...' : '신분증 확인하기'}
