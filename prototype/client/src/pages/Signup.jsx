@@ -82,25 +82,40 @@ export default function Signup() {
     setCameraOn(false)
   }, [])
 
-  const capturePhoto = useCallback(() => {
+  const resizeImage = (dataUrl, maxWidth = 1200) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let w = img.width, h = img.height
+        if (w > maxWidth) { h = (h * maxWidth) / w; w = maxWidth }
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.7))
+      }
+      img.src = dataUrl
+    })
+  }
+
+  const capturePhoto = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return
     const video = videoRef.current
     const canvas = canvasRef.current
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
-    setCaptured(dataUrl)
+    canvas.getContext('2d').drawImage(video, 0, 0)
+    const resized = await resizeImage(canvas.toDataURL('image/jpeg', 0.8))
+    setCaptured(resized)
     stopCamera()
   }, [stopCamera])
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
-      setCaptured(ev.target.result)
+    reader.onload = async (ev) => {
+      const resized = await resizeImage(ev.target.result)
+      setCaptured(resized)
       stopCamera()
     }
     reader.readAsDataURL(file)
@@ -124,7 +139,14 @@ export default function Signup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: captured }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch {
+        console.error('서버 응답(JSON 아님):', text.slice(0, 200))
+        setError('서버에서 비정상 응답을 받았습니다. 다시 시도해주세요.')
+        setVerifying(false)
+        return
+      }
 
       if (!res.ok) {
         setError(data.message || '신분증 인식에 실패했습니다.')
@@ -139,8 +161,9 @@ export default function Signup() {
         idNumber: data.idNumber || '',
       }))
       setStep(1)
-    } catch {
-      setError('서버 연결에 실패했습니다.')
+    } catch (err) {
+      console.error('신분증 확인 오류:', err)
+      setError(`서버 연결 실패: ${err.message || err}`)
     } finally {
       setVerifying(false)
     }
@@ -195,11 +218,17 @@ export default function Signup() {
           birthdate: form.birthdate || null,
         }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch {
+        console.error('서버 응답(JSON 아님):', text.slice(0, 200))
+        setError('서버에서 비정상 응답을 받았습니다.'); setLoading(false); return
+      }
       if (!res.ok) { setError(data.message || '회원가입에 실패했습니다.'); setLoading(false); return }
       setDone(true)
-    } catch {
-      setError('서버 연결에 실패했습니다.')
+    } catch (err) {
+      console.error('회원가입 오류:', err)
+      setError(`서버 연결 실패: ${err.message || err}`)
     } finally {
       setLoading(false)
     }

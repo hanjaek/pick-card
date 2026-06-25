@@ -39,25 +39,42 @@ function parseIdCardText(text) {
     }
   }
 
-  // 이름: 한글 2~5자 (줄 전체 또는 줄 내 단독 한글 단어)
-  const exclude = ['주민등록증', '대한민국', '운전면허증', '주민등록', '서울특별', '부산광역',
-                   '경기도', '인천광역', '대구광역', '광주광역', '대전광역', '울산광역', '세종특별',
-                   '강원도', '충청', '전라', '경상', '제주특별', '적성검사', '면허증', '기간']
-  for (const line of lines) {
-    if (name) break
-    // 줄 전체가 한글 이름인 경우
-    const exactMatch = line.match(/^([가-힣]{2,5})$/)
-    if (exactMatch && !exclude.some(e => exactMatch[1].includes(e))) {
-      name = exactMatch[1]
-      break
+  // 이름: 주민번호가 있는 줄의 바로 윗줄에서 한글 이름 추출
+  const exclude = ['주민등록증', '대한민국', '운전면허증', '주민등록', '면허증',
+                   '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
+                   '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
+                   '특별시', '광역시', '특별자치', '적성검사', '기간', '통일', '조회']
+
+  // 1차: 주민번호 줄 기준으로 위쪽에서 이름 찾기
+  let idLineIdx = -1
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].match(/\d{6}\s*[-–—]?\s*\d/)) { idLineIdx = i; break }
+  }
+  if (idLineIdx > 0) {
+    for (let i = idLineIdx - 1; i >= 0; i--) {
+      const words = lines[i].split(/\s+/)
+      for (const w of words) {
+        const m = w.match(/^([가-힣]{2,5})$/)
+        if (m && !exclude.some(e => m[1].includes(e))) {
+          name = m[1]
+          break
+        }
+      }
+      if (name) break
     }
-    // 줄 안에 한글 이름이 포함된 경우 (공백 구분)
-    const words = line.split(/\s+/)
-    for (const w of words) {
-      const wm = w.match(/^([가-힣]{2,4})$/)
-      if (wm && !exclude.some(e => wm[1].includes(e))) {
-        name = wm[1]
-        break
+  }
+
+  // 2차 fallback: 전체 줄에서 한글 2~4자 단어 찾기 (주소/키워드 제외)
+  if (!name) {
+    for (const line of lines) {
+      if (name) break
+      const words = line.split(/\s+/)
+      for (const w of words) {
+        const m = w.match(/^([가-힣]{2,4})$/)
+        if (m && !exclude.some(e => m[1].includes(e))) {
+          name = m[1]
+          break
+        }
       }
     }
   }

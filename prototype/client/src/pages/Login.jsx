@@ -39,7 +39,14 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch {
+        console.error('서버 응답(JSON 아님):', text.slice(0, 300))
+        setError('서버 응답 오류 — 브라우저 주소가 localhost:3000인지 확인해주세요.')
+        setLoading(false)
+        return
+      }
 
       if (!res.ok) {
         setError(data.message || '로그인에 실패했습니다.')
@@ -51,8 +58,9 @@ export default function Login() {
       localStorage.setItem('isAdmin',  data.is_admin ? 'true' : 'false')
       localStorage.setItem('userName', data.name || '')
       navigate(data.is_admin ? '/admin' : '/')
-    } catch {
-      setError('서버 연결에 실패했습니다.')
+    } catch (err) {
+      console.error('로그인 오류:', err)
+      setError(`서버 연결 실패: ${err.message || err}`)
       setLoading(false)
     }
   }
