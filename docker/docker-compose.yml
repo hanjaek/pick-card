@@ -29,6 +29,7 @@ volumes:
   sentinel2-data:
   sentinel3-data:
   mysql-data:
+  uploads-data:      # 약관 PDF 등 업로드 파일 — 서버 2대가 공유
   # redisinsight 는 호스트 폴더(bind mount)로 분리 → down -v 해도 연결 설정 유지
 
 # 백엔드 서버 2대 공통 설정 (YAML 앵커로 중복 제거)
@@ -36,6 +37,8 @@ x-server-common: &server-common
   build:
     context: ../prototype/server
   image: pickard-server:local
+  volumes:
+    - uploads-data:/app/uploads   # 업로드 파일 공유 (서버 2대 동일 파일 접근)
   env_file:
     - ./.env                 # 비밀값(DB_PASSWORD·JWT_SECRET·SESSION_SECRET) 분리
   environment:
