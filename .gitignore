@@ -45,3 +45,4 @@ chroma_db/
 docker/REDIS_TROUBLESHOOTING.md
 *.local.md
 docker/redisinsight-data/
+job_description.md
