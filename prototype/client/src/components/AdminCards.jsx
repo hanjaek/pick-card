@@ -188,10 +188,16 @@ export default function AdminCards() {
             </label>
             <div className="ac-field-row">
               <label className="ac-field"><span>색상 시작</span>
-                <input value={editing.colorFrom || ''} onChange={e => setEditing(p => ({ ...p, colorFrom: e.target.value }))} placeholder="#1B3A5C" />
+                <div className="ac-color-wrap">
+                  <input type="color" className="ac-color-picker" value={editing.colorFrom || '#1B3A5C'} onChange={e => setEditing(p => ({ ...p, colorFrom: e.target.value }))} />
+                  <input className="ac-color-text" value={editing.colorFrom || ''} onChange={e => setEditing(p => ({ ...p, colorFrom: e.target.value }))} placeholder="#1B3A5C" />
+                </div>
               </label>
               <label className="ac-field"><span>색상 끝</span>
-                <input value={editing.colorTo || ''} onChange={e => setEditing(p => ({ ...p, colorTo: e.target.value }))} placeholder="#2D6195" />
+                <div className="ac-color-wrap">
+                  <input type="color" className="ac-color-picker" value={editing.colorTo || '#2D6195'} onChange={e => setEditing(p => ({ ...p, colorTo: e.target.value }))} />
+                  <input className="ac-color-text" value={editing.colorTo || ''} onChange={e => setEditing(p => ({ ...p, colorTo: e.target.value }))} placeholder="#2D6195" />
+                </div>
               </label>
             </div>
             <div className="ac-preview" style={{ background: `linear-gradient(135deg, ${editing.colorFrom}, ${editing.colorTo})` }}>
@@ -256,10 +262,16 @@ export default function AdminCards() {
             </label>
             <div className="ac-field-row">
               <label className="ac-field"><span>색상 시작</span>
-                <input value={creating.colorFrom} onChange={e => setCreating(p => ({ ...p, colorFrom: e.target.value }))} />
+                <div className="ac-color-wrap">
+                  <input type="color" className="ac-color-picker" value={creating.colorFrom} onChange={e => setCreating(p => ({ ...p, colorFrom: e.target.value }))} />
+                  <input className="ac-color-text" value={creating.colorFrom} onChange={e => setCreating(p => ({ ...p, colorFrom: e.target.value }))} />
+                </div>
               </label>
               <label className="ac-field"><span>색상 끝</span>
-                <input value={creating.colorTo} onChange={e => setCreating(p => ({ ...p, colorTo: e.target.value }))} />
+                <div className="ac-color-wrap">
+                  <input type="color" className="ac-color-picker" value={creating.colorTo} onChange={e => setCreating(p => ({ ...p, colorTo: e.target.value }))} />
+                  <input className="ac-color-text" value={creating.colorTo} onChange={e => setCreating(p => ({ ...p, colorTo: e.target.value }))} />
+                </div>
               </label>
             </div>
             <div className="ac-preview" style={{ background: `linear-gradient(135deg, ${creating.colorFrom}, ${creating.colorTo})` }}>

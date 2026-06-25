@@ -48,10 +48,14 @@ function Admin() {
   const [tab,      setTab]     = useState('dashboard')   // dashboard | cards | apps | terms
   const fileRef = useRef()
 
-  // ---- 초기 로드 ----
+  // ---- 초기 로드 + 약관 탭 진입 시 카드 목록 갱신 ----
   useEffect(() => {
     fetchCards()
   }, [])
+
+  useEffect(() => {
+    if (tab === 'terms') fetchCards()
+  }, [tab])
 
   // 카드 선택 시 약관 목록 로드
   useEffect(() => {
@@ -59,9 +63,10 @@ function Admin() {
   }, [selectedCard])
 
   const fetchCards = async () => {
-    const res = await axios.get('/api/cards')
+    const token = localStorage.getItem('token')
+    const res = await axios.get('/api/admin/cards', { headers: { Authorization: `Bearer ${token}` } })
     setCards(res.data)
-    if (res.data.length > 0) setSelectedCard(res.data[0])
+    if (!selectedCard && res.data.length > 0) setSelectedCard(res.data[0])
   }
 
   const fetchTerms = async (cardId) => {
