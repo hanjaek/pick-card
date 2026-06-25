@@ -222,11 +222,11 @@ function Admin() {
                 {/* 카드 색상 인디케이터 */}
                 <span
                   className="sidebar-dot"
-                  style={{ background: `linear-gradient(135deg, ${card.color_from}, ${card.color_to})` }}
+                  style={{ background: `linear-gradient(135deg, ${card.colorFrom}, ${card.colorTo})` }}
                 />
                 <div className="sidebar-item-text">
-                  <span className="sidebar-item-name">{card.prd_nm}</span>
-                  <span className="sidebar-item-type">{card.card_type_cd}</span>
+                  <span className="sidebar-item-name">{card.name}</span>
+                  <span className="sidebar-item-type">{card.type}</span>
                 </div>
               </li>
             ))}
@@ -240,7 +240,7 @@ function Admin() {
               {/* 섹션 헤더 */}
               <div className="admin-section-header">
                 <div>
-                  <h2 className="admin-section-title">{selectedCard.prd_nm}</h2>
+                  <h2 className="admin-section-title">{selectedCard.name}</h2>
                   <span className="admin-section-sub">이 카드의 약관 · 추가 / 수정(새 버전) / 삭제</span>
                 </div>
                 <button
@@ -262,7 +262,7 @@ function Admin() {
               {showUpload && (
                 <div className="upload-box">
                   <div className="upload-box-header">
-                    <h3>새 약관 PDF 등록 <span className="upload-box-card">— {selectedCard.prd_nm}</span></h3>
+                    <h3>새 약관 PDF 등록 <span className="upload-box-card">— {selectedCard.name}</span></h3>
                     <button className="btn-close" onClick={() => setShowUpload(false)}>X</button>
                   </div>
                   <form onSubmit={handleUpload} className="upload-form">
