@@ -1,97 +1,154 @@
-/* 관리자 페이지 전용 스타일 */
-
-.admin-layout {
+/* ================================================================
+   관리자 콘솔 — 좌측 다크 네비 + 라이트 콘텐츠 (백오피스 스타일)
+   ================================================================ */
+.admin-shell {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  background: #F7F5F4;
-  font-family: 'Noto Sans KR', sans-serif;
+  background: #F4F2F0;
+  font-family: 'SUIT Variable', 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
-/* ---- 관리자 헤더: 레드 ---- */
-.admin-header {
-  height: 64px;
-  background: var(--bnk-red);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
+/* ───── 좌측 내비게이션 (다크) ───── */
+.admin-nav {
+  width: 236px;
   flex-shrink: 0;
-  box-shadow: 0 2px 12px rgba(139, 3, 4, 0.3);
+  background: #211C18;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
-.admin-header-left {
+.admin-nav-brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 11px;
+  padding: 22px 22px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-
-.admin-logo {
-  background: #fff;
-  color: var(--bnk-red);
-  font-size: 14px;
-  font-weight: 900;
-  padding: 5px 12px;
-  border-radius: 6px;
-  letter-spacing: 1px;
-}
-
-.admin-title {
-  font-size: 17px;
-  font-weight: 700;
+.admin-nav-logo {
+  background: var(--bnk-red);
   color: #fff;
-}
-
-.admin-badge {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
-}
-
-.admin-header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.admin-user {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 6px 9px;
+  border-radius: 7px;
 }
+.admin-nav-brandtext { display: flex; flex-direction: column; line-height: 1.25; }
+.admin-nav-name { font-size: 15px; font-weight: 800; color: #fff; }
+.admin-nav-sub  { font-size: 11px; color: #8A8079; letter-spacing: 0.3px; }
 
-.admin-logout {
-  padding: 7px 18px;
+.admin-nav-menu {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border: none;
+  background: none;
+  color: #B5ABA2;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 9px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+.admin-nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.admin-nav-item.on {
+  background: rgba(215, 25, 25, 0.16);
+  color: #fff;
+}
+.admin-nav-item.on::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--bnk-red);
+  border-radius: 0 3px 3px 0;
+}
+.admin-nav-ic { font-size: 14px; width: 18px; text-align: center; opacity: 0.9; }
+
+.admin-nav-foot {
+  padding: 16px 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.admin-nav-user { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.admin-nav-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--bnk-red); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.admin-nav-utext { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+.admin-nav-uname { font-size: 13px; font-weight: 700; color: #fff; }
+.admin-nav-urole { font-size: 11px; color: #8A8079; }
+.admin-nav-logout {
+  width: 100%;
+  padding: 9px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #D8CFC7;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
-  color: #fff;
+  font-family: inherit;
   cursor: pointer;
   transition: var(--transition);
-  font-family: inherit;
+}
+.admin-nav-logout:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* ───── 콘텐츠 영역 ───── */
+.admin-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.admin-topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--bnk-border);
+  padding: 18px 32px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.admin-crumb { font-size: 12px; color: var(--bnk-light-gray); margin-bottom: 3px; }
+.admin-topbar-title { font-size: 20px; font-weight: 900; color: var(--bnk-text); letter-spacing: -0.4px; }
+.admin-topbar-sub { font-size: 13px; color: var(--bnk-gray); padding-bottom: 2px; }
+
+.admin-view {
+  flex: 1;
+  padding: 26px 32px 40px;
+  overflow-y: auto;
 }
 
-.admin-logout:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #fff;
-}
-
-/* ---- 바디 ---- */
+/* ---- 약관 탭: 카드형 패널 (좌 카드목록 + 우 약관) ---- */
 .admin-body {
   display: flex;
-  flex: 1;
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 14px;
   overflow: hidden;
+  min-height: 540px;
 }
 
-/* ---- 좌측 사이드바 ---- */
+/* ---- 좌측 카드 목록 ---- */
 .admin-sidebar {
   width: 240px;
-  background: #fff;
+  background: #FBFAF9;
   border-right: 1px solid var(--bnk-border);
   display: flex;
   flex-direction: column;

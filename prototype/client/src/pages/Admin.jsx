@@ -11,6 +11,21 @@ const authHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
 })
 
+// 좌측 내비게이션 메뉴
+const NAV = [
+  { key: 'dashboard', label: '대시보드',  icon: '◴' },
+  { key: 'cards',     label: '카드 관리',  icon: '▦' },
+  { key: 'apps',      label: '신청 관리',  icon: '▤' },
+  { key: 'terms',     label: '약관 관리',  icon: '▣' },
+]
+// 페이지 제목/설명
+const PAGE = {
+  dashboard: ['대시보드',   '운영 현황을 한눈에'],
+  cards:     ['카드 관리',   '카드 상품 등록 · 수정 · 노출 제어'],
+  apps:      ['신청 관리',   '회원 카드 신청 승인 · 거절'],
+  terms:     ['약관 관리',   '약관 PDF · 버전 · 변경 이력'],
+}
+
 function Admin() {
   const navigate = useNavigate()
 
@@ -106,46 +121,66 @@ function Admin() {
     navigate('/login')
   }
 
+  const userName = localStorage.getItem('userName') || '관리자'
+
   return (
-    <div className="admin-layout">
+    <div className="admin-shell">
 
-      {/* ---- 상단 관리자 헤더 ---- */}
-      <header className="admin-header">
-        <div className="admin-header-left">
-          <div className="admin-logo">Pickard</div>
-          <span className="admin-title">관리자 페이지</span>
-          <span className="admin-badge">약관 관리</span>
+      {/* ───── 좌측 내비게이션 ───── */}
+      <aside className="admin-nav">
+        <div className="admin-nav-brand">
+          <span className="admin-nav-logo">BNK</span>
+          <div className="admin-nav-brandtext">
+            <span className="admin-nav-name">Pickard</span>
+            <span className="admin-nav-sub">Admin Console</span>
+          </div>
         </div>
-        <div className="admin-header-right">
-          <span className="admin-user">{localStorage.getItem('userName')} 관리자</span>
-          <button className="admin-logout" onClick={handleLogout}>로그아웃</button>
-        </div>
-      </header>
 
-      {/* 탭 네비게이션 */}
-      <div className="admin-tabs">
-        <button className={`admin-tab ${tab === 'dashboard' ? 'on' : ''}`} onClick={() => setTab('dashboard')}>대시보드</button>
-        <button className={`admin-tab ${tab === 'cards' ? 'on' : ''}`} onClick={() => setTab('cards')}>카드 관리</button>
-        <button className={`admin-tab ${tab === 'apps' ? 'on' : ''}`} onClick={() => setTab('apps')}>신청 관리</button>
-        <button className={`admin-tab ${tab === 'terms' ? 'on' : ''}`} onClick={() => setTab('terms')}>약관 관리</button>
-      </div>
+        <nav className="admin-nav-menu">
+          {NAV.map(n => (
+            <button
+              key={n.key}
+              className={`admin-nav-item ${tab === n.key ? 'on' : ''}`}
+              onClick={() => setTab(n.key)}
+            >
+              <span className="admin-nav-ic">{n.icon}</span>
+              {n.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="admin-nav-foot">
+          <div className="admin-nav-user">
+            <span className="admin-nav-avatar">{userName[0]}</span>
+            <div className="admin-nav-utext">
+              <span className="admin-nav-uname">{userName}</span>
+              <span className="admin-nav-urole">시스템 관리자</span>
+            </div>
+          </div>
+          <button className="admin-nav-logout" onClick={handleLogout}>로그아웃</button>
+        </div>
+      </aside>
+
+      {/* ───── 콘텐츠 ───── */}
+      <div className="admin-content">
+        <header className="admin-topbar">
+          <div>
+            <div className="admin-crumb">관리자 &rsaquo; {PAGE[tab][0]}</div>
+            <h1 className="admin-topbar-title">{PAGE[tab][0]}</h1>
+          </div>
+          <span className="admin-topbar-sub">{PAGE[tab][1]}</span>
+        </header>
+
+        <div className="admin-view">
 
       {/* ===== 대시보드 탭 ===== */}
-      {tab === 'dashboard' && (
-        <div className="admin-tab-panel"><AdminDashboard /></div>
-      )}
+      {tab === 'dashboard' && <AdminDashboard />}
 
       {/* ===== 카드 관리 탭 ===== */}
-      {tab === 'cards' && (
-        <div className="admin-tab-panel">
-          <AdminCards />
-        </div>
-      )}
+      {tab === 'cards' && <AdminCards />}
 
       {/* ===== 신청 관리 탭 ===== */}
-      {tab === 'apps' && (
-        <div className="admin-tab-panel"><AdminApplications /></div>
-      )}
+      {tab === 'apps' && <AdminApplications />}
 
       {/* ===== 약관 관리 탭 ===== */}
       {tab === 'terms' && (
@@ -399,6 +434,9 @@ function Admin() {
 
       </div>
       )}
+
+        </div>{/* admin-view */}
+      </div>{/* admin-content */}
     </div>
   )
 }
