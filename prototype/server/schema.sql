@@ -309,6 +309,38 @@ CREATE TABLE IF NOT EXISTS custom_designs (
 );
 
 -- ============================================================
+-- 11-1. transactions  (회원 결제/거래 내역 - 소비 분석용)
+--    실제 결제 시스템 대용: 회원가입 시 모의 거래를 생성해 채움
+-- ============================================================
+CREATE TABLE IF NOT EXISTS transactions (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id      BIGINT        NOT NULL,
+  category_cd  ENUM('CAFE','TRANSPORT','SHOPPING','TELECOM','CULTURE','PAY') NOT NULL,
+  merchant_nm  VARCHAR(100),                          -- 가맹점명
+  amount       INT           NOT NULL,                -- 결제금액(원)
+  paid_dt      DATE          NOT NULL,                -- 결제일
+  reg_dt       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_tx_user_date (user_id, paid_dt)
+);
+
+-- 데모 계정(testuser)에 이번 달 모의 거래 시드 (소비 분석 즉시 동작)
+INSERT IGNORE INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt)
+SELECT u.id, t.category_cd, t.merchant_nm, t.amount, DATE_FORMAT(CURDATE(), '%Y-%m-05')
+FROM users u
+CROSS JOIN (
+            SELECT 'CAFE'      AS category_cd, '스타벅스 서면점'  AS merchant_nm, 22000 AS amount
+  UNION ALL SELECT 'CAFE',      'GS25 광안점',     18000
+  UNION ALL SELECT 'TRANSPORT', '부산교통공사',     41000
+  UNION ALL SELECT 'SHOPPING',  '이마트 해운대점',  56000
+  UNION ALL SELECT 'SHOPPING',  '쿠팡',            33000
+  UNION ALL SELECT 'TELECOM',   'SKT 통신요금',     55000
+  UNION ALL SELECT 'CULTURE',   'CGV 센텀시티',     28000
+  UNION ALL SELECT 'PAY',       '네이버페이',       47000
+) t
+WHERE u.username = 'testuser';
+
+-- ============================================================
 -- 11. admin_logs  (관리자 활동 로그 - 감사 추적)
 --     누가/언제/무엇을/어떤 대상에 했는지 기록
 -- ============================================================

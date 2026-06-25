@@ -12,6 +12,34 @@ const SESSION_DURATION_MS = 60 * 60 * 1000
 // connect-redis 가 세션을 저장할 때 쓰는 키 접두사 (기본값 'sess:')
 const SESSION_PREFIX = 'sess:'
 
+// 회원가입 시 이번 달 모의 거래를 생성 (소비 분석용, 사용자마다 다른 패턴)
+async function seedTransactions(userId) {
+  const CATS = [
+    { cd: 'CAFE',      names: ['스타벅스', '메가커피', 'GS25', 'CU'],         range: [3000, 25000], n: [2, 4] },
+    { cd: 'TRANSPORT', names: ['부산교통공사', '버스요금', '카카오택시'],       range: [1300, 15000], n: [2, 4] },
+    { cd: 'SHOPPING',  names: ['이마트', '쿠팡', '롯데마트', '무신사'],         range: [15000, 80000], n: [1, 3] },
+    { cd: 'TELECOM',   names: ['SKT 통신요금', 'KT 통신요금'],                 range: [40000, 70000], n: [1, 1] },
+    { cd: 'CULTURE',   names: ['CGV', '메가박스', '교보문고'],                  range: [10000, 35000], n: [0, 2] },
+    { cd: 'PAY',       names: ['네이버페이', '카카오페이', '토스'],             range: [5000, 60000], n: [1, 3] },
+  ]
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+  const rows = []
+  const ym = new Date().toISOString().slice(0, 7) // YYYY-MM
+  for (const c of CATS) {
+    const count = rnd(c.n[0], c.n[1])
+    for (let i = 0; i < count; i++) {
+      const day = String(rnd(1, 27)).padStart(2, '0')
+      rows.push([userId, c.cd, c.names[rnd(0, c.names.length - 1)], rnd(c.range[0], c.range[1]), `${ym}-${day}`])
+    }
+  }
+  if (rows.length) {
+    await pool.query(
+      'INSERT INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt) VALUES ?',
+      [rows]
+    )
+  }
+}
+
 /* ======================================================
    POST /api/auth/register  -  회원가입
    ====================================================== */
@@ -40,10 +68,14 @@ router.post('/register', async (req, res) => {
 
     // 상세 정보는 user_details 테이블에 별도 저장
     const [inserted] = await pool.query('SELECT id FROM users WHERE username = ?', [username])
+    const newUserId = inserted[0].id
     await pool.query(
       'INSERT INTO user_details (user_id, email, birth_dt) VALUES (?, ?, ?)',
-      [inserted[0].id, email, birthdate || null]
+      [newUserId, email, birthdate || null]
     )
+
+    // 소비 분석용 모의 거래 자동 생성 (사용자마다 다른 패턴 — 카테고리별 랜덤 금액)
+    await seedTransactions(newUserId)
 
     res.status(201).json({ message: '회원가입이 완료되었습니다.' })
   } catch (err) {

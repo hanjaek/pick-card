@@ -29,6 +29,7 @@ const ocrRouter          = require('./routes/ocr')
 const chatbotRoutes      = require('./routes/chatbot')
 const verifyRoutes       = require('./routes/verify')
 const adminRoutes        = require('./routes/admin')
+const mypageRoutes       = require('./routes/mypage')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -82,6 +83,7 @@ app.use('/api/ocr',          ocrRouter)
 app.use('/api/chatbot',      chatbotRoutes)
 app.use('/api/verify',       verifyRoutes)
 app.use('/api/admin',        adminRoutes)
+app.use('/api/mypage',       mypageRoutes)
 
 /* ================================================================
    정적 파일 서빙 (약관 PDF 등)

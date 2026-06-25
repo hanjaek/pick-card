@@ -2,26 +2,24 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './MyPage.css'
 
-/* ── 이달 모의 소비 데이터 ─────────────────────────────────── */
-const SPENDING = [
-  { category: '카페·편의점', icon: '☕', amount: 83000,  keywords: ['카페', '편의점'] },
-  { category: '대중교통',   icon: '🚌', amount: 52000,  keywords: ['대중교통', '버스', '지하철', '택시', '교통'] },
-  { category: '마트·쇼핑',  icon: '🛍', amount: 78000,  keywords: ['마트', '쇼핑', '온라인'] },
-  { category: '통신요금',   icon: '📱', amount: 55000,  keywords: ['통신', '휴대폰', '휴대'] },
-  { category: '영화·문화',  icon: '🎬', amount: 22000,  keywords: ['영화', '문화'] },
-  { category: '간편결제',   icon: '💳', amount: 67000,  keywords: ['간편결제', '페이'] },
-]
+/* ── 카테고리 설정 (아이콘·매칭 키워드) — 금액은 DB(거래내역)에서 ── */
+const CATEGORY_CONFIG = {
+  CAFE:      { category: '카페·편의점', icon: '☕', keywords: ['카페', '편의점', '커피'] },
+  TRANSPORT: { category: '대중교통',   icon: '🚌', keywords: ['대중교통', '버스', '지하철', '택시', '교통', 'KTX'] },
+  SHOPPING:  { category: '마트·쇼핑',  icon: '🛍', keywords: ['마트', '쇼핑', '온라인', '쿠팡', '백화점'] },
+  TELECOM:   { category: '통신요금',   icon: '📱', keywords: ['통신', '휴대폰', '휴대'] },
+  CULTURE:   { category: '영화·문화',  icon: '🎬', keywords: ['영화', '문화', '공연', '도서'] },
+  PAY:       { category: '간편결제',   icon: '💳', keywords: ['간편결제', '페이'] },
+}
+const CATEGORY_ORDER = ['CAFE', 'TRANSPORT', 'SHOPPING', 'TELECOM', 'CULTURE', 'PAY']
 
-const TOTAL   = SPENDING.reduce((s, c) => s + c.amount, 0)
-const MAX_CAT = Math.max(...SPENDING.map(c => c.amount))
-
-function calcSavings(benefits = []) {
+function calcSavings(benefits = [], spending = []) {
   let total = 0
   for (const b of benefits) {
     const rate = parseFloat(b.discountRate) || 0
     if (rate === 0) continue
-    const desc = (b.desc || '').toLowerCase()
-    for (const cat of SPENDING) {
+    const desc = (b.desc || '')
+    for (const cat of spending) {
       if (cat.keywords.some(k => desc.includes(k))) {
         const raw   = cat.amount * (rate / 100)
         const limit = b.monthlyLimit ? Number(b.monthlyLimit) : Infinity
@@ -55,19 +53,27 @@ export default function MyPage() {
 
   const [allCards, setAllCards] = useState([])
   const [applied,  setApplied]  = useState([])
+  const [spending, setSpending] = useState([])   // DB 거래 집계 (카테고리별)
   const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
     if (!token) { navigate('/login'); return }
+    const auth = { headers: { Authorization: `Bearer ${token}` } }
     Promise.all([
       fetch('/api/cards').then(r => r.json()),
-      fetch('/api/applications/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then(r => r.json()),
+      fetch('/api/applications/me', auth).then(r => r.json()),
+      fetch('/api/mypage/spending', auth).then(r => r.json()),
     ])
-      .then(([cards, apps]) => {
+      .then(([cards, apps, spend]) => {
         setAllCards(Array.isArray(cards) ? cards : [])
         setApplied(Array.isArray(apps)  ? apps  : [])
+        // DB 집계(카테고리·금액)를 config(아이콘·키워드)와 합쳐 표시용 배열 구성
+        const amountByCat = {}
+        ;(Array.isArray(spend) ? spend : []).forEach(s => { amountByCat[s.category] = Number(s.amount) })
+        const merged = CATEGORY_ORDER
+          .map(cd => ({ ...CATEGORY_CONFIG[cd], amount: amountByCat[cd] || 0 }))
+          .filter(c => c.amount > 0)
+        setSpending(merged)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -77,13 +83,16 @@ export default function MyPage() {
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
+  const TOTAL   = spending.reduce((s, c) => s + c.amount, 0)
+  const MAX_CAT = Math.max(1, ...spending.map(c => c.amount))
+
   const appliedIds    = new Set(applied.map(a => a.cardId))
   const myCards       = allCards.filter(c =>  appliedIds.has(c.id))
   const notApplied    = allCards.filter(c => !appliedIds.has(c.id))
 
-  const mySavings     = myCards.reduce((s, c) => s + calcSavings(c.benefits), 0)
+  const mySavings     = myCards.reduce((s, c) => s + calcSavings(c.benefits, spending), 0)
   const opportunities = notApplied
-    .map(c => ({ ...c, savings: calcSavings(c.benefits) }))
+    .map(c => ({ ...c, savings: calcSavings(c.benefits, spending) }))
     .filter(c => c.savings > 0)
     .sort((a, b) => b.savings - a.savings)
     .slice(0, 3)
@@ -134,7 +143,7 @@ export default function MyPage() {
               이달 총 <strong>{TOTAL.toLocaleString()}원</strong> 소비
             </p>
             <div className="mp-spending-list">
-              {SPENDING.map(cat => (
+              {spending.map(cat => (
                 <div key={cat.category} className="mp-spending-row">
                   <span className="mp-spending-icon">{cat.icon}</span>
                   <span className="mp-spending-cat">{cat.category}</span>
