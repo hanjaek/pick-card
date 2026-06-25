@@ -4,6 +4,7 @@ import axios from 'axios'
 import AdminCards from '../components/AdminCards'
 import AdminDashboard from '../components/AdminDashboard'
 import AdminApplications from '../components/AdminApplications'
+import AdminLogs from '../components/AdminLogs'
 import './Admin.css'
 
 // 인증 헤더 생성 헬퍼: 모든 관리자 API 요청에 Bearer 토큰 첨부
@@ -17,6 +18,7 @@ const NAV = [
   { key: 'cards',     label: '카드 관리',  icon: '▦' },
   { key: 'apps',      label: '신청 관리',  icon: '▤' },
   { key: 'terms',     label: '약관 관리',  icon: '▣' },
+  { key: 'logs',      label: '활동 로그',  icon: '☷' },
 ]
 // 페이지 제목/설명
 const PAGE = {
@@ -24,6 +26,7 @@ const PAGE = {
   cards:     ['카드 관리',   '카드 상품 등록 · 수정 · 노출 제어'],
   apps:      ['신청 관리',   '회원 카드 신청 승인 · 거절'],
   terms:     ['약관 관리',   '약관 PDF · 버전 · 변경 이력'],
+  logs:      ['활동 로그',   '관리자 변경 이력 · 감사 추적'],
 }
 
 function Admin() {
@@ -181,6 +184,9 @@ function Admin() {
 
       {/* ===== 신청 관리 탭 ===== */}
       {tab === 'apps' && <AdminApplications />}
+
+      {/* ===== 활동 로그 탭 ===== */}
+      {tab === 'logs' && <AdminLogs />}
 
       {/* ===== 약관 관리 탭 ===== */}
       {tab === 'terms' && (
