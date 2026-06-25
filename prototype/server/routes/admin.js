@@ -154,6 +154,108 @@ router.delete('/cards/:id', requireAdmin, async (req, res) => {
 })
 
 /* ======================================================
+   GET /api/admin/applications  -  신청 목록 (회원·카드 조인)
+   ?status=PENDING|APPROVED|REJECTED|CANCELLED (선택)
+   ====================================================== */
+router.get('/applications', requireAdmin, async (req, res) => {
+  const { status } = req.query
+  try {
+    let sql = `
+      SELECT
+        a.id, a.status, a.applied_dt AS appliedDt, a.processed_dt AS processedDt,
+        a.applicant_name AS applicantName, a.phone_no AS phoneNo, a.email,
+        a.address, a.residence_type AS residenceType, a.income_type AS incomeType,
+        a.job_yn AS jobYn, a.billing_day AS billingDay, a.credit_limit AS creditLimit,
+        c.id AS cardId, c.prd_nm AS cardName, c.card_type_cd AS cardType,
+        u.username AS userId
+      FROM card_applications a
+      JOIN cards c ON c.id = a.card_id
+      JOIN users u ON u.id = a.user_id
+    `
+    const params = []
+    if (status) { sql += ' WHERE a.status = ?'; params.push(status) }
+    sql += ' ORDER BY a.applied_dt DESC'
+
+    const [rows] = await pool.query(sql, params)
+    res.json(rows)
+  } catch (err) {
+    console.error('[admin GET /applications]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
+/* ======================================================
+   PATCH /api/admin/applications/:id/status  -  승인/거절
+   APPROVED(승인) / REJECTED(거절)
+   ====================================================== */
+router.patch('/applications/:id/status', requireAdmin, async (req, res) => {
+  const { id } = req.params
+  const { status } = req.body
+  const ALLOWED = ['APPROVED', 'REJECTED']
+  const LABEL   = { APPROVED: '승인', REJECTED: '거절' }
+
+  if (!ALLOWED.includes(status)) {
+    return res.status(400).json({ message: '승인 또는 거절만 가능합니다.' })
+  }
+  try {
+    const [[app]] = await pool.query(
+      `SELECT a.id, a.applicant_name, c.prd_nm AS cardName
+       FROM card_applications a JOIN cards c ON c.id = a.card_id WHERE a.id = ?`, [id]
+    )
+    if (!app) return res.status(404).json({ message: '신청을 찾을 수 없습니다.' })
+
+    await pool.query(
+      'UPDATE card_applications SET status = ?, processed_dt = NOW() WHERE id = ?',
+      [status, id]
+    )
+    await writeLog(req.admin, 'APP_PROCESS', 'APPLICATION', id,
+      `${app.applicant_name}님의 '${app.cardName}' 신청 ${LABEL[status]}`)
+    res.json({ message: `신청을 ${LABEL[status]} 처리했습니다.` })
+  } catch (err) {
+    console.error('[admin PATCH /applications/:id/status]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
+/* ======================================================
+   GET /api/admin/dashboard  -  운영 통계 (실제 DB 집계)
+   ====================================================== */
+router.get('/dashboard', requireAdmin, async (req, res) => {
+  try {
+    // 요약 카운트 (한 번에)
+    const [[summary]] = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM users WHERE is_admin = 0)                      AS memberCount,
+        (SELECT COUNT(*) FROM card_applications)                            AS applyTotal,
+        (SELECT COUNT(*) FROM cards WHERE sale_status_cd = 'ON_SALE')       AS onSaleCards,
+        (SELECT COUNT(*) FROM card_applications WHERE status = 'PENDING')   AS pendingCount
+    `)
+
+    // 상태별 분포
+    const [statusRows] = await pool.query(
+      `SELECT status, COUNT(*) AS cnt FROM card_applications GROUP BY status`
+    )
+    const byStatus = { PENDING: 0, APPROVED: 0, REJECTED: 0, CANCELLED: 0 }
+    statusRows.forEach(r => { byStatus[r.status] = r.cnt })
+
+    // 카드별 신청 수 (인기 순위) — 취소 제외
+    const [popular] = await pool.query(`
+      SELECT c.id, c.prd_nm AS name, c.card_type_cd AS type, c.view_count AS viewCount,
+             COUNT(a.id) AS applyCount
+      FROM cards c
+      LEFT JOIN card_applications a ON a.card_id = c.id AND a.status != 'CANCELLED'
+      GROUP BY c.id
+      ORDER BY applyCount DESC, viewCount DESC
+    `)
+
+    res.json({ summary, byStatus, popular })
+  } catch (err) {
+    console.error('[admin GET /dashboard]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
+/* ======================================================
    GET /api/admin/logs  -  관리자 활동 로그 (최근 50건)
    ====================================================== */
 router.get('/logs', requireAdmin, async (req, res) => {

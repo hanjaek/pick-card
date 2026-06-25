@@ -271,8 +271,8 @@ CREATE TABLE IF NOT EXISTS card_applications (
   apply_method    ENUM('INTERNET','MOBILE','BRANCH') DEFAULT 'INTERNET',
   -- AI 커스텀 디자인 연결 (선택)
   design_id       BIGINT,
-  -- 상태
-  status          ENUM('PENDING','APPROVED','CANCELLED') DEFAULT 'PENDING',
+  -- 상태: 대기 / 승인 / 거절(관리자) / 취소(사용자)
+  status          ENUM('PENDING','APPROVED','REJECTED','CANCELLED') DEFAULT 'PENDING',
   applied_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   processed_dt    TIMESTAMP     NULL,
   FOREIGN KEY (user_id)  REFERENCES users(id),

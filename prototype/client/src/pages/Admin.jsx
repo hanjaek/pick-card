@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import AdminCards from '../components/AdminCards'
+import AdminDashboard from '../components/AdminDashboard'
+import AdminApplications from '../components/AdminApplications'
 import './Admin.css'
 
 // 인증 헤더 생성 헬퍼: 모든 관리자 API 요청에 Bearer 토큰 첨부
@@ -25,7 +27,7 @@ function Admin() {
   const [file,     setFile]    = useState(null)
   const [loading,  setLoading] = useState(false)
   const [message,  setMessage] = useState('')
-  const [tab,      setTab]     = useState('cards')   // 'cards' | 'terms'
+  const [tab,      setTab]     = useState('dashboard')   // dashboard | cards | apps | terms
   const fileRef = useRef()
 
   // ---- 초기 로드 ----
@@ -122,15 +124,27 @@ function Admin() {
 
       {/* 탭 네비게이션 */}
       <div className="admin-tabs">
+        <button className={`admin-tab ${tab === 'dashboard' ? 'on' : ''}`} onClick={() => setTab('dashboard')}>대시보드</button>
         <button className={`admin-tab ${tab === 'cards' ? 'on' : ''}`} onClick={() => setTab('cards')}>카드 관리</button>
+        <button className={`admin-tab ${tab === 'apps' ? 'on' : ''}`} onClick={() => setTab('apps')}>신청 관리</button>
         <button className={`admin-tab ${tab === 'terms' ? 'on' : ''}`} onClick={() => setTab('terms')}>약관 관리</button>
       </div>
+
+      {/* ===== 대시보드 탭 ===== */}
+      {tab === 'dashboard' && (
+        <div className="admin-tab-panel"><AdminDashboard /></div>
+      )}
 
       {/* ===== 카드 관리 탭 ===== */}
       {tab === 'cards' && (
         <div className="admin-tab-panel">
           <AdminCards />
         </div>
+      )}
+
+      {/* ===== 신청 관리 탭 ===== */}
+      {tab === 'apps' && (
+        <div className="admin-tab-panel"><AdminApplications /></div>
       )}
 
       {/* ===== 약관 관리 탭 ===== */}
