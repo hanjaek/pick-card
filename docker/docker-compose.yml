@@ -28,8 +28,8 @@ volumes:
   sentinel-data:
   sentinel2-data:
   sentinel3-data:
-  redisinsight-data:
   mysql-data:
+  # redisinsight 는 호스트 폴더(bind mount)로 분리 → down -v 해도 연결 설정 유지
 
 # 백엔드 서버 2대 공통 설정 (YAML 앵커로 중복 제거)
 x-server-common: &server-common
@@ -222,7 +222,7 @@ services:
     ports:
       - "5540:5540"
     volumes:
-      - redisinsight-data:/data
+      - ./redisinsight-data:/data    # 호스트 폴더에 저장 → down -v 에도 연결 설정 보존
     depends_on:
       redis-master:
         condition: service_healthy
