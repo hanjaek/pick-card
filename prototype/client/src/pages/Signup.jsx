@@ -32,9 +32,12 @@ export default function Signup() {
   const [cameraOn, setCameraOn]       = useState(false)
   const [captured, setCaptured]       = useState(null)
   const [verifying, setVerifying]     = useState(false)
+  const [scanStatus, setScanStatus]   = useState('')
   const videoRef    = useRef(null)
   const streamRef   = useRef(null)
   const canvasRef   = useRef(null)
+  const scanRef     = useRef(null)
+  const capturedRef = useRef(false)
 
   const navigate = useNavigate()
   const inputRef = useRef(null)
@@ -55,11 +58,55 @@ export default function Signup() {
   }
 
   /* ---- Camera ---- */
+  const scanFrame = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || capturedRef.current) return
+    const video = videoRef.current
+    if (video.videoWidth === 0) return
+
+    const c = canvasRef.current
+    c.width = video.videoWidth
+    c.height = video.videoHeight
+    c.getContext('2d').drawImage(video, 0, 0)
+    const dataUrl = c.toDataURL('image/jpeg', 0.5)
+
+    try {
+      setScanStatus('스캔 중...')
+      const res = await fetch('/api/verify/id-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl }),
+      })
+      const data = await res.json()
+      if (data.success && data.idNumber) {
+        capturedRef.current = true
+        if (scanRef.current) { clearInterval(scanRef.current); scanRef.current = null }
+        const resized = await resizeImage(c.toDataURL('image/jpeg', 0.85))
+        setCaptured(resized)
+        stopCamera()
+        setForm(prev => ({
+          ...prev,
+          name: data.name || prev.name,
+          birthdate: data.birthdate || prev.birthdate,
+          idNumber: data.idNumber || '',
+        }))
+        setStep(1)
+        return
+      }
+      setScanStatus('신분증을 가이드 안에 맞춰주세요')
+    } catch {
+      setScanStatus('신분증을 가이드 안에 맞춰주세요')
+    }
+  }, [])
+
   useEffect(() => {
     if (cameraOn && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current
+      capturedRef.current = false
+      setScanStatus('신분증을 가이드 안에 맞춰주세요')
+      scanRef.current = setInterval(scanFrame, 2000)
     }
-  }, [cameraOn])
+    return () => { if (scanRef.current) { clearInterval(scanRef.current); scanRef.current = null } }
+  }, [cameraOn, scanFrame])
 
   const startCamera = useCallback(async () => {
     try {
@@ -67,6 +114,7 @@ export default function Signup() {
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
       })
       streamRef.current = stream
+      capturedRef.current = false
       setCameraOn(true)
       setError('')
     } catch {
@@ -79,7 +127,9 @@ export default function Signup() {
       streamRef.current.getTracks().forEach(t => t.stop())
       streamRef.current = null
     }
+    if (scanRef.current) { clearInterval(scanRef.current); scanRef.current = null }
     setCameraOn(false)
+    setScanStatus('')
   }, [])
 
   const resizeImage = (dataUrl, maxWidth = 1200) => {
@@ -390,13 +440,16 @@ export default function Signup() {
                           <span className="id-corner bl" />
                           <span className="id-corner br" />
                         </div>
-                        <p className="id-guide-label">신분증을 가이드 안에 맞춰주세요</p>
+                        <p className={`id-guide-label${scanStatus === '스캔 중...' ? ' scanning' : ''}`}>
+                          {scanStatus || '신분증을 가이드 안에 맞춰주세요'}
+                        </p>
                       </div>
                     </div>
                     <div className="id-camera-btns">
                       <button className="id-capture-btn" onClick={capturePhoto}>
                         <div className="id-capture-inner" />
                       </button>
+                      <p className="id-camera-hint">자동 인식 또는 버튼으로 촬영</p>
                     </div>
                   </div>
                 )}
@@ -448,18 +501,18 @@ export default function Signup() {
                 </div>
 
                 <div className="auth-field" style={{ marginTop: 16 }}>
-                  <label className="auth-label">이름 수정</label>
+                  <label className="auth-label">이름을 확인해주세요</label>
                   <input
                     ref={inputRef}
                     className="auth-input"
                     type="text"
-                    placeholder="이름 확인"
+                    placeholder="실명을 입력해주세요"
                     value={form.name}
                     onChange={(e) => set('name', e.target.value)}
                     onKeyDown={handleKeyDown}
                   />
                   {error && <p className="auth-hint error">{error}</p>}
-                  <p className="auth-hint">정보가 다르면 수정해주세요</p>
+                  <p className="auth-hint error">OCR 인식 결과가 부정확할 수 있습니다. 실명으로 수정해주세요.</p>
                 </div>
 
                 <div className="auth-btn-area">
