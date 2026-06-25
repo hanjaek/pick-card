@@ -224,15 +224,17 @@ INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm) 
 
 -- 약관 초기 시드: 카드 8종 × 문서 3종(상품안내장/이용약관/포인트이용약관)
 -- PDF는 일단 공용 sample.pdf 로 통일 (관리자가 실제 PDF로 교체). CROSS JOIN 으로 한 번에 생성.
+-- 카드 종류별 문서 차등: 모든 카드(상품안내장·이용약관), 신용카드만(포인트이용약관)
+-- → 신용카드 3개 / 체크카드 2개 (카드마다 약관 개수가 다를 수 있음을 반영)
 INSERT IGNORE INTO terms (card_id, doc_type, version_no, terms_title, pdf_path, effective_dt, is_active)
 SELECT c.id, d.doc_type, 'v1.0',
        CONCAT(c.prd_nm, ' ', d.doc_type), 'sample.pdf', c.launch_dt, 1
 FROM cards c
-CROSS JOIN (
-  SELECT '상품안내장' AS doc_type
-  UNION ALL SELECT '이용약관'
-  UNION ALL SELECT '포인트이용약관'
-) d;
+JOIN (
+  SELECT '상품안내장'     AS doc_type, 'ALL'    AS applies
+  UNION ALL SELECT '이용약관',       'ALL'
+  UNION ALL SELECT '포인트이용약관', '신용카드'
+) d ON (d.applies = 'ALL' OR d.applies = c.card_type_cd);
 
 -- ============================================================
 -- [v2] 고도화 확장 스키마

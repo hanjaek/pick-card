@@ -636,3 +636,12 @@
   display: inline-block; padding: 3px 10px; border-radius: 6px;
   font-size: 12px; font-weight: 800; background: #EEF1FB; color: #1A5DA0;
 }
+
+/* 약관 관리: 이력+삭제 버튼 */
+.terms-manage { display: flex; gap: 6px; white-space: nowrap; }
+.btn-terms-del {
+  padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  background: #fff; color: #991B1B; border: 1px solid #f0c0c0;
+  cursor: pointer; font-family: inherit; transition: var(--transition);
+}
+.btn-terms-del:hover { background: #FEF2F2; }

@@ -149,5 +149,23 @@ router.post('/upload', adminOnly, upload.single('file'), async (req, res) => {
   }
 })
 
+/* ======================================================
+   DELETE /api/terms/:id  -  약관 문서 삭제 (관리자 전용)
+   카드마다 약관 개수를 다르게 운영할 수 있도록 개별 삭제 지원.
+   (terms_history 는 FK ON DELETE CASCADE 로 함께 정리됨)
+   ====================================================== */
+router.delete('/:id', adminOnly, async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM terms WHERE id = ?', [req.params.id])
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '약관을 찾을 수 없습니다.' })
+    }
+    res.json({ message: '약관이 삭제되었습니다.' })
+  } catch (err) {
+    console.error('[terms DELETE /:id]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
 module.exports = router
 

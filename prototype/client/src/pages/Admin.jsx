@@ -120,6 +120,18 @@ function Admin() {
     }
   }
 
+  // ---- 약관 삭제 ----
+  const handleDeleteTerms = async (t) => {
+    if (!window.confirm(`'${t.doc_type || ''} ${t.version_no}' 약관을 삭제할까요?`)) return
+    try {
+      await axios.delete(`/api/terms/${t.id}`, authHeader())
+      setMessage('약관이 삭제되었습니다.')
+      fetchTerms(selectedCard.id)
+    } catch (err) {
+      setMessage(err.response?.data?.message || '삭제 실패')
+    }
+  }
+
   const handleLogout = () => {
     localStorage.clear()
     navigate('/login')
@@ -352,7 +364,7 @@ function Admin() {
                       <th>PDF 파일</th>
                       <th>등록일</th>
                       <th>상태</th>
-                      <th>변경 이력</th>
+                      <th>관리</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -391,12 +403,18 @@ function Admin() {
                                 : <span className="badge-old">구버전</span>
                               }
                             </td>
-                            <td>
+                            <td className="terms-manage">
                               <button
                                 className="btn-history"
                                 onClick={() => fetchHistory(t)}
                               >
                                 이력 {historyTarget?.id === t.id ? '닫기' : '보기'}
+                              </button>
+                              <button
+                                className="btn-terms-del"
+                                onClick={() => handleDeleteTerms(t)}
+                              >
+                                삭제
                               </button>
                             </td>
                           </tr>
