@@ -120,9 +120,9 @@ export default function Home() {
     <div className="home">
 
       {/* ── KV HERO ── */}
-      <section className="kv">
-        <div className="kv-img" />
-        <div className="kv-overlay" />
+      <section className="kv" aria-label="메인 배너">
+        <div className="kv-img" role="img" aria-label="BNK 부산은행 카드몰 배경 이미지" />
+        <div className="kv-overlay" aria-hidden="true" />
         <div className="kv-inner">
           <p className="kv-eyebrow">AI 맞춤 카드 추천</p>
           <h1 className="kv-title">

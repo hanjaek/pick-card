@@ -53,7 +53,7 @@ function App() {
           element={
             <>
               <Header />
-              <main>
+              <main id="main-content" role="main">
                 <Routes>
                   <Route path="/"                      element={<Home />}       />
                   <Route path="/cards"                 element={<Cards />}      />

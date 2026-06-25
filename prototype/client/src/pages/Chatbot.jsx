@@ -188,7 +188,9 @@ export default function Chatbot() {
                 <rect x="3" y="13.5" width="14" height="1.5" rx="0.75" fill="currentColor" />
               </svg>
             </button>
+            <label htmlFor="chatbot-input" className="sr-only">AI 상담 질문 입력</label>
             <input
+              id="chatbot-input"
               ref={inputRef}
               className="cb-input"
               type="text"

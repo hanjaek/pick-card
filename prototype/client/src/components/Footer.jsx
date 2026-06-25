@@ -2,7 +2,7 @@ import './Footer.css'
 
 function Footer() {
   return (
-    <footer className="footer">
+    <footer className="footer" role="contentinfo">
       <div className="footer-inner">
         {/* 브랜드 설명 */}
         <div className="footer-brand">

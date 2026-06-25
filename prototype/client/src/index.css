@@ -66,3 +66,71 @@ button {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bnk-bg); }
 ::-webkit-scrollbar-thumb { background: var(--bnk-border); border-radius: 3px; }
+
+/* ============================================================
+   웹 접근성 (장애인차별금지법 · KWCAG 2.2 준수)
+   ============================================================ */
+
+/* 스킵 내비게이션: Tab 키로 포커스 시 표시 */
+.skip-nav {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bnk-red);
+  color: #fff;
+  padding: 12px 32px;
+  border-radius: 0 0 12px 12px;
+  font-size: 15px;
+  font-weight: 800;
+  z-index: 9999;
+  transition: top 0.2s;
+}
+.skip-nav:focus {
+  top: 0;
+  outline: 3px solid #FFD700;
+  outline-offset: 2px;
+}
+
+/* 키보드 포커스 표시: 모든 인터랙티브 요소에 포커스 링 */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--bnk-red);
+  outline-offset: 2px;
+}
+
+/* 스크린 리더 전용 텍스트 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 고대비 모드 지원 */
+@media (forced-colors: active) {
+  .auth-btn-primary,
+  .cb-send-btn.active,
+  .fchip.on,
+  .csf-chip.on,
+  .csf-type-btn.on {
+    forced-color-adjust: none;
+  }
+}
+
+/* 모션 감소 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

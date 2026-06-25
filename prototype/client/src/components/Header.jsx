@@ -33,17 +33,19 @@ function Header() {
   }
 
   return (
-    <header className={`header${scrolled ? '' : ' transparent'}`}>
+    <>
+    <a href="#main-content" className="skip-nav">본문 바로가기</a>
+    <header className={`header${scrolled ? '' : ' transparent'}`} role="banner">
       <div className="header-inner">
-        <Link to="/" className="header-logo">
-          <div className="logo-mark">BNK</div>
+        <Link to="/" className="header-logo" aria-label="BNK Pickard 홈으로 이동">
+          <div className="logo-mark" aria-hidden="true">BNK</div>
           <div className="logo-text">
             <span className="logo-main">Pickard</span>
             <span className="logo-sub">부산은행 카드몰</span>
           </div>
         </Link>
 
-        <nav className="header-nav">
+        <nav className="header-nav" aria-label="메인 내비게이션">
           <Link to="/cards"   className={`nav-link ${isActive('/cards')}`}>카드</Link>
           <Link to="/chatbot" className={`nav-link ${isActive('/chatbot')}`}>AI 상담</Link>
           <Link to="/support" className={`nav-link ${isActive('/support')}`}>고객센터</Link>
@@ -65,6 +67,7 @@ function Header() {
         </div>
       </div>
     </header>
+    </>
   )
 }
 
