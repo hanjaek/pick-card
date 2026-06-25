@@ -631,3 +631,8 @@
 .admin-tab.on { color: var(--bnk-red); border-bottom-color: var(--bnk-red); }
 
 .admin-tab-panel { padding: 28px 32px; }
+
+.doctype-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 800; background: #EEF1FB; color: #1A5DA0;
+}

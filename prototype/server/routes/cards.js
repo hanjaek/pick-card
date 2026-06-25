@@ -172,8 +172,11 @@ router.get('/:id', async (req, res) => {
       [id]
     )
 
+    // 그 카드의 현행 약관 문서들 (문서종류별로) — 배열
     const [termsList] = await pool.query(
-      'SELECT id, version_no AS version, terms_title AS title, terms_content AS content, pdf_path AS pdfPath, effective_dt AS effectiveDt FROM terms WHERE card_id = ? AND is_active = 1 ORDER BY reg_dt DESC LIMIT 1',
+      `SELECT id, doc_type AS docType, version_no AS version, terms_title AS title,
+              pdf_path AS pdfPath, effective_dt AS effectiveDt
+       FROM terms WHERE card_id = ? AND is_active = 1 ORDER BY id`,
       [id]
     )
 
@@ -181,7 +184,7 @@ router.get('/:id', async (req, res) => {
       ...card,
       benefits,
       disclosure: disclosure || null,
-      terms: termsList[0] || null
+      terms: termsList   // 배열 (문서 여러 개)
     })
   } catch (err) {
     console.error('[cards GET /:id]', err)

@@ -247,20 +247,30 @@ function CardDetail() {
           {/* ---- 상품약관 탭 ---- */}
           {activeTab === 'terms' && (
             <div className="cd-tab-content">
-              <ul className="cd-terms-accordion">
-                {[
-                  '상품안내장',
-                  'BNK부산은행 개인회원 표준약관',
-                  'BNK부산은행 개인회원 부속약관',
-                  '개인신용평점 하락 가능성 등에 대한 설명 확인서',
-                  '포인트이용약관',
-                ].map((item, i) => (
-                  <li key={i} className="cd-terms-row">
-                    <span>{item}</span>
-                    <span className="cd-terms-arrow">›</span>
-                  </li>
-                ))}
-              </ul>
+              {(card.terms && card.terms.length > 0) ? (
+                <ul className="cd-terms-list">
+                  {card.terms.map(t => (
+                    t.pdfPath ? (
+                      <li key={t.id}>
+                        <a className="cd-terms-item" href={`/uploads/terms/${t.pdfPath}`} target="_blank" rel="noreferrer">
+                          <span className="cd-terms-itemname">{t.docType || t.title}</span>
+                          <span className="cd-terms-itemmeta">PDF 열기 ›</span>
+                        </a>
+                      </li>
+                    ) : (
+                      <li key={t.id}>
+                        <div className="cd-terms-item cd-terms-item--none">
+                          <span className="cd-terms-itemname">{t.docType || t.title}</span>
+                          <span className="cd-terms-itemmeta">준비중</span>
+                        </div>
+                      </li>
+                    )
+                  ))}
+                </ul>
+              ) : (
+                <p className="cd-no-content">아직 등록된 약관이 없습니다.</p>
+              )}
+
               {card.disclosure && (
                 <p className="cd-service-notice" style={{ marginTop: 20 }}>
                   공시승인번호: {card.disclosure.approvalCode}
@@ -297,19 +307,6 @@ function CardDetail() {
             <button className="cd-share-btn">관심카드 저장</button>
             <button className="cd-share-btn">상품 문자받기</button>
           </div>
-
-          <Link to={`/terms?card_id=${id}`} className="cd-terms-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            약관·상품설명서 조회
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}>
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </Link>
         </div>
       </div>
     </div>

@@ -3,7 +3,21 @@ require('dotenv').config()
 const express    = require('express')
 const cors       = require('cors')
 const path       = require('path')
+const fs         = require('fs')
 const session    = require('express-session')
+
+// 시드 약관용 공용 PDF(sample.pdf)를 업로드 폴더에 보장 (없으면 복사)
+// → schema.sql 이 pdf_path='sample.pdf' 로 시드한 약관 다운로드가 항상 동작
+try {
+  const termsDir = path.join(__dirname, 'uploads', 'terms')
+  fs.mkdirSync(termsDir, { recursive: true })
+  const dst = path.join(termsDir, 'sample.pdf')
+  const src = path.join(__dirname, 'seed-assets', 'sample.pdf')
+  if (!fs.existsSync(dst) && fs.existsSync(src)) {
+    fs.copyFileSync(src, dst)
+    console.log('[seed] sample.pdf 복사 완료')
+  }
+} catch (e) { console.error('[seed] sample.pdf 복사 실패:', e.message) }
 
 const authRoutes         = require('./routes/auth')
 const cardRoutes         = require('./routes/cards')

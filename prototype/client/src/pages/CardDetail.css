@@ -622,3 +622,50 @@
     margin: 0 auto;
   }
 }
+
+/* ── 상품약관 탭: 실제 등록 약관 ── */
+.cd-terms-subhead {
+  font-size: 14px; font-weight: 800; color: var(--bnk-text);
+  margin-bottom: 10px;
+}
+.cd-terms-doc {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: #fff; border: 1px solid var(--bnk-border); border-radius: 12px;
+  padding: 16px 18px;
+}
+.cd-terms-docinfo { display: flex; align-items: center; gap: 12px; }
+.cd-terms-ver {
+  background: var(--bnk-red); color: #fff; font-size: 12px; font-weight: 800;
+  padding: 4px 10px; border-radius: 6px; flex-shrink: 0;
+}
+.cd-terms-doctitle { font-size: 14px; font-weight: 700; color: var(--bnk-text); }
+.cd-terms-docdate  { font-size: 12px; color: var(--bnk-gray); margin-top: 2px; }
+.cd-terms-dl {
+  flex-shrink: 0; padding: 9px 18px; background: var(--bnk-red); color: #fff;
+  font-size: 13px; font-weight: 700; border-radius: 8px; text-decoration: none;
+  transition: var(--transition);
+}
+.cd-terms-dl:hover { background: var(--bnk-dark-red); }
+.cd-terms-nopdf { font-size: 13px; color: var(--bnk-light-gray); flex-shrink: 0; }
+
+.cd-terms-allink {
+  display: inline-block; margin-top: 20px; font-size: 13px; font-weight: 700;
+  color: var(--bnk-red); text-decoration: none;
+}
+.cd-terms-allink:hover { text-decoration: underline; }
+
+/* ── 상품약관 탭: 문서별 클릭 목록 ── */
+.cd-terms-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--bnk-border); border-radius: 12px; overflow: hidden; }
+.cd-terms-list li + li { border-top: 1px solid var(--bnk-border); }
+.cd-terms-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; text-decoration: none; color: var(--bnk-text);
+  transition: var(--transition);
+}
+a.cd-terms-item:hover { background: var(--bnk-bg); }
+a.cd-terms-item:hover .cd-terms-itemname { color: var(--bnk-red); }
+.cd-terms-itemname { font-size: 15px; font-weight: 700; }
+.cd-terms-itemmeta { font-size: 13px; color: var(--bnk-red); font-weight: 700; }
+.cd-terms-item--none { cursor: default; }
+.cd-terms-item--none .cd-terms-itemname { color: var(--bnk-light-gray); }
+.cd-terms-item--none .cd-terms-itemmeta { color: var(--bnk-light-gray); }

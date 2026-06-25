@@ -40,7 +40,7 @@ function Admin() {
   const [historyTarget, setHistoryTarget] = useState(null) // 이력 조회 중인 terms row
   const [showUpload,    setShowUpload]    = useState(false) // 업로드 모달 표시
   const [uploadForm,    setUploadForm]    = useState({
-    version_no: '', terms_title: '', effective_dt: '', change_reason: ''
+    doc_type: '이용약관', version_no: '', terms_title: '', effective_dt: '', change_reason: ''
   })
   const [file,     setFile]    = useState(null)
   const [loading,  setLoading] = useState(false)
@@ -93,6 +93,7 @@ function Admin() {
 
     const fd = new FormData()
     fd.append('card_id',       selectedCard.id)
+    fd.append('doc_type',      uploadForm.doc_type)
     fd.append('version_no',    uploadForm.version_no)
     fd.append('terms_title',   uploadForm.terms_title)
     fd.append('effective_dt',  uploadForm.effective_dt)
@@ -110,7 +111,7 @@ function Admin() {
       setMessage(`등록 완료: ${res.data.pdf_path}`)
       setShowUpload(false)
       setFile(null)
-      setUploadForm({ version_no: '', terms_title: '', effective_dt: '', change_reason: '' })
+      setUploadForm({ doc_type: '이용약관', version_no: '', terms_title: '', effective_dt: '', change_reason: '' })
       fetchTerms(selectedCard.id) // 목록 새로고침
     } catch (err) {
       setMessage(err.response?.data?.message || '업로드 실패')
@@ -255,6 +256,19 @@ function Admin() {
                   <form onSubmit={handleUpload} className="upload-form">
                     <div className="upload-form-row">
                       <div className="uf-group">
+                        <label>문서 종류</label>
+                        <select
+                          value={uploadForm.doc_type}
+                          onChange={e => setUploadForm(p => ({ ...p, doc_type: e.target.value }))}
+                        >
+                          <option value="상품안내장">상품안내장</option>
+                          <option value="이용약관">이용약관</option>
+                          <option value="포인트이용약관">포인트이용약관</option>
+                          <option value="표준약관">표준약관</option>
+                          <option value="부속약관">부속약관</option>
+                        </select>
+                      </div>
+                      <div className="uf-group">
                         <label>버전 번호</label>
                         <input
                           type="text"
@@ -331,6 +345,7 @@ function Admin() {
                 <table className="terms-table">
                   <thead>
                     <tr>
+                      <th>문서종류</th>
                       <th>버전</th>
                       <th>제목</th>
                       <th>시행일</th>
@@ -343,7 +358,7 @@ function Admin() {
                   <tbody>
                     {termsList.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="terms-empty">
+                        <td colSpan={8} className="terms-empty">
                           등록된 약관이 없습니다. 새 약관을 등록해주세요.
                         </td>
                       </tr>
@@ -351,6 +366,7 @@ function Admin() {
                       termsList.map(t => (
                         <>
                           <tr key={t.id} className={t.is_active ? 'row-active' : ''}>
+                            <td><span className="doctype-badge">{t.doc_type || '이용약관'}</span></td>
                             <td><span className="version-badge">{t.version_no}</span></td>
                             <td className="td-title">{t.terms_title || '-'}</td>
                             <td>{t.effective_dt ? t.effective_dt.slice(0, 10) : '-'}</td>
@@ -388,7 +404,7 @@ function Admin() {
                           {/* 인라인 이력 행 */}
                           {historyTarget?.id === t.id && history.length > 0 && (
                             <tr key={`hist-${t.id}`} className="row-history">
-                              <td colSpan={7}>
+                              <td colSpan={8}>
                                 <div className="history-panel">
                                   <div className="history-panel-title">변경 이력</div>
                                   <table className="history-table">

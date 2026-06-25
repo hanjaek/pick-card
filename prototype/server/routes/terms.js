@@ -101,8 +101,9 @@ router.get('/:id/history', async (req, res) => {
        effective_dt, change_reason, file (PDF)
    ====================================================== */
 router.post('/upload', adminOnly, upload.single('file'), async (req, res) => {
-  const { card_id, version_no, terms_title, terms_content, effective_dt, change_reason } = req.body
+  const { card_id, doc_type, version_no, terms_title, terms_content, effective_dt, change_reason } = req.body
   const pdf_path = req.file ? req.file.filename : null
+  const docType  = doc_type || '이용약관'
 
   if (!card_id || !version_no) {
     return res.status(400).json({ message: 'card_id와 version_no는 필수입니다.' })
@@ -112,17 +113,17 @@ router.post('/upload', adminOnly, upload.single('file'), async (req, res) => {
   try {
     await conn.beginTransaction()
 
-    // 기존 현행 약관을 비활성화 (같은 카드의 이전 버전)
+    // 같은 카드의 "같은 문서종류" 이전 버전만 비활성화 (문서종류별로 현행 1개 유지)
     await conn.query(
-      'UPDATE terms SET is_active = 0 WHERE card_id = ? AND is_active = 1',
-      [card_id]
+      'UPDATE terms SET is_active = 0 WHERE card_id = ? AND doc_type = ? AND is_active = 1',
+      [card_id, docType]
     )
 
     // 새 약관 등록
     const [result] = await conn.query(
-      `INSERT INTO terms (card_id, version_no, terms_title, terms_content, pdf_path, effective_dt, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [card_id, version_no, terms_title || null, terms_content || null, pdf_path, effective_dt || null]
+      `INSERT INTO terms (card_id, doc_type, version_no, terms_title, terms_content, pdf_path, effective_dt, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+      [card_id, docType, version_no, terms_title || null, terms_content || null, pdf_path, effective_dt || null]
     )
 
     // 변경 이력 기록

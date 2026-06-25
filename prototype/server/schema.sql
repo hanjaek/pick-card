@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS card_descriptions (
 CREATE TABLE IF NOT EXISTS terms (
   id             BIGINT AUTO_INCREMENT PRIMARY KEY,
   card_id        BIGINT        NOT NULL,
+  doc_type       VARCHAR(30)   DEFAULT '이용약관',   -- 문서 종류(상품안내장/이용약관/포인트이용약관 등)
   version_no     VARCHAR(20)   NOT NULL,           -- 버전 번호
   terms_title    VARCHAR(200),
   terms_content  TEXT,                             -- 약관 본문 (텍스트 요약)
@@ -221,16 +222,17 @@ INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm) 
 (7, 'BNK-2024-TRV-007', '2024-06-20', '카드사업부'),
 (8, 'BNK-2024-ALT-008', '2024-07-20', '카드사업부');
 
--- 약관 초기 버전 (PDF는 관리자 페이지에서 업로드)
-INSERT IGNORE INTO terms (card_id, version_no, terms_title, effective_dt) VALUES
-(1, 'v1.0', 'BNK Young 체크카드 이용약관',      '2024-01-15'),
-(2, 'v1.0', 'BNK 마이플러스 신용카드 이용약관', '2024-02-01'),
-(3, 'v1.0', 'BNK 부산사랑 신용카드 이용약관',   '2024-03-01'),
-(4, 'v1.0', 'BNK 하이라이프 신용카드 이용약관', '2024-04-01'),
-(5, 'v1.0', 'BNK 그린라이프 체크카드 이용약관', '2024-05-01'),
-(6, 'v1.0', 'BNK 쇼핑플러스 신용카드 이용약관', '2024-06-01'),
-(7, 'v1.0', 'BNK 트래블 신용카드 이용약관',     '2024-07-01'),
-(8, 'v1.0', 'BNK 알뜰 체크카드 이용약관',       '2024-08-01');
+-- 약관 초기 시드: 카드 8종 × 문서 3종(상품안내장/이용약관/포인트이용약관)
+-- PDF는 일단 공용 sample.pdf 로 통일 (관리자가 실제 PDF로 교체). CROSS JOIN 으로 한 번에 생성.
+INSERT IGNORE INTO terms (card_id, doc_type, version_no, terms_title, pdf_path, effective_dt, is_active)
+SELECT c.id, d.doc_type, 'v1.0',
+       CONCAT(c.prd_nm, ' ', d.doc_type), 'sample.pdf', c.launch_dt, 1
+FROM cards c
+CROSS JOIN (
+  SELECT '상품안내장' AS doc_type
+  UNION ALL SELECT '이용약관'
+  UNION ALL SELECT '포인트이용약관'
+) d;
 
 -- ============================================================
 -- [v2] 고도화 확장 스키마
