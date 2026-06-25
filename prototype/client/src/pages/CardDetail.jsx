@@ -254,7 +254,7 @@ function CardDetail() {
                       <li key={t.id}>
                         <a className="cd-terms-item" href={`/uploads/terms/${t.pdfPath}`} target="_blank" rel="noreferrer">
                           <span className="cd-terms-itemname">{t.docType || t.title}</span>
-                          <span className="cd-terms-itemmeta">PDF 열기 ›</span>
+                          <span className="cd-terms-itemmeta">약관 보기 ›</span>
                         </a>
                       </li>
                     ) : (
