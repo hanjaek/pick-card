@@ -28,6 +28,33 @@ router.post('/', authMiddleware, async (req, res) => {
     return res.status(400).json({ message: '필수 항목을 입력해주세요.' })
   }
 
+  // ── 입력값 검증 (잘못된 값으로 서버가 죽지 않도록 미리 차단) ──
+  const phoneRe = /^[0-9-]{9,20}$/
+  if (!phoneRe.test(phoneNo)) {
+    return res.status(400).json({ message: '전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)' })
+  }
+  if (homePhone && !phoneRe.test(homePhone)) {
+    return res.status(400).json({ message: '자택전화 형식이 올바르지 않습니다.' })
+  }
+  if (zipCode && !/^[0-9]{4,7}$/.test(zipCode)) {
+    return res.status(400).json({ message: '우편번호는 숫자 4~7자리로 입력해주세요.' })
+  }
+  if (email && (email.length > 100 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) {
+    return res.status(400).json({ message: '이메일 형식이 올바르지 않습니다.' })
+  }
+  if (residenceType && !['자가', '전세', '월세', '기타'].includes(residenceType)) {
+    return res.status(400).json({ message: '주거형태 값이 올바르지 않습니다.' })
+  }
+  if (incomeType && !['근로소득', '사업소득', '기타'].includes(incomeType)) {
+    return res.status(400).json({ message: '소득분류 값이 올바르지 않습니다.' })
+  }
+  if (billingAccount && !/^[0-9-]{1,50}$/.test(billingAccount)) {
+    return res.status(400).json({ message: '계좌번호는 숫자로 입력해주세요.' })
+  }
+  if (applicantName.length > 100) {
+    return res.status(400).json({ message: '이름이 너무 깁니다.' })
+  }
+
   try {
     const [existing] = await pool.query(
       "SELECT id FROM card_applications WHERE user_id = ? AND card_id = ? AND status != 'CANCELLED'",
@@ -56,6 +83,11 @@ router.post('/', authMiddleware, async (req, res) => {
     res.status(201).json({ id: result.insertId, message: '카드 신청이 완료되었습니다.' })
   } catch (err) {
     console.error('[applications POST /]', err)
+    // 입력값이 컬럼 제약(길이·형식)에 안 맞는 경우 → 친절한 400 (서버 500 방지)
+    if (['ER_DATA_TOO_LONG', 'WARN_DATA_TRUNCATED', 'ER_TRUNCATED_WRONG_VALUE',
+         'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD'].includes(err.code)) {
+      return res.status(400).json({ message: '입력 형식이 올바르지 않습니다. 다시 확인해주세요.' })
+    }
     res.status(500).json({ message: '서버 오류가 발생했습니다.' })
   }
 })

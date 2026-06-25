@@ -86,6 +86,19 @@ export default function CardApply() {
       alert('필수 항목(*)을 모두 입력해주세요.')
       return
     }
+    // 형식 검증
+    if (!/^[0-9-]{9,13}$/.test(verify.phone)) {
+      alert('휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)')
+      return
+    }
+    if (!/^[0-9]{4,6}$/.test(form.zipCode)) {
+      alert('우편번호는 숫자 4~6자리로 입력해주세요.')
+      return
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
+      alert('이메일 형식이 올바르지 않습니다.')
+      return
+    }
     setSubmitting(true)
     try {
       const res = await fetch('/api/applications', {
@@ -239,8 +252,9 @@ export default function CardApply() {
                   <input
                     type="tel"
                     placeholder="010-0000-0000"
+                    maxLength={13}
                     value={verify.phone}
-                    onChange={e => setVerify(p => ({ ...p, phone: e.target.value }))}
+                    onChange={e => setVerify(p => ({ ...p, phone: e.target.value.replace(/[^0-9-]/g, '') }))}
                   />
                   <button className="btn-otp-send" onClick={handleSendOtp}>인증번호 발송</button>
                 </div>
@@ -287,9 +301,11 @@ export default function CardApply() {
                   <input type="text" value="부산은행" disabled className="apply-fixed" />
                   <input
                     type="text"
-                    placeholder="계좌번호 입력 (- 없이)"
+                    placeholder="계좌번호 입력 (숫자)"
+                    inputMode="numeric"
+                    maxLength={20}
                     value={form.billingAccount}
-                    onChange={e => setForm(p => ({ ...p, billingAccount: e.target.value }))}
+                    onChange={e => setForm(p => ({ ...p, billingAccount: e.target.value.replace(/[^0-9]/g, '') }))}
                   />
                 </div>
               </label>
@@ -312,9 +328,11 @@ export default function CardApply() {
                 <span>우편번호 / 주소 <em className="apply-req">*</em></span>
                 <input
                   type="text"
-                  placeholder="우편번호"
+                  placeholder="우편번호 (숫자)"
+                  inputMode="numeric"
+                  maxLength={6}
                   value={form.zipCode}
-                  onChange={e => setForm(p => ({ ...p, zipCode: e.target.value }))}
+                  onChange={e => setForm(p => ({ ...p, zipCode: e.target.value.replace(/[^0-9]/g, '') }))}
                   style={{ maxWidth: 140, marginBottom: 8 }}
                 />
                 <input
@@ -338,8 +356,9 @@ export default function CardApply() {
                 <input
                   type="tel"
                   placeholder="051-000-0000"
+                  maxLength={13}
                   value={form.homePhone}
-                  onChange={e => setForm(p => ({ ...p, homePhone: e.target.value }))}
+                  onChange={e => setForm(p => ({ ...p, homePhone: e.target.value.replace(/[^0-9-]/g, '') }))}
                 />
               </label>
               <label className="apply-field">
