@@ -31,6 +31,7 @@ volumes:
   mysql-data:
   uploads-data:      # 약관 PDF 등 업로드 파일 — 서버 2대가 공유
   # redisinsight 는 호스트 폴더(bind mount)로 분리 → down -v 해도 연결 설정 유지
+  chroma-data:
 
 # 백엔드 서버 2대 공통 설정 (YAML 앵커로 중복 제거)
 x-server-common: &server-common
@@ -47,6 +48,7 @@ x-server-common: &server-common
     DB_PORT:           "3306"
     DB_USER:           root
     DB_NAME:           bnk_card
+    RAG_URL:           "http://pickard-rag:8000"
     # 센티넬 3대 모두 등록 → 일부 죽어도 마스터 자동 추적
     REDIS_SENTINELS:   redis-sentinel:26379,redis-sentinel-2:26379,redis-sentinel-3:26379
     REDIS_MASTER_NAME: mymaster
@@ -114,6 +116,28 @@ services:
     depends_on:
       - pickard-server-1
       - pickard-server-2
+    networks:
+      - redis-cluster
+    restart: unless-stopped
+
+  # ── 파이썬 AI 서버 (RAG & OCR) ──────────────────────────────────
+  pickard-rag:
+    build:
+      context: ../rag-service
+    image: pickard-rag:local
+    container_name: pickard-rag
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../rag-service/.env  # GROQ_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY 등
+    environment:
+      # AI 서버가 카드를 인덱싱할 때 프론트엔드 Nginx(로드밸런서)를 통해 백엔드에 요청하도록 설정
+      BACKEND_URL: "http://frontend:80"
+    volumes:
+      - chroma-data:/app/chroma_db
+      - uploads-data:/app/uploads
+    depends_on:
+      - frontend
     networks:
       - redis-cluster
     restart: unless-stopped
