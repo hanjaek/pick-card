@@ -1,0 +1,413 @@
+/* ================================================================
+   MyPage — BNK Pickard 소비 패턴 & 혜택 분석
+   ================================================================ */
+
+.mp-page {
+  padding-top: 70px;
+  min-height: 100vh;
+  background: var(--bnk-bg);
+}
+
+/* ── 로딩 ── */
+.mp-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+.mp-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--bnk-border);
+  border-top-color: var(--bnk-red);
+  border-radius: 50%;
+  animation: mp-spin 0.8s linear infinite;
+}
+@keyframes mp-spin { to { transform: rotate(360deg); } }
+
+/* ── Hero ── */
+.mp-hero {
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-red) 55%, #E84040 100%);
+  padding: 44px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+.mp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 90% 40%, rgba(255,255,255,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.mp-hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px 0;
+}
+
+.mp-greeting-sub {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 6px;
+}
+.mp-greeting-name {
+  font-size: 32px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.mp-greeting-period {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 32px;
+}
+
+/* 3개 통계 박스 */
+.mp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+.mp-stat {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.2s;
+}
+.mp-stat:hover { background: rgba(255,255,255,0.14); }
+
+.mp-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.3px;
+}
+.mp-stat-value {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.mp-stat-value em {
+  font-size: 15px;
+  font-weight: 700;
+  font-style: normal;
+  margin-left: 2px;
+}
+.mp-stat--save   .mp-stat-value { color: #86efac; }
+.mp-stat--potential .mp-stat-value { color: #fcd34d; }
+
+.mp-stat-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+
+/* ── Body ── */
+.mp-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* ── Section ── */
+.mp-section { }
+
+.mp-section-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--bnk-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.mp-section-sub {
+  font-size: 13px;
+  color: var(--bnk-gray);
+  margin-bottom: 16px;
+}
+
+/* ── 소비 패턴 카드 ── */
+.mp-card-box {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 16px;
+  padding: 28px 32px;
+}
+.mp-spending-total {
+  font-size: 14px;
+  color: var(--bnk-gray);
+  margin-bottom: 20px;
+}
+.mp-spending-total strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--bnk-text);
+}
+
+.mp-spending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mp-spending-row {
+  display: grid;
+  grid-template-columns: 24px 110px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+}
+.mp-spending-icon { font-size: 18px; text-align: center; }
+.mp-spending-cat {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bnk-text);
+}
+.mp-bar-track {
+  height: 8px;
+  background: var(--bnk-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bnk-dark-red), var(--bnk-red));
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.mp-spending-amt {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bnk-text);
+  text-align: right;
+}
+
+/* ── 카드 혜택 행 목록 ── */
+.mp-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mp-row {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: 130px 1fr auto;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.mp-row:hover {
+  border-color: #ddd;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+
+/* 최고 절약 강조 */
+.mp-opp--best {
+  border-color: var(--bnk-gold);
+  background: #FFFBF5;
+}
+.mp-opp--best:hover { border-color: var(--bnk-gold); }
+
+.mp-best-badge {
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--bnk-gold);
+  color: #fff;
+  padding: 3px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+/* ── 미니 카드 ── */
+.mp-mini-card {
+  width: 130px;
+  height: 82px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.mp-mini-chip {
+  width: 22px;
+  height: 17px;
+  background: linear-gradient(135deg, #f0c060, #c8960a);
+  border-radius: 3px;
+}
+.mp-mini-network {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 0.5px;
+}
+.mp-mini-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+/* ── 행 정보 ── */
+.mp-row-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--bnk-text);
+  margin-bottom: 6px;
+}
+.mp-row-msg {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--bnk-gray);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.mp-row-msg strong { font-weight: 900; }
+
+.mp-row-msg--saved strong    { color: #16A34A; font-size: 16px; }
+.mp-row-msg--potential strong { color: var(--bnk-gold); font-size: 16px; }
+.mp-row-msg--zero            { color: var(--bnk-light-gray); font-style: italic; }
+
+.mp-row-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mp-row-details li {
+  font-size: 12px;
+  color: var(--bnk-gray);
+  padding-left: 12px;
+  position: relative;
+  line-height: 1.5;
+}
+.mp-row-details li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: var(--bnk-light-gray);
+}
+
+/* ── 버튼 ── */
+.mp-row-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bnk-gray);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+.mp-row-link:hover { color: var(--bnk-red); }
+
+.mp-apply-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--bnk-red);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 50px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.mp-apply-btn:hover {
+  background: var(--bnk-dark-red);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139,3,4,0.25);
+}
+
+/* ── 빈 상태 ── */
+.mp-empty {
+  background: #fff;
+  border: 1px solid var(--bnk-border);
+  border-radius: 16px;
+  padding: 56px;
+  text-align: center;
+}
+.mp-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: var(--bnk-gold);
+}
+.mp-empty-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--bnk-text);
+  margin-bottom: 8px;
+}
+.mp-empty-sub {
+  font-size: 14px;
+  color: var(--bnk-gray);
+  margin-bottom: 24px;
+}
+.mp-empty-btn {
+  display: inline-block;
+  padding: 14px 40px;
+  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-gold) 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: var(--transition);
+}
+.mp-empty-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(137,110,74,0.35);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .mp-hero-inner { padding: 0 24px; }
+  .mp-body       { padding: 28px 24px 60px; }
+  .mp-stats      { grid-template-columns: 1fr 1fr; }
+  .mp-stat:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .mp-hero-inner { padding: 0 16px; }
+  .mp-greeting-name { font-size: 24px; }
+  .mp-body       { padding: 20px 14px 50px; }
+  .mp-stats      { grid-template-columns: 1fr; }
+  .mp-stat:last-child { grid-column: auto; }
+  .mp-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .mp-mini-card  { width: 100%; height: 80px; }
+  .mp-spending-row { grid-template-columns: 24px 100px 1fr 80px; }
+  .mp-empty { padding: 40px 24px; }
+}

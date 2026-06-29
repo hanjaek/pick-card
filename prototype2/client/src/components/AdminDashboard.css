@@ -1,0 +1,57 @@
+.ad-wrap { padding: 4px; }
+.ad-loading { padding: 40px; text-align: center; color: var(--bnk-gray); }
+.ad-head { margin-bottom: 20px; }
+.ad-title { font-size: 20px; font-weight: 900; color: var(--bnk-text); }
+.ad-sub   { font-size: 13px; color: var(--bnk-gray); }
+
+/* 요약 카드 */
+.ad-summary {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+}
+.ad-card {
+  background: #fff; border: 1px solid var(--bnk-border); border-radius: 14px;
+  padding: 20px 22px; display: flex; flex-direction: column; gap: 8px;
+}
+.ad-card--accent { background: #FFF7F7; border-color: #F0D0D0; }
+.ad-card-label { font-size: 13px; font-weight: 600; color: var(--bnk-gray); }
+.ad-card-num   { font-size: 28px; font-weight: 900; color: var(--bnk-text); letter-spacing: -0.5px; }
+.ad-card-num em { font-size: 14px; font-weight: 700; font-style: normal; margin-left: 3px; color: var(--bnk-gray); }
+.ad-card--accent .ad-card-num { color: var(--bnk-red); }
+
+/* 2단 그리드 */
+.ad-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+@media (max-width: 1000px) { .ad-grid { grid-template-columns: 1fr; } .ad-summary { grid-template-columns: 1fr 1fr; } }
+
+.ad-panel { background: #fff; border: 1px solid var(--bnk-border); border-radius: 14px; padding: 22px; }
+.ad-panel-title { font-size: 15px; font-weight: 800; color: var(--bnk-text); margin-bottom: 16px; }
+.ad-panel-title span { font-size: 12px; font-weight: 500; color: var(--bnk-light-gray); }
+
+/* 인기 순위 */
+.ad-rank { display: flex; flex-direction: column; gap: 14px; }
+.ad-rank-row { display: flex; gap: 12px; align-items: flex-start; }
+.ad-rank-no {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--bnk-bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: var(--bnk-gray); flex-shrink: 0;
+}
+.ad-rank-row:nth-child(1) .ad-rank-no { background: var(--bnk-red); color: #fff; }
+.ad-rank-body { flex: 1; }
+.ad-rank-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.ad-rank-name { font-size: 13px; font-weight: 700; color: var(--bnk-text); }
+.ad-rank-count { font-size: 13px; font-weight: 800; color: var(--bnk-red); }
+.ad-bar-track { height: 6px; background: var(--bnk-bg); border-radius: 3px; overflow: hidden; }
+.ad-bar-fill { height: 100%; background: linear-gradient(90deg, var(--bnk-dark-red), var(--bnk-red)); border-radius: 3px; }
+.ad-rank-view { font-size: 11px; color: var(--bnk-light-gray); }
+
+/* 상태 분포 */
+.ad-status-list { display: flex; flex-direction: column; gap: 14px; }
+.ad-status-row { display: grid; grid-template-columns: 12px 56px 1fr 44px; align-items: center; gap: 10px; }
+.ad-status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.ad-status-label { font-size: 13px; color: var(--bnk-text); font-weight: 600; }
+.ad-status-track { height: 8px; background: var(--bnk-bg); border-radius: 4px; overflow: hidden; }
+.ad-status-bar { height: 100%; border-radius: 4px; }
+.ad-status-num { font-size: 13px; font-weight: 700; text-align: right; }
+.ad-status-dot.pending,  .ad-status-bar.pending  { background: #E0A93B; }
+.ad-status-dot.approved, .ad-status-bar.approved { background: #2E9E5B; }
+.ad-status-dot.rejected, .ad-status-bar.rejected { background: #C73E3E; }
+.ad-status-dot.cancelled,.ad-status-bar.cancelled{ background: #9AA0A6; }

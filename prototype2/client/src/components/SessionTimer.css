@@ -1,0 +1,155 @@
+/* ================================================================
+   SessionTimer — 로그인 세션 카운트다운 + 연장
+   ================================================================ */
+
+/* ── 헤더 타이머 칩 ── */
+.st-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 50px;
+  border: 1.5px solid var(--bnk-border);
+  background: var(--bnk-bg);
+  font-family: 'SUIT Variable', 'SUIT', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bnk-gray);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.st-chip:hover {
+  border-color: var(--bnk-red);
+  color: var(--bnk-red);
+}
+
+.st-clock { font-size: 13px; }
+.st-time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  min-width: 42px;
+  text-align: center;
+}
+.st-extend {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--bnk-red);
+  color: #fff;
+}
+
+/* 만료 임박(5분 이하) — 빨간 강조 + 깜빡임 */
+.st-chip--urgent {
+  border-color: var(--bnk-red);
+  background: #FFF0F0;
+  color: var(--bnk-red);
+  animation: st-blink 1.2s ease-in-out infinite;
+}
+@keyframes st-blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(215, 25, 25, 0.0); }
+  50%      { box-shadow: 0 0 0 4px rgba(215, 25, 25, 0.15); }
+}
+
+/* 투명 헤더(홈 상단)에서의 색상 */
+.header.transparent .st-chip {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+.header.transparent .st-chip--urgent {
+  background: rgba(255, 80, 80, 0.25);
+  border-color: #fff;
+  color: #fff;
+}
+
+/* ── 경고 모달 ── */
+.st-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: st-fade 0.2s ease;
+}
+@keyframes st-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.st-modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 36px 40px;
+  width: 90%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  animation: st-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes st-pop {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.st-modal-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+.st-modal-title {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--bnk-text);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+.st-modal-desc {
+  font-size: 14px;
+  color: var(--bnk-gray);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.st-modal-desc strong {
+  color: var(--bnk-red);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.st-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.st-btn-extend {
+  padding: 14px;
+  background: var(--bnk-red);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.st-btn-extend:hover {
+  background: var(--bnk-dark-red);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(139,3,4,0.28);
+}
+.st-btn-logout {
+  padding: 12px;
+  background: #fff;
+  color: var(--bnk-gray);
+  border: 1.5px solid var(--bnk-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.st-btn-logout:hover {
+  border-color: var(--bnk-gray);
+  color: var(--bnk-text);
+}

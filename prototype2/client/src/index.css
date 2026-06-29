@@ -1,0 +1,68 @@
+/* ============================================================
+   SUIT Variable 폰트 (로컬)
+   ============================================================ */
+@font-face {
+  font-family: 'SUIT';
+  src: url('/fonts/SUIT-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   BNK 부산은행 공식 브랜드 컬러 (CI 기준)
+   - BNK Red      PANTONE 1797C  #D71919  (메인 레드)
+   - BNK Dark Red PANTONE 188C   #8B0304  (다크 레드)
+   - BNK Dark Gray PANTONE WG11C #655C4F
+   - BNK Light Gray PANTONE 7530C #B7A997
+   ============================================================ */
+:root {
+  --bnk-red:        #D71919;   /* BNK 공식 레드 */
+  --bnk-dark-red:   #8B0304;   /* BNK 다크 레드 */
+  --bnk-mid-red:    #C01515;   /* 중간 레드 */
+  --bnk-gray:       #655C4F;   /* BNK 다크 그레이 */
+  --bnk-light-gray: #B7A997;   /* BNK 라이트 그레이 */
+  --bnk-gold:       #896E4A;   /* BNK 골드 - 포인트 강조 */
+  --bnk-silver:     #909394;   /* BNK 실버 */
+  --bnk-bg:         #F8F5F2;   /* 페이지 배경 (따뜻한 크림) */
+  --bnk-cream:      #F2EDE7;   /* 카드·섹션 배경 (따뜻한 베이지) */
+  --bnk-border:     #E5DDD5;   /* 테두리 (따뜻한 베이지) */
+  --bnk-text:       #1E1A17;   /* 본문 기본 텍스트 */
+
+  --shadow-card:  0 20px 60px rgba(137, 110, 74, 0.10);
+  --shadow-hover: 0 30px 80px rgba(137, 110, 74, 0.18);
+  --radius-card:  20px;
+  --radius-btn:   12px;
+  --transition:   all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'SUIT', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bnk-bg);
+  color: var(--bnk-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: inherit;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bnk-bg); }
+::-webkit-scrollbar-thumb { background: var(--bnk-border); border-radius: 3px; }

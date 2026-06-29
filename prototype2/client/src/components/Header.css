@@ -1,0 +1,217 @@
+/* 헤더: 상단 고정, 기본 흰 배경 / 투명 모드 지원 */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 70px;
+  background: #fff;
+  border-bottom: 1px solid var(--bnk-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 히어로 위에서 투명 상태 */
+.header.transparent {
+  background: transparent;
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+.header.transparent .logo-mark {
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+}
+
+.header.transparent .logo-main { color: #fff; }
+.header.transparent .logo-sub  { color: rgba(255,255,255,0.6); }
+
+.header.transparent .nav-link {
+  color: rgba(255,255,255,0.8);
+}
+.header.transparent .nav-link:hover,
+.header.transparent .nav-link.active {
+  color: #fff;
+}
+.header.transparent .nav-link::after { background: #fff; }
+
+.header.transparent .btn-login {
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.4);
+}
+.header.transparent .btn-login:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-color: rgba(255,255,255,0.7);
+}
+
+.header.transparent .btn-signup {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.header.transparent .btn-signup:hover {
+  background: rgba(255,255,255,0.25);
+  box-shadow: none;
+  transform: none;
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+/* ---- 로고 ---- */
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* BNK 레드 박스 로고 */
+.logo-mark {
+  background: var(--bnk-red);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 6px;
+  letter-spacing: 1.5px;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.logo-main {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--bnk-red);
+}
+
+.logo-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--bnk-gray);
+}
+
+/* ---- 네비게이션 ---- */
+.header-nav {
+  display: flex;
+  gap: 28px;
+  flex: 1;
+}
+
+.nav-link {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--bnk-gray);
+  transition: var(--transition);
+  position: relative;
+  padding-bottom: 4px;
+}
+
+/* 하단 레드 언더라인 슬라이드 인 */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--bnk-red);
+  transition: var(--transition);
+  border-radius: 1px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--bnk-red);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* ---- 인증 버튼 ---- */
+.header-auth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.btn-mypage {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bnk-gray);
+  transition: var(--transition);
+  padding: 0 4px;
+}
+.btn-mypage:hover,
+.btn-mypage.active {
+  color: var(--bnk-red);
+}
+.header.transparent .btn-mypage {
+  color: rgba(255,255,255,0.8);
+}
+.header.transparent .btn-mypage:hover,
+.header.transparent .btn-mypage.active {
+  color: #fff;
+}
+
+.btn-login {
+  padding: 9px 22px;
+  border-radius: var(--radius-btn);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bnk-red);
+  border: 1.5px solid var(--bnk-red);
+  transition: var(--transition);
+}
+
+.btn-login:hover {
+  background: var(--bnk-red);
+  color: #fff;
+}
+
+.btn-signup {
+  padding: 9px 22px;
+  border-radius: var(--radius-btn);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--bnk-red);
+  color: #fff;
+  transition: var(--transition);
+}
+
+.btn-signup:hover {
+  background: var(--bnk-dark-red);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 3, 4, 0.28);
+}
+
+.btn-logout {
+  padding: 9px 22px;
+  border-radius: var(--radius-btn);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bnk-gray);
+  border: 1.5px solid var(--bnk-border);
+  transition: var(--transition);
+}
+
+.btn-logout:hover {
+  border-color: var(--bnk-gray);
+  color: var(--bnk-text);
+}
