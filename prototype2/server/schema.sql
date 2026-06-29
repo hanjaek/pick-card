@@ -11,13 +11,14 @@ SET NAMES utf8mb4;
 -- 항상 깨끗한 상태로 재생성 (테이블/컬럼이 바뀌어도 매 실행 시 최신 스키마 보장)
 -- ※ 기존 데이터는 초기화되지만, 카드·관리자·약관 등 시드가 아래에 포함돼 자동 복구됨
 -- ※ 도커는 최초 1회만 실행되므로 영향 없음 (워크벤치 재실행 시에도 에러 없이 동작)
-DROP DATABASE IF EXISTS bnk_card;
+-- prototype2 전용 DB — 원본 prototype 의 bnk_card 와 분리(충돌 없음)
+DROP DATABASE IF EXISTS bnk_life;
 
-CREATE DATABASE IF NOT EXISTS bnk_card
+CREATE DATABASE IF NOT EXISTS bnk_life
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE bnk_card;
+USE bnk_life;
 
 -- ============================================================
 -- 1. users  (ERD: TB_CUST_BC - 고객 기본)
@@ -85,6 +86,11 @@ CREATE TABLE IF NOT EXISTS card_benefits (
   bnft_desc        TEXT,                           -- 혜택 설명
   discount_rate    DECIMAL(5,2),                   -- 할인율 (%)
   monthly_limit_amt INT,                           -- 월 한도 (원)
+  -- [라이프 카드] 생애단계·소비 카테고리 태그 — 나이/소비 기반 자동 혜택 매칭용
+  life_stage_cd    ENUM('TEEN','YOUNG','FAMILY','SENIOR','ALL') DEFAULT 'ALL',  -- 생애단계(ALL=전단계 공통)
+  category_cd      ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
+                        'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
+                        'TRAVEL','CONVENIENCE') NULL,  -- 소비 카테고리(개인화 매칭 키)
   reg_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   upd_dt           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
@@ -361,3 +367,36 @@ CREATE TABLE IF NOT EXISTS admin_logs (
   FOREIGN KEY (admin_id) REFERENCES users(id),
   INDEX idx_adminlog_created (created_at)
 );
+
+-- ============================================================
+-- ★ BNK 라이프 평생 카드 (prototype2 대표 상품)
+--   생애단계(life_stage_cd) × 소비 카테고리(category_cd) 태그로
+--   "나이 + 소비" 기반 자동 혜택 매칭(개인화)의 기반 데이터
+-- ============================================================
+INSERT IGNORE INTO cards
+  (prd_nm, card_type_cd, annual_fee, network, launch_dt, color_from, color_to, brand, traffic_yn, product_feature)
+VALUES
+  ('BNK 라이프 평생 카드', '체크카드', 0, 'VISA', '2026-01-01', '#D71919', '#7A1010', '국내전용', 'Y',
+   '어릴 때부터 노년까지, 하나의 카드로 평생. AI가 나이와 소비를 분석해 생애 단계마다 혜택을 자동으로 바꿔주는 BNK 평생 카드입니다.');
+
+-- 라이프 카드 혜택 (ALL=전 단계 공통 / 단계별 자동 적용 혜택)
+INSERT INTO card_benefits
+  (card_id, bnft_type_cd, bnft_desc, discount_rate, monthly_limit_amt, life_stage_cd, category_cd)
+SELECT c.id, x.bnft_type_cd, x.bnft_desc, x.discount_rate, x.monthly_limit_amt, x.life_stage_cd, x.category_cd
+FROM cards c
+JOIN (
+            SELECT '면제' AS bnft_type_cd, '연회비 평생 무료'             AS bnft_desc, NULL AS discount_rate, NULL AS monthly_limit_amt, 'ALL'    AS life_stage_cd, NULL          AS category_cd
+  UNION ALL SELECT '무료', '후불 교통카드 (전국 버스·지하철)',           NULL,  NULL,  'ALL',    'TRANSPORT'
+  UNION ALL SELECT '우대', '해외 결제 수수료 우대',                      NULL,  NULL,  'ALL',    'TRAVEL'
+  UNION ALL SELECT '적립', '편의점 5% 적립',                            5.00,  3000,  'TEEN',   'CONVENIENCE'
+  UNION ALL SELECT '적립', '대중교통 10% 적립',                        10.00,  3000,  'TEEN',   'TRANSPORT'
+  UNION ALL SELECT '적립', '배달앱 10% 적립',                          10.00,  8000,  'YOUNG',  'DELIVERY'
+  UNION ALL SELECT '적립', '카페 20% 적립',                            20.00,  8000,  'YOUNG',  'CAFE'
+  UNION ALL SELECT '할인', '구독서비스(OTT·음악) 10% 할인',            10.00,  5000,  'YOUNG',  'SUBSCRIPTION'
+  UNION ALL SELECT '할인', '대형마트 5% 할인',                          5.00, 20000,  'FAMILY', 'SHOPPING'
+  UNION ALL SELECT '할인', '주유 리터당 60원 할인',                    NULL, 30000,  'FAMILY', 'FUEL'
+  UNION ALL SELECT '할인', '학원·교육비 5% 할인',                       5.00, 20000,  'FAMILY', 'EDUCATION'
+  UNION ALL SELECT '할인', '병원·약국 10% 할인',                       10.00, 10000,  'SENIOR', 'MEDICAL'
+  UNION ALL SELECT '적립', '여행·관광 10% 적립',                       10.00,  NULL,  'SENIOR', 'TRAVEL'
+) x
+WHERE c.prd_nm = 'BNK 라이프 평생 카드';

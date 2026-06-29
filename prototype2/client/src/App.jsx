@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import Header     from './components/Header'
 import Footer     from './components/Footer'
 import Home       from './pages/Home'
+import LifeCard   from './pages/LifeCard'
 import Login      from './pages/Login'
 import Signup     from './pages/Signup'
 import Cards      from './pages/Cards'
@@ -56,6 +57,7 @@ function App() {
               <main>
                 <Routes>
                   <Route path="/"                      element={<Home />}       />
+                  <Route path="/life-card"             element={<LifeCard />}   />
                   <Route path="/cards"                 element={<Cards />}      />
                   <Route path="/search"                element={<Navigate to="/cards" replace />} />
                   <Route path="/cards/:id"             element={<CardDetail />} />

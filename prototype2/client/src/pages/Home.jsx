@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Home.css'
 
@@ -63,11 +63,12 @@ const PILLARS = [
   { ic: IC.trend,  no: '03', title: '자산이 자라요', desc: '아낀 돈을 모아 자산이\n커지는 걸 눈으로 확인합니다' },
 ]
 
-const STAGES = [
-  { age: '10s',  label: '청소년',     benefit: '편의점·교통 적립\n＋ 용돈 관리' },
-  { age: '20s',  label: '사회초년생', benefit: '배달·카페·구독 적립\n＋ 저축 습관' },
-  { age: '30-40s', label: '가정 형성', benefit: '마트·주유·교육 할인\n＋ 자산 형성' },
-  { age: '60s+', label: '시니어',     benefit: '의료·약국·여행\n＋ 안정·연금' },
+/* DB(/api/life-card) 연결 실패 시 보여줄 기본값(폴백) */
+const STAGES_FALLBACK = [
+  { age: '10대',    label: '청소년',     benefit: '편의점·교통 적립\n＋ 용돈 관리' },
+  { age: '20대',    label: '사회초년생', benefit: '배달·카페·구독 적립\n＋ 저축 습관' },
+  { age: '30~40대', label: '가정 형성',  benefit: '마트·주유·교육 할인\n＋ 자산 형성' },
+  { age: '60대+',   label: '시니어',     benefit: '의료·약국·여행\n＋ 안정·연금' },
 ]
 
 const BENEFITS = [
@@ -81,6 +82,22 @@ const BENEFITS = [
 
 export default function Home() {
   const heroCardRef = useRef(null)
+  const [stages, setStages] = useState(STAGES_FALLBACK)
+
+  // 라이프스테이지 혜택을 DB(/api/life-card)에서 로드 — 실패 시 폴백 유지
+  useEffect(() => {
+    fetch('/api/life-card')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(d => {
+        if (!d?.stages?.length) return
+        setStages(d.stages.map(s => ({
+          age:     s.age,
+          label:   s.label,
+          benefit: (s.benefits || []).map(b => b.desc).join('\n') || '맞춤 혜택',
+        })))
+      })
+      .catch(() => {})
+  }, [])
 
   function handleTilt(e) {
     const el = heroCardRef.current
@@ -121,7 +138,7 @@ export default function Home() {
             <h1 className="kv-title">BNK 라이프<br />평생 카드</h1>
             <p className="kv-sub">어릴 때부터 노년까지, AI가 내 소비와 나이에 맞춰<br />혜택을 알아서 바꿔주는 단 하나의 카드</p>
             <div className="kv-cta-row">
-              <Link to="/signup" className="kv-cta">내 카드 만들기</Link>
+              <Link to="/life-card" className="kv-cta">내 카드 만들기</Link>
               <Link to="/cards" className="kv-cta-ghost">다른 BNK 카드 보러가기 →</Link>
             </div>
           </div>
@@ -194,7 +211,7 @@ export default function Home() {
           <h2 className="lh-title">한 장으로 평생,<br />혜택은 매번 새롭게</h2>
           <p className="lh-lead center">AI가 나이와 소비를 분석해, 생애 단계마다 혜택을 자동으로 바꿔드립니다.</p>
           <div className="stage-line">
-            {STAGES.map((s, i) => (
+            {stages.map((s, i) => (
               <div key={i} className="stage-node" style={{ transitionDelay: `${i * 90}ms` }}>
                 <span className="stage-dot" />
                 <span className="stage-age">{s.age}</span>
@@ -257,7 +274,7 @@ export default function Home() {
           <h2 className="lh-title">평생 함께할<br />내 카드 만들기</h2>
           <p className="lh-lead center">학생도, 사회초년생도, 시니어도 — 하나의 카드로 충분합니다.</p>
           <div className="kv-cta-row" style={{ justifyContent: 'center' }}>
-            <Link to="/signup" className="kv-cta">내 카드 만들기</Link>
+            <Link to="/life-card" className="kv-cta">내 카드 만들기</Link>
             <Link to="/cards" className="kv-cta-ghost">다른 BNK 카드 보러가기 →</Link>
           </div>
         </div>

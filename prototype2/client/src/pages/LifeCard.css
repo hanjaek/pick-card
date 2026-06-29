@@ -1,0 +1,129 @@
+/* ================================================================
+   BNK 라이프 카드 — 상세 + AI 소비 분석 페이지
+   ================================================================ */
+.lc-page { background: var(--bnk-bg); }
+
+/* ── 상단 히어로 ── */
+.lc-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 90px 40px 70px;
+}
+.lc-hero-card { display: flex; justify-content: center; perspective: 1300px; }
+.lc-hero-text { }
+.lc-eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: var(--bnk-red); margin-bottom: 16px; }
+.lc-title { font-size: 42px; font-weight: 900; line-height: 1.18; letter-spacing: -1.4px; color: #16110f; margin-bottom: 18px; word-break: keep-all; }
+.lc-desc { font-size: 16px; line-height: 1.7; color: #6b6b6b; margin-bottom: 22px; }
+.lc-quick { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; }
+.lc-quick li {
+  list-style: none; font-size: 13.5px; font-weight: 700; color: #8b2b2b;
+  background: #fbeae8; border: 1px solid #f3d4cf; padding: 7px 14px; border-radius: 20px;
+}
+
+.lc-btn-primary {
+  background: var(--bnk-red); color: #fff; border: none;
+  padding: 16px 44px; font-size: 16px; font-weight: 800; border-radius: 50px;
+  cursor: pointer; transition: var(--transition); box-shadow: 0 12px 30px rgba(215,25,25,0.3);
+}
+.lc-btn-primary:hover { background: var(--bnk-dark-red); transform: translateY(-2px); box-shadow: 0 18px 40px rgba(215,25,25,0.42); }
+
+.lc-issued { background: #fff; border: 1px solid var(--bnk-border); border-radius: 16px; padding: 24px 26px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+.lc-issued-title { font-size: 20px; font-weight: 800; color: var(--bnk-red); margin-bottom: 6px; }
+.lc-issued-sub { font-size: 13.5px; color: #999; margin-bottom: 16px; }
+.lc-btn-ghost { background: none; border: 1.5px solid var(--bnk-red); color: var(--bnk-red); padding: 10px 24px; border-radius: 40px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.lc-btn-ghost:hover { background: var(--bnk-red); color: #fff; }
+
+/* ── AI 소비 분석 리포트 ── */
+.lc-report { max-width: 1140px; margin: 0 auto; padding: 40px 40px 70px; }
+.lc-report-head { text-align: center; margin-bottom: 40px; }
+.lc-badge-ai {
+  display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 1px;
+  color: #fff; background: linear-gradient(135deg, #D71919, #8B0304);
+  padding: 6px 16px; border-radius: 20px; margin-bottom: 16px;
+}
+.lc-report-title { font-size: 28px; font-weight: 900; letter-spacing: -0.8px; color: #16110f; word-break: keep-all; }
+
+.lc-login-prompt { background: #fff; border: 1px solid var(--bnk-border); border-radius: 20px; padding: 50px 30px; text-align: center; }
+.lc-login-prompt p { font-size: 16px; color: #555; margin-bottom: 22px; line-height: 1.6; }
+
+.lc-loading { display: flex; justify-content: center; padding: 60px; }
+.lc-spinner { width: 38px; height: 38px; border: 4px solid #f0d6d2; border-top-color: var(--bnk-red); border-radius: 50%; animation: lcspin 0.8s linear infinite; }
+@keyframes lcspin { to { transform: rotate(360deg); } }
+
+.lc-report-grid { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 20px; }
+.lc-card-box { background: #fff; border: 1px solid var(--bnk-border); border-radius: 20px; padding: 28px 26px; box-shadow: 0 8px 24px rgba(0,0,0,0.03); }
+.lc-box-label { font-size: 13px; font-weight: 800; color: #aa9; letter-spacing: 0.5px; margin-bottom: 14px; }
+.lc-diagnosis { background: linear-gradient(150deg, #2a1311, #160d0b); border: none; color: #fff; }
+.lc-diagnosis .lc-box-label { color: rgba(255,255,255,0.55); }
+.lc-stage-big { font-size: 27px; font-weight: 900; letter-spacing: -0.6px; margin-bottom: 10px; }
+.lc-stage-desc { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.62); }
+
+.lc-total { font-size: 30px; font-weight: 900; color: #16110f; letter-spacing: -1px; margin-bottom: 18px; }
+.lc-total em { font-size: 16px; font-weight: 700; font-style: normal; margin-left: 3px; color: #999; }
+.lc-bars { display: flex; flex-direction: column; gap: 11px; }
+.lc-bar-row { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; gap: 12px; }
+.lc-bar-label { font-size: 13px; color: #555; font-weight: 600; }
+.lc-bar-track { height: 8px; background: #f1eae6; border-radius: 6px; overflow: hidden; }
+.lc-bar-fill { height: 100%; background: linear-gradient(90deg, #D71919, #B01414); border-radius: 6px; }
+.lc-bar-amt { font-size: 12.5px; color: #888; font-weight: 600; white-space: nowrap; }
+.lc-empty { font-size: 14px; color: #aaa; }
+
+.lc-saving { background: linear-gradient(150deg, #D71919, #8B0304); border: none; color: #fff; display: flex; flex-direction: column; justify-content: center; }
+.lc-saving .lc-box-label { color: rgba(255,255,255,0.7); }
+.lc-save-big { font-size: 34px; font-weight: 900; letter-spacing: -1px; }
+.lc-save-big em { font-size: 18px; font-weight: 700; font-style: normal; margin-left: 3px; }
+.lc-save-sub { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 6px; }
+
+/* 켜진 혜택 */
+.lc-active { margin-top: 28px; }
+.lc-active-title { font-size: 18px; font-weight: 800; color: #16110f; margin-bottom: 16px; }
+.lc-active-list { display: flex; flex-direction: column; gap: 11px; }
+.lc-active-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: #fff; border: 1px solid var(--bnk-border); border-radius: 14px; padding: 18px 22px; }
+.lc-active-item.on { border-color: #f0c4bd; background: #fff8f7; box-shadow: 0 6px 18px rgba(215,25,25,0.06); }
+.lc-active-name { font-size: 15.5px; font-weight: 700; color: #221; }
+.lc-active-why { font-size: 13px; color: var(--bnk-red); margin-top: 5px; font-weight: 600; }
+.lc-active-saved { font-size: 17px; font-weight: 800; color: var(--bnk-red); white-space: nowrap; }
+.lc-active-tag { font-size: 12.5px; color: #aaa; font-weight: 700; white-space: nowrap; }
+
+/* ── 생애단계별 혜택 ── */
+.lc-stages-sec { background: #fff; padding: 70px 40px; border-top: 1px solid var(--bnk-border); }
+.lc-section-title { font-size: 30px; font-weight: 900; text-align: center; letter-spacing: -1px; color: #16110f; margin-bottom: 12px; }
+.lc-section-sub { font-size: 15px; color: #888; text-align: center; margin-bottom: 44px; }
+.lc-stage-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; max-width: 1140px; margin: 0 auto; }
+.lc-stage-card { border: 1px solid var(--bnk-border); border-radius: 18px; padding: 26px 22px; transition: var(--transition); }
+.lc-stage-card:hover { transform: translateY(-5px); box-shadow: 0 18px 40px rgba(215,25,25,0.08); border-color: #f0d2cd; }
+.lc-stage-age { display: inline-block; font-size: 13px; font-weight: 900; color: var(--bnk-red); background: #fbeae8; padding: 4px 12px; border-radius: 20px; }
+.lc-stage-label { font-size: 19px; font-weight: 800; margin: 12px 0 14px; color: #16110f; }
+.lc-stage-benefits { display: flex; flex-direction: column; gap: 9px; }
+.lc-stage-benefits li { list-style: none; font-size: 13.5px; color: #555; line-height: 1.5; padding-left: 16px; position: relative; }
+.lc-stage-benefits li::before { content: '✓'; position: absolute; left: 0; color: var(--bnk-red); font-weight: 800; }
+
+.lc-common { max-width: 1140px; margin: 34px auto 0; text-align: center; }
+.lc-common-label { font-size: 13px; font-weight: 800; color: #999; margin-bottom: 14px; }
+.lc-common-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.lc-common-tag { font-size: 13.5px; font-weight: 700; color: #555; background: var(--bnk-cream); border: 1px solid var(--bnk-border); padding: 8px 16px; border-radius: 20px; }
+
+/* ── 하단 CTA ── */
+.lc-cta-sec { background: linear-gradient(150deg, #a81414, #D71919 55%, #8B0304); text-align: center; padding: 80px 40px; }
+.lc-cta-title { font-size: 30px; font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 28px; word-break: keep-all; }
+.lc-btn-white { background: #fff; color: var(--bnk-red); border: none; padding: 16px 48px; font-size: 16px; font-weight: 800; border-radius: 50px; cursor: pointer; transition: var(--transition); box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+.lc-btn-white:hover { transform: translateY(-2px); background: #f3f3f3; }
+
+/* ── 반응형 ── */
+@media (max-width: 960px) {
+  .lc-hero { grid-template-columns: 1fr; gap: 40px; text-align: center; padding-top: 60px; }
+  .lc-hero-text { text-align: center; }
+  .lc-quick { justify-content: center; }
+  .lc-report-grid { grid-template-columns: 1fr; }
+  .lc-stage-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .lc-title { font-size: 32px; }
+  .lc-stage-grid { grid-template-columns: 1fr; }
+  .lc-bar-row { grid-template-columns: 64px 1fr; }
+  .lc-bar-amt { display: none; }
+}

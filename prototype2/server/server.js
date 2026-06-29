@@ -30,6 +30,7 @@ const chatbotRoutes      = require('./routes/chatbot')
 const verifyRoutes       = require('./routes/verify')
 const adminRoutes        = require('./routes/admin')
 const mypageRoutes       = require('./routes/mypage')
+const lifeCardRoutes     = require('./routes/lifecard')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -84,6 +85,7 @@ app.use('/api/chatbot',      chatbotRoutes)
 app.use('/api/verify',       verifyRoutes)
 app.use('/api/admin',        adminRoutes)
 app.use('/api/mypage',       mypageRoutes)
+app.use('/api/life-card',    lifeCardRoutes)
 
 /* ================================================================
    정적 파일 서빙 (약관 PDF 등)
