@@ -400,3 +400,41 @@ JOIN (
   UNION ALL SELECT '적립', '여행·관광 10% 적립',                       10.00,  NULL,  'SENIOR', 'TRAVEL'
 ) x
 WHERE c.prd_nm = 'BNK 라이프 평생 카드';
+
+-- ============================================================
+-- ★ BNK 라이프 데모 테스트 계정 2종 (소비 패턴 대비 — 개인화 비교용)
+--   life_young  : 26세 사회초년생(YOUNG)·카페/교통 → "카페 20% 적립" 켜짐
+--   life_family : 38세 가정형성(FAMILY)·마트/통신   → "대형마트 5% 할인" 켜짐
+--   (둘 다 비밀번호: test1234)  ※ scripts/seed-life-testusers.js 로도 재시드 가능
+-- ============================================================
+INSERT IGNORE INTO users (username, password, cust_nm) VALUES
+('testuser1',  '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '김도윤', 0),
+('testuser2', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '박민준', 0);
+
+INSERT IGNORE INTO user_details (user_id, birth_dt)
+SELECT id, '2000-03-15' FROM users WHERE username = 'testuser1'
+UNION ALL
+SELECT id, '1988-07-20' FROM users WHERE username = 'testuser2';
+
+-- life_young 거래 (카페·교통 중심)
+INSERT IGNORE INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt)
+SELECT u.id, t.category_cd, t.merchant_nm, t.amount, DATE_FORMAT(CURDATE(), '%Y-%m-05')
+FROM users u CROSS JOIN (
+            SELECT 'CAFE'      AS category_cd, '스타벅스 서면점' AS merchant_nm, 16000 AS amount
+  UNION ALL SELECT 'CAFE',      '메가커피 광안점',  12000
+  UNION ALL SELECT 'CAFE',      '투썸플레이스',     17000
+  UNION ALL SELECT 'TRANSPORT', '부산교통공사',     38000
+  UNION ALL SELECT 'CULTURE',   'CGV 센텀시티',     22000
+  UNION ALL SELECT 'PAY',       '네이버페이',       30000
+) t WHERE u.username = 'testuser1';
+
+-- life_family 거래 (마트·통신 중심)
+INSERT IGNORE INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt)
+SELECT u.id, t.category_cd, t.merchant_nm, t.amount, DATE_FORMAT(CURDATE(), '%Y-%m-05')
+FROM users u CROSS JOIN (
+            SELECT 'SHOPPING'  AS category_cd, '이마트 해운대점' AS merchant_nm, 86000 AS amount
+  UNION ALL SELECT 'SHOPPING',  '쿠팡',            94000
+  UNION ALL SELECT 'SHOPPING',  '롯데마트 동래점',  42000
+  UNION ALL SELECT 'TELECOM',   'SKT 통신요금',     60000
+  UNION ALL SELECT 'TRANSPORT', '부산교통공사',     30000
+) t WHERE u.username = 'testuser2';

@@ -39,16 +39,20 @@ const PORT = process.env.PORT || 4000
    Redis 세션 스토어 설정
    ================================================================ */
 let sessionStore
-try {
-  const connectRedis = require('connect-redis')
-  const { master }   = require('./redis')
-  const RedisStore   = connectRedis(session)
-  // disableTouch: 요청마다 TTL 자동연장 끔 → 고정 60분 만료.
-  // 연장은 오직 명시적 /api/auth/extend 호출로만 발생 (카운트다운 타이머가 의미를 가짐)
-  sessionStore       = new RedisStore({ client: master, disableTouch: true })
-  console.log('[Session] Redis 세션 스토어 사용')
-} catch {
-  console.log('[Session] MemoryStore 사용 (Redis 미연결)')
+// prototype2 는 단독 실행(도커/Redis 없이)이 기본 → MemoryStore 사용.
+// Redis 세션이 필요하면 .env 에 USE_REDIS_SESSION=true 설정 시에만 연결.
+if (process.env.USE_REDIS_SESSION === 'true') {
+  try {
+    const connectRedis = require('connect-redis')
+    const { master }   = require('./redis')
+    const RedisStore   = connectRedis(session)
+    sessionStore       = new RedisStore({ client: master, disableTouch: true })
+    console.log('[Session] Redis 세션 스토어 사용')
+  } catch {
+    console.log('[Session] MemoryStore 사용 (Redis 미연결)')
+  }
+} else {
+  console.log('[Session] MemoryStore 사용 (prototype2 단독 실행)')
 }
 
 app.use(session({
@@ -95,15 +99,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 /* ================================================================
    헬스체크
    ================================================================ */
-app.get('/api/health', async (_, res) => {
-  let redisStatus = 'disconnected'
-  try {
-    const { master } = require('./redis')
-    await master.ping()
-    redisStatus = 'connected'
-  } catch {}
-
-  res.json({ status: 'ok', redis: redisStatus })
+app.get('/api/health', (_, res) => {
+  // prototype2 는 Redis 없이 단독 실행 (DB만 사용)
+  res.json({ status: 'ok', mode: 'standalone' })
 })
 
 app.listen(PORT, () => {

@@ -2,15 +2,12 @@ const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const jwt    = require('jsonwebtoken')
 const pool   = require('../db')
-const { master } = require('../redis')   // 세션 키의 실제 TTL 조회용
+// prototype2 는 Redis/도커 없이 단독 실행 — 세션은 MemoryStore + 쿠키 만료로 관리
 
 const SALT_ROUNDS = 10
 
 // 로그인 세션 유지 시간 (카드몰 기준 60분). 연장 시에도 이 값을 사용.
 const SESSION_DURATION_MS = 60 * 60 * 1000
-
-// connect-redis 가 세션을 저장할 때 쓰는 키 접두사 (기본값 'sess:')
-const SESSION_PREFIX = 'sess:'
 
 // 회원가입 시 이번 달 모의 거래를 생성 (소비 분석용, 사용자마다 다른 패턴)
 async function seedTransactions(userId) {
@@ -148,16 +145,11 @@ router.get('/me', async (req, res) => {
     return res.status(401).json({ loggedIn: false, message: '로그인 세션이 없습니다.' })
   }
 
-  // Redis 키의 실제 TTL(초) 조회 → 이게 유일한 만료 기준(source of truth)
-  let ttl
-  try {
-    ttl = await master.ttl(SESSION_PREFIX + req.sessionID)
-  } catch {
-    ttl = -2   // 조회 실패 시 만료로 간주
-  }
+  // 남은 시간은 세션 쿠키의 maxAge(남은 ms)로 판단 — Redis 없이도 동작.
+  // (USE_REDIS_SESSION 사용 시에도 connect-redis 가 쿠키 만료를 함께 관리)
+  const remainingMs = req.session.cookie?.maxAge
 
-  // ttl: -2(키 없음/만료) · -1(만료 없음) · 양수(남은 초)
-  if (ttl === -2 || ttl === 0) {
+  if (remainingMs != null && remainingMs <= 0) {
     return req.session.destroy(() => {
       res.status(401).json({ loggedIn: false, expired: true, message: '세션이 만료되었습니다.' })
     })
@@ -166,7 +158,7 @@ router.get('/me', async (req, res) => {
   res.json({
     loggedIn:  true,
     user:      req.session.user,
-    expiresIn: ttl > 0 ? ttl * 1000 : SESSION_DURATION_MS,   // ms 단위로 변환
+    expiresIn: remainingMs != null ? remainingMs : SESSION_DURATION_MS,
   })
 })
 

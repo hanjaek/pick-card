@@ -43,7 +43,7 @@ export default function Login() {
       let data
       try { data = JSON.parse(text) } catch {
         console.error('서버 응답(JSON 아님):', text.slice(0, 300))
-        setError('서버 응답 오류 — 브라우저 주소가 localhost:3000인지 확인해주세요.')
+        setError('서버 응답 오류 — 잠시 후 다시 시도해주세요. (페이지 새로고침)')
         setLoading(false)
         return
       }
