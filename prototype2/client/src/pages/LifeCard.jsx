@@ -56,11 +56,15 @@ export default function LifeCard() {
         <div className="lc-hero-text">
           <p className="lc-eyebrow">BNK 라이프 평생 카드</p>
           <h1 className="lc-title">고르지 마세요.<br />AI가 평생 챙겨드립니다.</h1>
-          <p className="lc-desc">{card?.feature || '어릴 때부터 노년까지, 하나의 카드로 평생. AI가 나이와 소비를 분석해 생애 단계마다 혜택을 자동으로 바꿔줍니다.'}</p>
+          <p className="lc-desc">
+            수십 장의 카드 중 나에게 맞는 걸 고르는 데 지치셨나요?<br />
+            평생카드는 만 14세부터 시니어까지 — AI가 내 소비 패턴을 분석해 혜택을 자동으로 설정합니다. 카드를 바꿀 필요 없어요.
+          </p>
           <ul className="lc-quick">
-            <li>연회비 평생 무료</li>
-            <li>후불 교통카드</li>
-            <li>나이·소비 맞춤 자동 혜택</li>
+            <li>만 14세부터 발급</li>
+            <li>AI 혜택 자동 설정</li>
+            <li>연회비 선택형</li>
+            <li>장기고객 추가 혜택</li>
           </ul>
           <button
             className="lc-btn-primary"
@@ -75,13 +79,80 @@ export default function LifeCard() {
       <section className="lc-report">
         <div className="lc-report-head">
           <span className="lc-badge-ai">AI 소비 분석</span>
-          <h2 className="lc-report-title">내 소비를 분석해, 켜질 혜택을 미리 보여드려요</h2>
+          <h2 className="lc-report-title">어떤 혜택이 맞는지 모르겠다면<br />AI가 내 소비 패턴을 보고 직접 골라드려요</h2>
+          <p className="lc-report-sub">카드 혜택표를 직접 비교할 필요 없어요. 소비 내역을 분석해 지금 내게 가장 유리한 혜택을 자동으로 설정합니다.</p>
         </div>
 
         {!token ? (
-          <div className="lc-login-prompt">
-            <p>로그인하면 <strong>내 소비 패턴 분석</strong>과 <strong>나에게 켜지는 혜택</strong>을 바로 확인할 수 있어요.</p>
-            <button className="lc-btn-primary" onClick={() => navigate('/login')}>로그인하고 분석 받기</button>
+          <div className="lc-demo">
+            <p className="lc-demo-notice">✦ 아래는 20대 사회초년생 기준 샘플 예시입니다</p>
+            {/* 샘플 분석 카드 3종 */}
+            <div className="lc-report-grid">
+              <div className="lc-card-box lc-diagnosis">
+                <p className="lc-box-label">생애단계 진단</p>
+                <p className="lc-stage-big">20대 · 사회초년생</p>
+                <p className="lc-stage-desc">카페·배달·구독 중심 소비 패턴. 저축 습관 형성 단계.</p>
+              </div>
+              <div className="lc-card-box lc-spending">
+                <p className="lc-box-label">이번 달 소비 분석</p>
+                <p className="lc-total">312,000<em>원</em></p>
+                <div className="lc-bars">
+                  {[
+                    { label: '카페·음료', pct: 78, amount: 86000 },
+                    { label: '배달·외식', pct: 54, amount: 62000 },
+                    { label: '구독 서비스', pct: 38, amount: 41000 },
+                    { label: '교통', pct: 24, amount: 28000 },
+                  ].map((s, i) => (
+                    <div key={i} className="lc-bar-row">
+                      <span className="lc-bar-label">{s.label}</span>
+                      <div className="lc-bar-track"><div className="lc-bar-fill" style={{ width: `${s.pct}%` }} /></div>
+                      <span className="lc-bar-amt">{s.amount.toLocaleString()}원</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="lc-card-box lc-saving">
+                <p className="lc-box-label">이 카드를 쓰면</p>
+                <p className="lc-save-big">+24,000<em>원</em></p>
+                <p className="lc-save-sub">이번 달 소비 기준 예상 절약액</p>
+              </div>
+            </div>
+            {/* 샘플 켜진 혜택 */}
+            <div className="lc-active">
+              <h3 className="lc-active-title">✦ 이 소비 패턴에 켜지는 혜택</h3>
+              <div className="lc-active-list">
+                {[
+                  { desc: '카페 20% 적립', reason: '카페·음료 지출 1위', saved: 17200 },
+                  { desc: '배달앱 10% 적립', reason: '배달·외식 지출 2위', saved: 6200 },
+                  { desc: '구독 서비스 5% 적립', reason: '구독 서비스 월정액 감지', saved: 2050 },
+                ].map((b, i) => (
+                  <div key={i} className="lc-active-item on">
+                    <div className="lc-active-main">
+                      <p className="lc-active-name">{b.desc}</p>
+                      <p className="lc-active-why">📊 {b.reason}</p>
+                    </div>
+                    <p className="lc-active-saved">+{b.saved.toLocaleString()}원</p>
+                  </div>
+                ))}
+                {[
+                  { desc: '후불 교통카드 기본 제공' },
+                  { desc: '해외결제 수수료 무료' },
+                ].map((b, i) => (
+                  <div key={`o${i}`} className="lc-active-item">
+                    <div className="lc-active-main"><p className="lc-active-name">{b.desc}</p></div>
+                    <p className="lc-active-tag">기본 제공</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* 로그인 CTA 배너 */}
+            <div className="lc-demo-cta">
+              <div className="lc-demo-cta-text">
+                <p className="lc-demo-cta-title">내 실제 소비 데이터로 분석받고 싶다면?</p>
+                <p className="lc-demo-cta-desc">로그인하면 내 소비 내역을 AI가 직접 분석해 켜지는 혜택을 실시간으로 보여드려요.</p>
+              </div>
+              <button className="lc-lock-btn" onClick={() => navigate('/login')}>로그인하고 내 리포트 보기</button>
+            </div>
           </div>
         ) : loadingA ? (
           <div className="lc-loading"><div className="lc-spinner" /></div>
@@ -153,8 +224,14 @@ export default function LifeCard() {
 
       {/* ── 생애단계별 혜택 (카드 설명) ── */}
       <section className="lc-stages-sec">
-        <h2 className="lc-section-title">나이에 따라, 혜택이 자랍니다</h2>
-        <p className="lc-section-sub">하나의 카드로 평생 — AI가 생애 단계마다 혜택을 자동으로 바꿔드려요.</p>
+        <h2 className="lc-section-title">만 14세부터 시니어까지,<br />카드 하나로 평생</h2>
+        <p className="lc-section-sub">생애 단계마다 소비가 달라지면 혜택도 따라 바뀝니다. 카드를 바꾸지 않아도 됩니다.</p>
+        <div className="lc-loyalty-badges">
+          <span>🎂 카드 생일 혜택</span>
+          <span>🏅 10년 장기고객 추가 혜택</span>
+          <span>💳 체크 → 신용 전환 특별 혜택</span>
+          <span>👨‍👩‍👧 부모 알림 서비스</span>
+        </div>
         <div className="lc-stage-grid">
           {stages.map((s, i) => (
             <div key={i} className="lc-stage-card">
@@ -178,7 +255,7 @@ export default function LifeCard() {
 
       {/* ── 하단 CTA ── */}
       <section className="lc-cta-sec">
-        <h2 className="lc-cta-title">평생 함께할 내 카드, 지금 만드세요</h2>
+        <h2 className="lc-cta-title">카드 고르는 데 시간 낭비하지 마세요.<br />평생 함께할 내 카드, 지금 만드세요</h2>
         <button className="lc-btn-white" onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}>
           이 카드 만들기
         </button>
