@@ -63,10 +63,11 @@ function applyTenure(benefit, tenureYear) {
   return { base, rate, limit, appliedTier, nextTier }
 }
 
-// 유저의 라이프카드 발급(보유) 조회
+// 유저의 라이프카드 발급(보유) 조회 — 가입연차는 달력기준(TIMESTAMPDIFF)으로 계산
 async function getMembership(userId, cardId) {
   const [rows] = await pool.query(
-    `SELECT id, card_no_masked, issued_dt, valid_thru, membership_status, card_onoff
+    `SELECT id, card_no_masked, issued_dt, valid_thru, membership_status, card_onoff,
+            TIMESTAMPDIFF(YEAR, issued_dt, CURDATE()) AS tenure_year
      FROM card_memberships
      WHERE user_id = ? AND card_id = ? AND membership_status = 'ACTIVE'
      ORDER BY issued_dt LIMIT 1`,
@@ -75,14 +76,14 @@ async function getMembership(userId, cardId) {
   return rows[0] || null
 }
 
-// 발급일 → 가입연차(정수) + 올해 진행률(0~100)
-function tenureFrom(issuedDt) {
+// 발급일 → 올해(현재 가입연차 구간) 진행률 0~100 (마지막 기념일 기준)
+function progressFrom(issuedDt) {
   const issued = new Date(issuedDt)
   const now = new Date()
-  const years = (now - issued) / (365.25 * 24 * 3600 * 1000)
-  const tenureYear = Math.max(0, Math.floor(years))
-  const yearProgress = Math.min(100, Math.max(0, Math.round((years - tenureYear) * 100)))
-  return { tenureYear, yearProgress }
+  const anniv = new Date(now.getFullYear(), issued.getMonth(), issued.getDate())
+  if (anniv > now) anniv.setFullYear(anniv.getFullYear() - 1)
+  const nextAnniv = new Date(anniv.getFullYear() + 1, issued.getMonth(), issued.getDate())
+  return Math.min(100, Math.max(0, Math.round((now - anniv) / (nextAnniv - anniv) * 100)))
 }
 
 /* ------------------------------------------------------
@@ -167,7 +168,8 @@ router.get('/my', authMiddleware, async (req, res) => {
 
     // 3) 보유(발급) 카드 → 가입연차 (성장형 기준)
     const membership = await getMembership(req.user.id, data.card.id)
-    const { tenureYear, yearProgress } = membership ? tenureFrom(membership.issued_dt) : { tenureYear: 0, yearProgress: 0 }
+    const tenureYear   = membership ? Number(membership.tenure_year) : 0
+    const yearProgress = membership ? progressFrom(membership.issued_dt) : 0
     const isHolder = !!membership
 
     // 4) 내 단계+공통 혜택 → 성장형 율 적용 + 소비 매칭(See Why)
