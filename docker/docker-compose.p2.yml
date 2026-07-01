@@ -1,0 +1,248 @@
+# ================================================================
+#  BNK 라이프 (prototype2) — 전체 컨테이너 스택
+#
+#  prototype2 를 본체로 하는 도커 구성. 원본 docker-compose.yml(prototype1)
+#  과 구조는 동일하되, 소스=prototype2 / DB=bnk_life / 세션=Redis 사용.
+#
+#  ⚠️ 컨테이너 이름·포트는 prototype1 스택과 동일하므로 동시에 띄우지 말 것.
+#     (prototype1 도커가 떠 있으면 먼저 `docker compose -f docker/docker-compose.yml down`)
+#
+#  실행:  docker compose -f docker/docker-compose.p2.yml up -d --build
+#  접속:  http://localhost:3000
+#  종료:  docker compose -f docker/docker-compose.p2.yml down
+# ================================================================
+
+networks:
+  redis-cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  p2-master-data:
+  p2-replica-data:
+  p2-sentinel-data:
+  p2-sentinel2-data:
+  p2-sentinel3-data:
+  p2-mysql-data:        # prototype2 전용 (bnk_life 초기화)
+  p2-uploads-data:
+  p2-chroma-data:
+
+# 백엔드 서버 2대 공통 설정
+x-server-common: &server-common
+  build:
+    context: ../prototype2/server
+  image: pickard2-server:local
+  volumes:
+    - /tmp/bnk2-uploads:/app/uploads
+  env_file:
+    - ./.env                 # 비밀값(DB_PASSWORD·JWT_SECRET·SESSION_SECRET)
+  environment:
+    PORT:               "4000"
+    DB_HOST:            mysql
+    DB_PORT:            "3306"
+    DB_USER:            root
+    DB_NAME:            bnk_life          # ★ prototype2 DB
+    USE_REDIS_SESSION:  "true"            # ★ 도커에선 세션을 Redis 에 저장
+    RAG_URL:            "http://pickard-rag:8000"
+    REDIS_SENTINELS:    redis-sentinel:26379,redis-sentinel-2:26379,redis-sentinel-3:26379
+    REDIS_MASTER_NAME:  mymaster
+  depends_on:
+    redis-master:
+      condition: service_healthy
+    redis-sentinel:
+      condition: service_started
+    mysql:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 20s
+  networks:
+    - redis-cluster
+  restart: unless-stopped
+
+services:
+
+  # ── MySQL (172.28.0.20) — bnk_life ─────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: pickard-mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - ./.env
+    environment:
+      MYSQL_DATABASE: bnk_life
+    volumes:
+      - p2-mysql-data:/var/lib/mysql
+      - ../prototype2/server/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.20
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # ── 백엔드 서버 2대 ─────────────────────────────────────────────
+  pickard-server-1:
+    <<: *server-common
+    container_name: pickard-server-1
+
+  pickard-server-2:
+    <<: *server-common
+    container_name: pickard-server-2
+
+  # ── 프론트엔드 + nginx (호스트 3000) ────────────────────────────
+  frontend:
+    build:
+      context: ../prototype2/client
+    image: pickard2-frontend:local
+    container_name: pickard-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - pickard-server-1
+      - pickard-server-2
+    networks:
+      - redis-cluster
+    restart: unless-stopped
+
+  # ── 파이썬 AI 서버 (RAG & OCR) ──────────────────────────────────
+  pickard-rag:
+    build:
+      context: ../rag-service
+    image: pickard-rag:local
+    container_name: pickard-rag
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../rag-service/.env
+    environment:
+      BACKEND_URL: "http://frontend:80"
+    volumes:
+      - p2-chroma-data:/app/chroma_db
+      - p2-uploads-data:/app/uploads
+    depends_on:
+      - frontend
+    networks:
+      - redis-cluster
+    restart: unless-stopped
+
+  # ── Redis MASTER (172.28.0.10) ─────────────────────────────────
+  redis-master:
+    image: redis:7-alpine
+    container_name: redis-master
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/master.conf:/usr/local/etc/redis/redis.conf:ro
+      - p2-master-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.10
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis REPLICA (172.28.0.11) ────────────────────────────────
+  redis-replica:
+    image: redis:7-alpine
+    container_name: redis-replica
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./redis/replica.conf:/usr/local/etc/redis/redis.conf:ro
+      - p2-replica-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis SENTINEL 1/2/3 ───────────────────────────────────────
+  redis-sentinel:
+    image: redis:7-alpine
+    container_name: redis-sentinel
+    ports:
+      - "26379:26379"
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+      - p2-sentinel-data:/data
+    command: sh -c "cp /etc/redis/sentinel.conf /data/sentinel.conf && redis-server /data/sentinel.conf --sentinel"
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.12
+    restart: unless-stopped
+
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: redis-sentinel-2
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+      - p2-sentinel2-data:/data
+    command: sh -c "cp /etc/redis/sentinel.conf /data/sentinel.conf && redis-server /data/sentinel.conf --sentinel"
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.14
+    restart: unless-stopped
+
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: redis-sentinel-3
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel.conf:ro
+      - p2-sentinel3-data:/data
+    command: sh -c "cp /etc/redis/sentinel.conf /data/sentinel.conf && redis-server /data/sentinel.conf --sentinel"
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.15
+    restart: unless-stopped
+
+  # ── RedisInsight (172.28.0.13 · 시각화) ────────────────────────
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - ./redisinsight-data:/data
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      redis-cluster:
+        ipv4_address: 172.28.0.13
+    restart: unless-stopped
