@@ -91,6 +91,16 @@ function parseIdCardText(text) {
   return { name, birthdate, idNumber, issueDate }
 }
 
+// OCR 서비스가 없거나 인식 실패해도 회원가입은 진행 — 직접 입력으로 폴백
+function manualFallback(res, message) {
+  return res.json({
+    success: true, fallback: true,
+    name: '', birthdate: '', idNumber: '', issueDate: '',
+    message: message || '신분증 자동 인식이 어려워요. 정보를 직접 확인·입력해주세요.',
+    demo: true,
+  })
+}
+
 router.post('/id-card', async (req, res) => {
   const { image } = req.body
   if (!image) return res.status(400).json({ message: '신분증 이미지가 필요합니다.' })
@@ -119,13 +129,13 @@ router.post('/id-card', async (req, res) => {
     const ocrText = data.text || ''
 
     if (!ocrText.trim()) {
-      return res.status(422).json({ success: false, message: '신분증에서 텍스트를 인식하지 못했습니다. 다시 촬영해주세요.' })
+      return manualFallback(res, '신분증에서 텍스트를 인식하지 못했어요. 정보를 직접 입력해주세요.')
     }
 
     const parsed = parseIdCardText(ocrText)
 
     if (!parsed.name && !parsed.idNumber) {
-      return res.status(422).json({ success: false, message: '신분증 정보를 추출할 수 없습니다. 신분증이 맞는지 확인 후 다시 촬영해주세요.' })
+      return manualFallback(res, '신분증 정보를 자동으로 읽지 못했어요. 정보를 직접 입력해주세요.')
     }
 
     res.json({
@@ -139,12 +149,8 @@ router.post('/id-card', async (req, res) => {
     })
   } catch (err) {
     console.error('[verify POST /id-card]', err.message)
-
-    if (err.cause?.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
-      return res.status(503).json({ success: false, message: 'OCR 서비스가 실행 중이지 않습니다. 관리자에게 문의해주세요.' })
-    }
-
-    res.status(500).json({ success: false, message: '신분증 인식 중 오류가 발생했습니다.' })
+    // OCR 서비스(RAG :8000) 미실행/오류 → 회원가입 막지 않고 수동 입력으로 폴백
+    return manualFallback(res, '신분증 자동 인식 서비스에 연결하지 못했어요. 정보를 직접 입력해주세요.')
   } finally {
     if (tmpPath && fs.existsSync(tmpPath)) {
       fs.unlinkSync(tmpPath)
