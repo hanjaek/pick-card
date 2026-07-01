@@ -8,7 +8,7 @@ export default defineConfig({
     // /api 요청을 prototype2 자체 백엔드(4000 · bnk_life DB)로 프록시
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:4100',
         changeOrigin: true
       }
     }

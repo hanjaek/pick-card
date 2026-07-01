@@ -71,7 +71,7 @@ app.use(session({
 app.use(express.json({ limit: '10mb' }))
 
 app.use(cors({
-  origin:      'http://localhost:3000',
+  origin: (origin, cb) => cb(null, true),
   credentials: true,
 }))
 
