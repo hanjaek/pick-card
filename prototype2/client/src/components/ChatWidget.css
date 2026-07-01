@@ -46,15 +46,43 @@
   padding: 18px 16px; background: #f7f5f3;
   display: flex; flex-direction: column; gap: 12px;
 }
-.cw-row { display: flex; flex-direction: column; max-width: 84%; }
-.cw-row.user { align-self: flex-end; align-items: flex-end; }
-.cw-row.assistant { align-self: flex-start; align-items: flex-start; }
+/* 아바타 */
+.cw-row { display: flex; gap: 8px; width: 100%; }
+.cw-row.user { justify-content: flex-end; }
+.cw-row.assistant { justify-content: flex-start; align-items: flex-start; }
+.cw-avatar { flex-shrink: 0; width: 30px; height: 30px; }
+.cw-avatar-inner {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, #D71919, #8B0304);
+  color: #fff; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.cw-content-wrap { display: flex; flex-direction: column; gap: 5px; max-width: 80%; }
+.cw-row.user .cw-content-wrap { align-items: flex-end; }
+.cw-sender { font-size: 11px; font-weight: 700; color: #999; padding-left: 2px; }
 .cw-bubble {
-  padding: 11px 15px; border-radius: 16px; font-size: 14px; line-height: 1.55;
-  white-space: pre-line; word-break: break-word;
+  padding: 11px 15px; border-radius: 16px; font-size: 14px; line-height: 1.55; word-break: break-word;
 }
 .cw-row.assistant .cw-bubble { background: #fff; color: #221; border: 1px solid #eee; border-top-left-radius: 4px; }
 .cw-row.user .cw-bubble { background: var(--bnk-red); color: #fff; border-top-right-radius: 4px; }
+
+/* 빠른 액션 칩 */
+.cw-quick-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cw-quick-btn {
+  font-size: 12px; font-weight: 700; color: #8b2b2b;
+  background: #fbeae8; border: 1px solid #f3d4cf; padding: 6px 12px; border-radius: 16px; cursor: pointer;
+  transition: all 0.15s;
+}
+.cw-quick-btn:hover { background: var(--bnk-red); color: #fff; border-color: var(--bnk-red); }
+
+/* 해시태그 */
+.cw-hashtags { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+.cw-hashtag {
+  font-size: 12px; font-weight: 600; color: #555;
+  background: #fff; border: 1px solid #e5ddd5; padding: 6px 12px; border-radius: 16px; cursor: pointer;
+  transition: all 0.15s;
+}
+.cw-hashtag:hover { border-color: var(--bnk-red); color: var(--bnk-red); }
 
 /* 추천 카드 */
 .cw-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; width: 100%; }
