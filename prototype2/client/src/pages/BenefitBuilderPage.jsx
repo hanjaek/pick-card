@@ -9,26 +9,10 @@ const FEE_TIERS = [
   { fee: 100000, label: '100,000원',sub: '모든 혜택 자유',  color: '#B45309' },
 ]
 
-const POOL = [
-  { id: 'transport', icon: '🚌', label: '대중교통',    desc: '3% 할인',         note: '월 최대 2,000원', cost: 5000,  color: '#2563EB',
-    growth: [{ year: 1, val: '3%' }, { year: 3, val: '5%' }, { year: 5, val: '7%' }] },
-  { id: 'pay',       icon: '💳', label: '간편결제',    desc: '1% 적립',         note: '월 최대 1,500원', cost: 4000,  color: '#0891B2',
-    growth: [{ year: 1, val: '1%' }, { year: 3, val: '2%' }, { year: 5, val: '3%' }] },
-  { id: 'cafe',      icon: '☕', label: '카페·편의점', desc: '5% 적립',         note: '월 최대 3,000원', cost: 8000,  color: '#D97706',
-    growth: [{ year: 1, val: '5%' }, { year: 3, val: '8%' }, { year: 5, val: '10%' }] },
-  { id: 'shopping',  icon: '🛍', label: '온라인쇼핑', desc: '2% 캐시백',       note: '월 최대 4,000원', cost: 10000, color: '#7C3AED',
-    growth: [{ year: 1, val: '2%' }, { year: 3, val: '3%' }, { year: 5, val: '5%' }] },
-  { id: 'medical',   icon: '💊', label: '약국·의료',  desc: '5% 할인',         note: '월 최대 2,000원', cost: 7000,  color: '#059669',
-    growth: [{ year: 1, val: '5%' }, { year: 3, val: '7%' }, { year: 5, val: '10%' }] },
-  { id: 'telecom',   icon: '📱', label: '통신요금',   desc: '월 2,000원 할인', note: '자동 적용',       cost: 12000, color: '#DC2626',
-    growth: [{ year: 1, val: '2,000원' }, { year: 3, val: '4,000원' }, { year: 5, val: '6,000원' }] },
-  { id: 'delivery',  icon: '🛵', label: '배달앱',     desc: '3% 할인',         note: '월 최대 3,000원', cost: 15000, color: '#EA580C',
-    growth: [{ year: 1, val: '3%' }, { year: 3, val: '5%' }, { year: 5, val: '7%' }] },
-  { id: 'culture',   icon: '🎬', label: '영화·문화',  desc: '월 1회 50% 할인', note: '최대 7,000원',    cost: 20000, color: '#9333EA',
-    growth: [{ year: 1, val: '월 1회' }, { year: 3, val: '월 2회' }, { year: 5, val: '월 3회' }] },
-]
+// 혜택 목록(POOL)은 하드코딩하지 않고 DB(benefit_catalog)에서 로드 — GET /api/life-card/benefit-catalog
 
 function currentVal(b, tenureYear) {
+  if (!b.growth?.length) return b.desc || ''
   let v = b.growth[0].val
   for (const t of b.growth) { if (tenureYear >= t.year) v = t.val }
   return v
@@ -44,6 +28,7 @@ export default function BenefitBuilderPage() {
   const navigate   = useNavigate()
   const token      = localStorage.getItem('token')
   const [lifeMy,   setLifeMy]   = useState(null)
+  const [POOL,     setPool]     = useState([])   // 혜택 카탈로그(DB에서 로드)
   const [loading,  setLoading]  = useState(true)
 
   const LS_FEE   = 'bnk_selected_fee'
@@ -56,21 +41,25 @@ export default function BenefitBuilderPage() {
 
   useEffect(() => {
     if (!token) { navigate('/login'); return }
-    fetch('/api/life-card/my', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : null).catch(() => null)
-      .then(life => {
-        setLifeMy(life)
-        if (life?.savedConfig) {
-          setSelectedFee(life.savedConfig.selectedFee)
-          setPicked(new Set(life.savedConfig.selectedBenefits))
-        } else {
-          const lsFee = Number(localStorage.getItem(LS_FEE)) || 30000
-          const lsPicks = (() => { try { return JSON.parse(localStorage.getItem(LS_PICKS) || '[]') } catch { return [] } })()
-          setSelectedFee(lsFee)
-          setPicked(new Set(lsPicks))
-        }
-        setLoading(false)
-      })
+    Promise.all([
+      fetch('/api/life-card/my', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/life-card/benefit-catalog')
+        .then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([life, catalog]) => {
+      setPool(Array.isArray(catalog) ? catalog : [])
+      setLifeMy(life)
+      if (life?.savedConfig) {
+        setSelectedFee(life.savedConfig.selectedFee)
+        setPicked(new Set(life.savedConfig.selectedBenefits))
+      } else {
+        const lsFee = Number(localStorage.getItem(LS_FEE)) || 30000
+        const lsPicks = (() => { try { return JSON.parse(localStorage.getItem(LS_PICKS) || '[]') } catch { return [] } })()
+        setSelectedFee(lsFee)
+        setPicked(new Set(lsPicks))
+      }
+      setLoading(false)
+    })
   }, [])
 
   const tenureYear = lifeMy?.membership?.tenureYear || 1

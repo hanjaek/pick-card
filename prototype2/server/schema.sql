@@ -673,6 +673,43 @@ CREATE TABLE IF NOT EXISTS user_benefit_configs (
 );
 
 -- ============================================================
+-- 19. benefit_catalog  (혜택 구성 빌더 — 선택 가능한 혜택 모듈)
+--   '혜택 구성 빌더'에서 회원이 고르는 혜택 후보. cost(예산 소진)로 조립.
+--   user_benefit_configs.selected_benefits(JSON)가 이 표의 benefit_cd 를 참조
+--   → 빌더 혜택 목록을 프론트 하드코딩이 아닌 DB에서 관리(관리자 편집 가능).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS benefit_catalog (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  benefit_cd    VARCHAR(30)   NOT NULL,              -- 안정 코드(cafe/pay/…) — 구성 저장의 참조 키
+  label         VARCHAR(50)   NOT NULL,              -- 표시명(카페·편의점)
+  icon          VARCHAR(10),                         -- 이모지 아이콘
+  base_desc     VARCHAR(100),                        -- 기본 혜택 문구(5% 적립)
+  note          VARCHAR(100),                        -- 부가 설명(월 최대 3,000원)
+  cost          INT           NOT NULL,              -- 예산 소진 비용(원)
+  color         VARCHAR(20),                         -- 표시 색
+  category_cd   ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
+                     'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
+                     'TRAVEL','CONVENIENCE') NULL,    -- 소비 카테고리(card_benefits와 동일 체계)
+  sort_order    INT           DEFAULT 0,             -- 노출 순서
+  is_active     TINYINT(1)    DEFAULT 1,             -- 노출 여부(끄면 빌더에서 숨김)
+  reg_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_benefit_cd (benefit_cd)
+);
+
+-- ============================================================
+-- 20. benefit_catalog_tiers  (빌더 혜택의 연차별 성장 표시값)
+--   benefit_tiers(라이프카드 자동혜택 성장)와 같은 원리 — 빌더 혜택도 연차로 성장.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS benefit_catalog_tiers (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  catalog_id   BIGINT        NOT NULL,
+  tenure_year  INT           NOT NULL,               -- 1,3,5…
+  display_val  VARCHAR(30)   NOT NULL,               -- 그 연차의 표시값(5% / 2,000원 / 월 2회)
+  FOREIGN KEY (catalog_id) REFERENCES benefit_catalog(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_catalog_year (catalog_id, tenure_year)
+);
+
+-- ============================================================
 -- [확장 시드] 성장형·발급·알림·상담 데모 데이터
 -- ============================================================
 
@@ -744,3 +781,45 @@ ORDER BY m.ord;
 INSERT IGNORE INTO user_benefit_configs (user_id, selected_fee, selected_benefits)
 SELECT id, 30000, JSON_ARRAY('cafe', 'delivery', 'pay')
 FROM users WHERE username = 'testuser1';
+
+-- 혜택 구성 빌더 카탈로그 (선택 가능한 혜택 8종 — 프론트 하드코딩 POOL 이관)
+INSERT IGNORE INTO benefit_catalog (benefit_cd, label, icon, base_desc, note, cost, color, category_cd, sort_order) VALUES
+('transport', '대중교통',    '🚌', '3% 할인',         '월 최대 2,000원', 5000,  '#2563EB', 'TRANSPORT', 1),
+('pay',       '간편결제',    '💳', '1% 적립',         '월 최대 1,500원', 4000,  '#0891B2', 'PAY',       2),
+('cafe',      '카페·편의점', '☕', '5% 적립',         '월 최대 3,000원', 8000,  '#D97706', 'CAFE',      3),
+('shopping',  '온라인쇼핑',  '🛍', '2% 캐시백',       '월 최대 4,000원', 10000, '#7C3AED', 'SHOPPING',  4),
+('medical',   '약국·의료',   '💊', '5% 할인',         '월 최대 2,000원', 7000,  '#059669', 'MEDICAL',   5),
+('telecom',   '통신요금',    '📱', '월 2,000원 할인', '자동 적용',       12000, '#DC2626', 'TELECOM',   6),
+('delivery',  '배달앱',      '🛵', '3% 할인',         '월 최대 3,000원', 15000, '#EA580C', 'DELIVERY',  7),
+('culture',   '영화·문화',   '🎬', '월 1회 50% 할인', '최대 7,000원',    20000, '#9333EA', 'CULTURE',   8);
+
+-- 카탈로그 혜택별 연차 성장값 (benefit_cd 로 안전하게 연결)
+INSERT IGNORE INTO benefit_catalog_tiers (catalog_id, tenure_year, display_val)
+SELECT c.id, t.yr, t.val
+FROM benefit_catalog c
+JOIN (
+            SELECT 'transport' AS cd, 1 AS yr, '3%'      AS val
+  UNION ALL SELECT 'transport', 3, '5%'
+  UNION ALL SELECT 'transport', 5, '7%'
+  UNION ALL SELECT 'pay',       1, '1%'
+  UNION ALL SELECT 'pay',       3, '2%'
+  UNION ALL SELECT 'pay',       5, '3%'
+  UNION ALL SELECT 'cafe',      1, '5%'
+  UNION ALL SELECT 'cafe',      3, '8%'
+  UNION ALL SELECT 'cafe',      5, '10%'
+  UNION ALL SELECT 'shopping',  1, '2%'
+  UNION ALL SELECT 'shopping',  3, '3%'
+  UNION ALL SELECT 'shopping',  5, '5%'
+  UNION ALL SELECT 'medical',   1, '5%'
+  UNION ALL SELECT 'medical',   3, '7%'
+  UNION ALL SELECT 'medical',   5, '10%'
+  UNION ALL SELECT 'telecom',   1, '2,000원'
+  UNION ALL SELECT 'telecom',   3, '4,000원'
+  UNION ALL SELECT 'telecom',   5, '6,000원'
+  UNION ALL SELECT 'delivery',  1, '3%'
+  UNION ALL SELECT 'delivery',  3, '5%'
+  UNION ALL SELECT 'delivery',  5, '7%'
+  UNION ALL SELECT 'culture',   1, '월 1회'
+  UNION ALL SELECT 'culture',   3, '월 2회'
+  UNION ALL SELECT 'culture',   5, '월 3회'
+) t ON t.cd = c.benefit_cd;

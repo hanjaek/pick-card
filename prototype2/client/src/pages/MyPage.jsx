@@ -8,16 +8,7 @@ const CAT_LABEL = {
   FOOD:    '식비·외식', MEDICAL:   '의료·건강',
 }
 
-const BENEFIT_META = {
-  transport: { icon: '🚌', label: '대중교통' },
-  pay:       { icon: '💳', label: '간편결제' },
-  cafe:      { icon: '☕', label: '카페·편의점' },
-  shopping:  { icon: '🛍', label: '온라인쇼핑' },
-  medical:   { icon: '💊', label: '약국·의료' },
-  telecom:   { icon: '📱', label: '통신요금' },
-  delivery:  { icon: '🛵', label: '배달앱' },
-  culture:   { icon: '🎬', label: '영화·문화' },
-}
+// 저장된 혜택 구성 칩의 아이콘·라벨은 API(savedConfig.items, benefit_catalog 조인)에서 옴 — 하드코딩 제거
 const CAT_ORDER = ['CAFE', 'TRANSPORT', 'SHOPPING', 'TELECOM', 'CULTURE', 'PAY']
 const CAT_META  = {
   CAFE:      { icon: '☕', keywords: ['카페', '편의점', '커피'] },
@@ -196,10 +187,9 @@ export default function MyPage() {
                 <div className="mp-my-config">
                   <p className="mp-my-config-label">내 혜택 구성</p>
                   <div className="mp-my-config-chips">
-                    {lifeMy.savedConfig.selectedBenefits.map(id => {
-                      const m = BENEFIT_META[id]
-                      return m ? <span key={id} className="mp-my-chip">{m.icon} {m.label}</span> : null
-                    })}
+                    {(lifeMy.savedConfig.items || []).map(it => (
+                      <span key={it.cd} className="mp-my-chip">{it.icon} {it.label}</span>
+                    ))}
                   </div>
                   <p className="mp-my-config-fee">연회비 {lifeMy.savedConfig.selectedFee.toLocaleString()}원</p>
                 </div>

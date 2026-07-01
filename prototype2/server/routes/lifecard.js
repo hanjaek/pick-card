@@ -118,6 +118,41 @@ router.get('/', async (req, res) => {
 })
 
 /* ------------------------------------------------------
+   GET /api/life-card/benefit-catalog  —  혜택 구성 빌더 카탈로그(DB)
+   프론트 하드코딩 POOL 대체: 선택 가능한 혜택 + 연차 성장값을 DB에서 제공
+   ------------------------------------------------------ */
+router.get('/benefit-catalog', async (req, res) => {
+  try {
+    const [items] = await pool.query(
+      `SELECT id, benefit_cd, label, icon, base_desc, note, cost, color, category_cd
+       FROM benefit_catalog WHERE is_active = 1 ORDER BY sort_order, id`
+    )
+    let tiers = []
+    const ids = items.map(i => i.id)
+    if (ids.length) {
+      const [tr] = await pool.query(
+        `SELECT catalog_id, tenure_year, display_val FROM benefit_catalog_tiers
+         WHERE catalog_id IN (?) ORDER BY tenure_year`, [ids]
+      )
+      tiers = tr
+    }
+    const growthByCat = {}
+    tiers.forEach(t => {
+      (growthByCat[t.catalog_id] = growthByCat[t.catalog_id] || []).push({ year: t.tenure_year, val: t.display_val })
+    })
+    // 프론트 POOL 과 동일한 형태로 반환(id = benefit_cd)
+    res.json(items.map(i => ({
+      id: i.benefit_cd, icon: i.icon, label: i.label, desc: i.base_desc,
+      note: i.note, cost: i.cost, color: i.color, category: i.category_cd,
+      growth: growthByCat[i.id] || [],
+    })))
+  } catch (err) {
+    console.error('[life-card GET /benefit-catalog]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
+/* ------------------------------------------------------
    GET /api/life-card/my  —  나이+소비+성장형 개인화 (See Why)
    ------------------------------------------------------ */
 function authMiddleware(req, res, next) {
@@ -213,12 +248,26 @@ router.get('/my', authMiddleware, async (req, res) => {
       'SELECT selected_fee, selected_benefits FROM user_benefit_configs WHERE user_id = ?',
       [req.user.id]
     )
-    const savedConfig = configs.length ? {
-      selectedFee:      configs[0].selected_fee,
-      selectedBenefits: Array.isArray(configs[0].selected_benefits)
+    let savedConfig = null
+    if (configs.length) {
+      const selectedBenefits = Array.isArray(configs[0].selected_benefits)
         ? configs[0].selected_benefits
-        : JSON.parse(configs[0].selected_benefits),
-    } : null
+        : JSON.parse(configs[0].selected_benefits)
+      // 저장된 코드(cafe/pay…) → benefit_catalog 조인으로 라벨·아이콘 부여(하드코딩 제거)
+      let items = []
+      if (selectedBenefits.length) {
+        const [cat] = await pool.query(
+          'SELECT benefit_cd, label, icon FROM benefit_catalog WHERE benefit_cd IN (?)',
+          [selectedBenefits]
+        )
+        const map = {}
+        cat.forEach(c => { map[c.benefit_cd] = c })
+        items = selectedBenefits.map(cd =>
+          map[cd] ? { cd, label: map[cd].label, icon: map[cd].icon } : { cd, label: cd, icon: '•' }
+        )
+      }
+      savedConfig = { selectedFee: configs[0].selected_fee, selectedBenefits, items }
+    }
 
     res.json({
       stage, stageLabel: STAGE_META[stage], age,
