@@ -407,8 +407,8 @@ WHERE c.prd_nm = 'BNK 라이프 평생 카드';
 --   life_family : 38세 가정형성(FAMILY)·마트/통신   → "대형마트 5% 할인" 켜짐
 --   (둘 다 비밀번호: test1234)  ※ scripts/seed-life-testusers.js 로도 재시드 가능
 -- ============================================================
-INSERT IGNORE INTO users (username, password, cust_nm) VALUES
-('testuser1',  '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '김도윤', 0),
+INSERT IGNORE INTO users (username, password, cust_nm, is_admin) VALUES
+('testuser1', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '김도윤', 0),
 ('testuser2', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '박민준', 0);
 
 INSERT IGNORE INTO user_details (user_id, birth_dt)
@@ -438,3 +438,169 @@ FROM users u CROSS JOIN (
   UNION ALL SELECT 'TELECOM',   'SKT 통신요금',     60000
   UNION ALL SELECT 'TRANSPORT', '부산교통공사',     30000
 ) t WHERE u.username = 'testuser2';
+
+-- ============================================================
+-- [확장] 시나리오·성장형·사후관리 테이블 (prototype2 본체화)
+--   회원→상담→신청→발급→성장→사후관리 전 생애주기 커버
+-- ============================================================
+
+-- ============================================================
+-- 13. card_memberships  (발급된 보유 카드)
+--   card_applications(신청) 과 구분: 신청이 승인되면 "발급"되어
+--   회원이 실제 보유하는 카드. issued_dt 는 성장형(가입연차)의 기준.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS card_memberships (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id           BIGINT        NOT NULL,             -- 보유 회원
+  card_id           BIGINT        NOT NULL,             -- 발급된 카드 상품
+  application_id    BIGINT,                             -- 발급 근거 신청건 (선택)
+  card_no_masked    VARCHAR(25),                        -- 마스킹 카드번호 (5310-98**-****-2749)
+  issued_dt         DATE          NOT NULL,             -- 발급일 = 가입연차(성장형) 기준
+  valid_thru        CHAR(5),                            -- 유효기간 MM/YY
+  membership_status ENUM('ACTIVE','BLOCKED','EXPIRED','CANCELLED') DEFAULT 'ACTIVE',  -- 카드 상태
+  card_onoff        ENUM('ON','OFF') DEFAULT 'ON',      -- 시나리오의 즉시 On/Off 관리
+  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)        REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (card_id)        REFERENCES cards(id),
+  FOREIGN KEY (application_id) REFERENCES card_applications(id) ON DELETE SET NULL,
+  -- 내 보유카드 조회( WHERE user_id=? AND status=ACTIVE )용 인덱스
+  INDEX idx_membership_user (user_id, membership_status)
+);
+
+-- ============================================================
+-- 14. benefit_tiers  (성장형 혜택 단계)
+--   혜택(card_benefits)의 기본율은 1년차. 오래 쓸수록(가입연차)
+--   적립/할인율이 상승 → 이 표에 "N년차부터 적용될 율" 을 단계로 저장.
+--   적용 규칙: 내 연차 이하 tenure_year 중 가장 큰 단계의 율을 사용.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS benefit_tiers (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  benefit_id        BIGINT        NOT NULL,             -- 대상 혜택
+  tenure_year       INT           NOT NULL,             -- 가입 N년차부터 적용 (2,3,5 …)
+  discount_rate     DECIMAL(5,2),                       -- 그 시점 적립/할인율
+  monthly_limit_amt INT,                                -- 그 시점 월 한도(상향 가능)
+  tier_label        VARCHAR(50),                        -- 표시용 ("3년차 우대")
+  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (benefit_id) REFERENCES card_benefits(id) ON DELETE CASCADE,
+  INDEX idx_tier_benefit_year (benefit_id, tenure_year)
+);
+
+-- ============================================================
+-- 15. notifications  (사후관리 알림)
+--   MY페이지의 "놓친 혜택 / 업그레이드 임박 / 혜택 추가" 등을 저장.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id       BIGINT        NOT NULL,                 -- 수신 회원
+  membership_id BIGINT,                                 -- 관련 보유카드 (선택)
+  noti_type     ENUM('MISSED_BENEFIT','UPGRADE_SOON','BENEFIT_ADDED','STAGE_CHANGE','GENERAL') NOT NULL,
+  title         VARCHAR(200),
+  body          TEXT,
+  is_read       TINYINT(1)    DEFAULT 0,                -- 읽음 여부
+  created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)       REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (membership_id) REFERENCES card_memberships(id) ON DELETE CASCADE,
+  INDEX idx_noti_user (user_id, is_read, created_at)
+);
+
+-- ============================================================
+-- 16. consultations  (AI 상담 세션)
+--   시나리오의 "AI 상담 팝업" 1건. 비회원도 상담 가능(user_id NULL).
+--   상담 결과 추천 카드/요약을 기록 → 상담 데이터 자산화.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS consultations (
+  id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id             BIGINT,                           -- 상담 회원 (비회원=NULL)
+  channel             ENUM('POPUP','PAGE') DEFAULT 'POPUP',  -- 상담 진입 형태
+  entry_point         VARCHAR(50),                      -- 유입 지점 (HOME/CARD_DETAIL 등)
+  recommended_card_id BIGINT,                           -- 상담 결과 추천 카드
+  summary             VARCHAR(300),                     -- 상담 요약
+  started_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  ended_at            TIMESTAMP     NULL,
+  FOREIGN KEY (user_id)             REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (recommended_card_id) REFERENCES cards(id) ON DELETE SET NULL,
+  INDEX idx_consult_user (user_id, started_at)
+);
+
+-- ============================================================
+-- 17. consultation_messages  (상담 대화 로그)
+--   상담 세션 안의 USER/AI 메시지. 상담 품질 분석·재현에 사용.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS consultation_messages (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  consultation_id BIGINT        NOT NULL,               -- 소속 상담 세션
+  sender          ENUM('USER','AI') NOT NULL,           -- 발화 주체
+  content         TEXT,
+  created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE CASCADE,
+  INDEX idx_msg_consult (consultation_id, created_at)
+);
+
+-- ============================================================
+-- [확장 시드] 성장형·발급·알림·상담 데모 데이터
+-- ============================================================
+
+-- 성장형 혜택 단계 (BNK 라이프 주요 혜택: 카페·배달·마트) — 1년차=기본, 이후 상승
+INSERT INTO benefit_tiers (benefit_id, tenure_year, discount_rate, monthly_limit_amt, tier_label)
+SELECT b.id, t.yr, t.rate, t.lim, t.label
+FROM card_benefits b
+JOIN cards c ON c.id = b.card_id AND c.prd_nm = 'BNK 라이프 평생 카드'
+JOIN (
+            SELECT '카페 20% 적립'  AS desc_match, 2 AS yr, 22.00 AS rate,  9000 AS lim, '2년차 우대'        AS label
+  UNION ALL SELECT '카페 20% 적립',  3, 25.00, 10000, '3년차 우대'
+  UNION ALL SELECT '카페 20% 적립',  5, 28.00, 12000, '5년차 우대(최대)'
+  UNION ALL SELECT '배달앱 10% 적립', 2, 12.00,  9000, '2년차 우대'
+  UNION ALL SELECT '배달앱 10% 적립', 3, 15.00, 10000, '3년차 우대(최대)'
+  UNION ALL SELECT '대형마트 5% 할인', 3,  7.00, 25000, '3년차 우대'
+  UNION ALL SELECT '대형마트 5% 할인', 5,  9.00, 30000, '5년차 우대(최대)'
+) t ON t.desc_match = b.bnft_desc;
+
+-- testuser1 의 BNK 라이프 카드 신청(승인) — 발급 근거 (2년 전 신청)
+INSERT INTO card_applications
+  (user_id, card_id, applicant_name, birth_dt, phone_no, email, status, applied_dt, processed_dt)
+SELECT u.id, c.id, '김도윤', '2000-03-15', '010-1234-5678', 'doyun@example.com', 'APPROVED',
+       DATE_SUB(CURDATE(), INTERVAL 2 YEAR), DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
+FROM users u JOIN cards c ON c.prd_nm = 'BNK 라이프 평생 카드'
+WHERE u.username = 'testuser1';
+
+-- testuser1 의 BNK 라이프 카드 발급 (2년차 → 성장형/사후관리 데모)
+INSERT INTO card_memberships
+  (user_id, card_id, application_id, card_no_masked, issued_dt, valid_thru, membership_status, card_onoff)
+SELECT u.id, c.id, a.id, '5310-98**-****-2749',
+       DATE_SUB(CURDATE(), INTERVAL 2 YEAR), '12/31', 'ACTIVE', 'ON'
+FROM users u
+JOIN cards c ON c.prd_nm = 'BNK 라이프 평생 카드'
+JOIN card_applications a ON a.user_id = u.id AND a.card_id = c.id AND a.status = 'APPROVED'
+WHERE u.username = 'testuser1';
+
+-- 사후관리 알림 (testuser1)
+INSERT INTO notifications (user_id, membership_id, noti_type, title, body)
+SELECT u.id, m.id, t.ntype, t.title, t.body
+FROM users u
+JOIN card_memberships m ON m.user_id = u.id
+JOIN (
+            SELECT 'BENEFIT_ADDED'  AS ntype, '2년차 우대가 적용됐어요'      AS title, '가입 2년차가 되어 카페 적립이 20% → 22% 로 올랐어요.'                AS body
+  UNION ALL SELECT 'UPGRADE_SOON',   '곧 혜택이 더 올라가요',        '3년차가 되면 카페 적립이 25% 로 상향됩니다. 조금만 더 함께해요!'
+  UNION ALL SELECT 'MISSED_BENEFIT', '놓친 혜택이 있어요',          '이번 달 배달 결제가 있었지만 배달 적립 혜택을 아직 활용하지 않았어요.'
+) t
+WHERE u.username = 'testuser1';
+
+-- AI 상담 세션 + 대화 로그 (testuser1, 홈 팝업 유입 예시)
+INSERT INTO consultations (user_id, channel, entry_point, recommended_card_id, summary, ended_at)
+SELECT u.id, 'POPUP', 'HOME', c.id,
+       '카페·배달 소비가 많은 사회초년생 → BNK 라이프 평생 카드 추천', NOW()
+FROM users u JOIN cards c ON c.prd_nm = 'BNK 라이프 평생 카드'
+WHERE u.username = 'testuser1';
+
+INSERT INTO consultation_messages (consultation_id, sender, content)
+SELECT co.id, m.sender, m.content
+FROM consultations co
+JOIN (
+            SELECT 'USER' AS sender, '카페랑 배달 자주 쓰는데 나한테 맞는 카드 있어요?' AS content, 1 AS ord
+  UNION ALL SELECT 'AI',   'BNK 라이프 평생 카드를 추천해요. 카페 20% 적립이 기본이고, 오래 쓸수록 최대 28%까지 올라가요.', 2
+  UNION ALL SELECT 'USER', '오 좋다, 배달도 되나요?', 3
+  UNION ALL SELECT 'AI',   '네, 배달앱 10% 적립도 포함돼요. 지금 가입하면 평생 함께 자라는 혜택을 받아요.', 4
+) m ON 1=1
+WHERE co.entry_point = 'HOME' AND co.user_id = (SELECT id FROM users WHERE username='testuser1')
+ORDER BY m.ord;
