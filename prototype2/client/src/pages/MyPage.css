@@ -1,373 +1,248 @@
 /* ================================================================
-   MyPage — Web layout (desktop-first, 2-column grid)
+   MyPage — 소비 분석 (라이프 카드 히어로 + 2컬럼 그리드)
    ================================================================ */
 
-.mp-page {
-  padding-top: 70px;
-  min-height: 100vh;
-  background: #F5F5F7;
-}
-.mp-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 40px 40px 64px;
-}
+.mp-page { padding-top: 70px; min-height: 100vh; background: #F5F5F7; }
+.mp-inner { max-width: 1100px; margin: 0 auto; padding: 40px 40px 64px; }
 
-/* ── 로딩 ── */
-.mp-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
-}
+.mp-loading { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
 .mp-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #E5E5EA;
-  border-top-color: var(--bnk-red);
-  border-radius: 50%;
-  animation: mp-spin .8s linear infinite;
+  width: 36px; height: 36px;
+  border: 3px solid #E5E5EA; border-top-color: var(--bnk-red);
+  border-radius: 50%; animation: mp-spin .8s linear infinite;
 }
 @keyframes mp-spin { to { transform: rotate(360deg); } }
 
-/* ── 페이지 헤더 ── */
-.mp-page-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 28px;
-}
-.mp-page-title {
-  font-size: 26px;
-  font-weight: 800;
-  color: #1C1C1E;
-  letter-spacing: -.02em;
-  margin-bottom: 4px;
-}
-.mp-page-sub {
-  font-size: 14px;
-  color: #8E8E93;
-}
-.mp-tenure-tag {
-  background: #fff;
-  border: 1px solid #E5E5EA;
-  color: #3C3C43;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 20px;
-}
-
-/* ── 상단 요약 바 ── */
-.mp-summary-bar {
+/* ════════════════════════════════════════════════════════════
+   라이프 카드 히어로 (보유자 메인)
+   ════════════════════════════════════════════════════════════ */
+.mp-life-hero {
   background: #1C1C1E;
-  border-radius: 18px;
-  padding: 28px 36px;
-  display: flex;
+  border-radius: 22px;
+  padding: 36px 40px;
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  gap: 36px;
   align-items: center;
-  gap: 0;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   color: #fff;
 }
-.mp-summary-main {
+
+/* 좌: 카드 비주얼 */
+.mp-life-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mp-life-card-wrap {
+  background: linear-gradient(145deg, #2D2D3E, #1A1A2E);
+  border-radius: 18px;
+  padding: 20px;
+  aspect-ratio: 1.586;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.mp-lc-chip {
+  width: 32px; height: 22px;
+  background: linear-gradient(135deg, #D4AF37, #C5922A);
+  border-radius: 5px;
+}
+.mp-lc-net {
+  position: absolute; top: 16px; right: 16px;
+  font-size: 10px; font-weight: 700;
+  color: rgba(255,255,255,.5); letter-spacing: .1em;
+}
+.mp-lc-brand {
+  font-size: 9px; color: rgba(255,255,255,.4); letter-spacing: .1em; margin-bottom: 2px;
+}
+.mp-lc-name  { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.mp-lc-no    { font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .08em; }
+.mp-lc-meta  { display: flex; gap: 8px; }
+.mp-lc-badge {
+  font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px;
+}
+.mp-lc-badge.year  { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+.mp-lc-badge.stage { background: #D71919; color: #fff; }
+
+/* 중: 지표 3개 */
+.mp-life-stats {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+.mp-lstat {
+  flex: 1;
+  padding: 4px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mp-lstat:first-child { padding-left: 0; }
+.mp-lstat-divider {
+  width: 1px;
+  background: rgba(255,255,255,.1);
+  margin: 4px 0;
   flex-shrink: 0;
 }
-.mp-summary-label {
-  font-size: 13px;
-  color: rgba(255,255,255,.55);
-  margin-bottom: 6px;
+.mp-lstat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
   letter-spacing: .02em;
 }
-.mp-summary-num {
-  font-size: 42px;
+.mp-lstat-val {
+  font-size: 28px;
   font-weight: 800;
+  color: #fff;
   letter-spacing: -.03em;
   line-height: 1;
 }
-.mp-summary-unit {
-  font-size: 22px;
-  font-weight: 600;
-  margin-left: 3px;
-  opacity: .8;
+.mp-lstat-val em {
+  font-size: 14px;
+  font-weight: 500;
+  font-style: normal;
+  opacity: .7;
+  margin-left: 2px;
 }
-.mp-summary-divider {
-  width: 1px;
-  height: 52px;
-  background: rgba(255,255,255,.15);
-  margin: 0 40px;
-  flex-shrink: 0;
+.mp-lstat-sub      { font-size: 12px; color: rgba(255,255,255,.45); }
+.mp-lstat-sub.warn { color: #FBBF24; }
+.mp-lstat-sub.good { color: #4ADE80; }
+.mp-lstat-val.good { color: #4ADE80; font-size: 20px; }
+.mp-lstat-upgrade-row {
+  display: flex; align-items: baseline; gap: 8px;
 }
-.mp-summary-stats {
-  display: flex;
-  gap: 40px;
+.mp-lstat-yr {
+  font-size: 11px; font-weight: 600;
+  background: rgba(215,25,25,.3); color: #FF8A8A;
+  padding: 2px 7px; border-radius: 20px;
 }
-.mp-sstat {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.mp-lstat-bar {
+  height: 4px; background: rgba(255,255,255,.12);
+  border-radius: 2px; overflow: hidden; margin: 4px 0;
 }
-.mp-sstat-label {
-  font-size: 12px;
-  color: rgba(255,255,255,.5);
-  letter-spacing: .03em;
-}
-.mp-sstat-val {
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
+.mp-lstat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #D71919, #FF6B6B);
+  border-radius: 2px;
+  transition: width .6s ease;
 }
 
-/* ── 2컬럼 그리드 ── */
-.mp-grid {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 16px;
-  align-items: start;
-}
-.mp-col {
+/* 우: 액션 */
+.mp-life-actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: flex-end;
+  gap: 10px;
 }
+.mp-action-btn {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700;
+  padding: 13px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity .15s, transform .1s;
+}
+.mp-action-btn.primary {
+  background: #fff; color: #1C1C1E;
+}
+.mp-action-btn:hover { opacity: .88; transform: translateY(-1px); }
+.mp-action-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,.4);
+  text-align: right;
+  line-height: 1.5;
+}
+.mp-action-period {
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  margin-top: 8px;
+}
+
+/* ── 비보유자 헤더 ── */
+.mp-page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+.mp-page-title  { font-size: 26px; font-weight: 800; color: #1C1C1E; letter-spacing: -.02em; margin-bottom: 4px; }
+.mp-page-sub    { font-size: 14px; color: #8E8E93; }
+
+/* ── 비보유자 요약 바 ── */
+.mp-summary-bar {
+  background: #1C1C1E; border-radius: 18px; padding: 28px 36px;
+  display: flex; align-items: center; gap: 0; margin-bottom: 20px; color: #fff;
+}
+.mp-summary-main { flex-shrink: 0; }
+.mp-summary-label { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 6px; }
+.mp-summary-num { font-size: 40px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.mp-summary-unit { font-size: 20px; font-weight: 600; margin-left: 3px; opacity: .7; }
+.mp-summary-divider { width: 1px; height: 48px; background: rgba(255,255,255,.15); margin: 0 40px; flex-shrink: 0; }
+.mp-summary-stats { display: flex; gap: 36px; }
+.mp-sstat { display: flex; flex-direction: column; gap: 6px; }
+.mp-sstat-label { font-size: 12px; color: rgba(255,255,255,.5); }
+.mp-sstat-val { font-size: 18px; font-weight: 700; color: #fff; }
+
+/* ════════════════════════════════════════════════════════════
+   2컬럼 그리드
+   ════════════════════════════════════════════════════════════ */
+.mp-grid { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+.mp-col  { display: flex; flex-direction: column; gap: 16px; }
 
 /* ── 공통 카드 ── */
 .mp-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 28px 28px;
+  background: #fff; border-radius: 18px; padding: 28px 28px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.04);
 }
-.mp-card--green {
-  border: 1.5px solid #BBF7D0;
-  background: #F0FDF4;
-}
 .mp-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
 }
-.mp-card-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: #1C1C1E;
-}
-.mp-chip {
-  background: #FFF0F0;
-  color: var(--bnk-red);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-.mp-chip--gray {
-  background: #F2F3F5;
-  color: #8E8E93;
-}
+.mp-card-title { font-size: 17px; font-weight: 700; color: #1C1C1E; }
+.mp-chip { background: #FFF0F0; color: var(--bnk-red); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.mp-chip--gray { background: #F2F3F5; color: #8E8E93; }
 
 /* ── 혜택 테이블 ── */
-.mp-benefit-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 16px;
-}
-.mp-benefit-table thead tr {
-  border-bottom: 2px solid #F2F3F5;
-}
-.mp-benefit-table th {
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: #AEAEB2;
-  padding: 0 8px 10px 0;
-  letter-spacing: .04em;
-  white-space: nowrap;
-}
-.mp-benefit-table th:last-child { padding-right: 0; }
-.mp-benefit-table tbody tr {
-  border-bottom: 1px solid #F7F7F8;
-  transition: background .1s;
-}
+.mp-benefit-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+.mp-benefit-table thead tr { border-bottom: 2px solid #F2F3F5; }
+.mp-benefit-table th { text-align: left; font-size: 12px; font-weight: 600; color: #AEAEB2; padding: 0 8px 10px 0; letter-spacing: .04em; white-space: nowrap; }
+.mp-benefit-table tbody tr { border-bottom: 1px solid #F7F7F8; transition: background .1s; }
 .mp-benefit-table tbody tr:hover { background: #FAFAFA; }
 .mp-benefit-table tbody tr.row-miss { opacity: .65; }
-.mp-benefit-table td {
-  padding: 13px 8px 13px 0;
-  font-size: 14px;
-  color: #1C1C1E;
-}
+.mp-benefit-table td { padding: 13px 8px 13px 0; font-size: 14px; color: #1C1C1E; }
 .td-desc { font-weight: 500; max-width: 200px; }
 .td-cat  { color: #8E8E93; font-size: 13px; white-space: nowrap; }
 .td-num  { color: #3C3C43; font-size: 13px; white-space: nowrap; }
 .td-save { font-weight: 600; color: #22C55E; white-space: nowrap; }
-.td-save:not(:empty)::before { content: ''; }
 .row-miss .td-save { color: #AEAEB2; font-weight: 400; }
 .td-status { white-space: nowrap; }
-.status-on {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #22C55E;
-}
-.status-off {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #F59E0B;
-}
-
+.status-on  { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #22C55E; }
+.status-off { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: #F59E0B; }
 .mp-missed-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 13px;
-  color: #92400E;
-  line-height: 1.5;
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #FFFBEB; border: 1px solid #FDE68A;
+  border-radius: 10px; padding: 12px 14px;
+  font-size: 13px; color: #92400E; line-height: 1.5;
 }
 .mp-missed-note svg { flex-shrink: 0; margin-top: 1px; }
 
 /* ── 알림 ── */
-.mp-noti-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+.mp-noti-list { display: flex; flex-direction: column; }
 .mp-noti-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 0;
-  border-bottom: 1px solid #F7F7F8;
-  position: relative;
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid #F7F7F8; position: relative;
 }
 .mp-noti-item:last-child { border-bottom: none; }
-.mp-noti-dot-icon {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 5px;
-}
+.mp-noti-dot-icon { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 .mp-noti-dot-icon.type-UPGRADE_SOON { background: #6366F1; }
 .mp-noti-dot-icon.type-MISSED_BENEFIT { background: #F59E0B; }
 .mp-noti-dot-icon.type-NEW_BENEFIT { background: #22C55E; }
-.mp-noti-body {
-  flex: 1;
-  min-width: 0;
-}
-.mp-noti-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1C1C1E;
-  margin-bottom: 2px;
-}
-.mp-noti-desc {
-  font-size: 13px;
-  color: #8E8E93;
-  line-height: 1.45;
-}
-.mp-unread-dot {
-  width: 7px;
-  height: 7px;
-  background: var(--bnk-red);
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 5px;
-}
-
-/* ── 업그레이드 카드 ── */
-.mp-upgrade-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.mp-upgrade-label {
-  font-size: 13px;
-  color: #8E8E93;
-  margin-bottom: 4px;
-}
-.mp-upgrade-big {
-  font-size: 32px;
-  font-weight: 800;
-  color: #1C1C1E;
-  letter-spacing: -.02em;
-  line-height: 1;
-}
-.mp-upgrade-pct {
-  font-size: 18px;
-  font-weight: 700;
-}
-.mp-year-badge {
-  background: #FFF0F0;
-  color: var(--bnk-red);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-.mp-progress-wrap { margin-bottom: 14px; }
-.mp-progress-track {
-  height: 6px;
-  background: #F2F3F5;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-.mp-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--bnk-dark-red), var(--bnk-red));
-  border-radius: 3px;
-  transition: width .6s ease;
-}
-.mp-progress-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #AEAEB2;
-}
-.mp-upgrade-benefit {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  background: #FFF8F8;
-  border-radius: 10px;
-  padding: 10px 14px;
-}
-.mp-rate-from { color: #AEAEB2; font-weight: 600; }
-.mp-rate-to   { color: var(--bnk-red); font-weight: 700; font-size: 15px; }
-.mp-benefit-name { color: #3C3C43; }
-.mp-best-grade {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-  font-size: 14px;
-  color: #15803D;
-  font-weight: 500;
-}
+.mp-noti-body { flex: 1; min-width: 0; }
+.mp-noti-title { font-size: 14px; font-weight: 600; color: #1C1C1E; margin-bottom: 2px; }
+.mp-noti-desc  { font-size: 13px; color: #8E8E93; line-height: 1.45; }
+.mp-unread-dot { width: 7px; height: 7px; background: var(--bnk-red); border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 
 /* ── 소비 패턴 ── */
-.mp-spend-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
-}
-.mp-spend-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.mp-spend-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.mp-spend-row  { display: flex; align-items: center; gap: 10px; }
 .mp-spend-icon  { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
 .mp-spend-label { font-size: 13px; color: #3C3C43; width: 68px; flex-shrink: 0; }
 .mp-bar-track   { flex: 1; height: 5px; background: #F2F3F5; border-radius: 3px; overflow: hidden; }
@@ -375,21 +250,12 @@
 .mp-spend-pct   { font-size: 12px; color: #AEAEB2; width: 28px; text-align: right; flex-shrink: 0; }
 .mp-spend-amt   { font-size: 12px; font-weight: 600; color: #3C3C43; width: 70px; text-align: right; flex-shrink: 0; }
 
-/* ── 다른 카드 추천 ── */
-.mp-opp-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-top: 4px;
-}
+/* ── 다른 카드 ── */
+.mp-opp-list { display: flex; flex-direction: column; margin-top: 4px; }
 .mp-opp-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 0;
-  border-bottom: 1px solid #F7F7F8;
-  text-decoration: none;
-  transition: opacity .15s;
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid #F7F7F8;
+  text-decoration: none; transition: opacity .15s;
 }
 .mp-opp-item:last-child { border-bottom: none; }
 .mp-opp-item:hover { opacity: .7; }
@@ -404,334 +270,33 @@
 .mp-empty-title { font-size: 18px; font-weight: 700; color: #1C1C1E; margin-bottom: 8px; }
 .mp-empty-sub   { font-size: 14px; color: #8E8E93; margin-bottom: 24px; }
 .mp-empty-btn {
-  display: inline-block;
-  background: var(--bnk-red);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 12px 28px;
-  border-radius: 12px;
-  text-decoration: none;
+  display: inline-block; background: var(--bnk-red); color: #fff;
+  font-size: 15px; font-weight: 600; padding: 12px 28px;
+  border-radius: 12px; text-decoration: none;
 }
-.mp-empty-btn:hover { opacity: .88; }
-.mp-builder-locked  { text-align: center; padding: 60px 28px; }
-.mp-builder-lock-icon { font-size: 40px; margin-bottom: 16px; }
-
-/* ════════════════════════════════════════════════════════════
-   탭 네비게이션
-   ════════════════════════════════════════════════════════════ */
-.mp-tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #E5E5EA;
-}
-.mp-tab {
-  background: none;
-  border: none;
-  font-size: 15px;
-  font-weight: 600;
-  color: #AEAEB2;
-  padding: 10px 20px;
-  cursor: pointer;
-  position: relative;
-  transition: color .15s;
-}
-.mp-tab.active {
-  color: #1C1C1E;
-}
-.mp-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #1C1C1E;
-  border-radius: 2px 2px 0 0;
-}
-
-/* ════════════════════════════════════════════════════════════
-   혜택 구성 (BenefitBuilder)
-   ════════════════════════════════════════════════════════════ */
-.bb-root {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 섹션 헤더 */
-.bb-section-head {
-  margin-bottom: 14px;
-}
-.bb-section-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1C1C1E;
-  margin-bottom: 4px;
-}
-.bb-section-sub {
-  font-size: 13px;
-  color: #8E8E93;
-}
-
-/* ── 연회비 선택 그리드 ── */
-.bb-fee-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-.bb-fee-card {
-  background: #fff;
-  border: 2px solid #E5E5EA;
-  border-radius: 16px;
-  padding: 18px 16px;
-  cursor: pointer;
-  text-align: left;
-  position: relative;
-  transition: border-color .15s, box-shadow .15s, transform .1s;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.bb-fee-card:hover {
-  border-color: #C7C7CC;
-  transform: translateY(-1px);
-}
-.bb-fee-card.selected {
-  border-color: #1C1C1E;
-  box-shadow: 0 0 0 3px rgba(28,28,30,.08);
-}
-.bb-fee-card.recommended.selected {
-  border-color: var(--bnk-red);
-  box-shadow: 0 0 0 3px rgba(215,25,25,.1);
-}
-.bb-rec-tag {
-  position: absolute;
-  top: -10px;
-  left: 14px;
-  background: var(--bnk-red);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 20px;
-}
-.bb-fee-amt {
-  font-size: 18px;
-  font-weight: 800;
-  color: #1C1C1E;
-  letter-spacing: -.02em;
-}
-.bb-fee-sub {
-  font-size: 12px;
-  color: #8E8E93;
-}
-
-/* ── 예산 현황 카드 ── */
-.bb-budget-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 24px 28px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.04);
-}
-.bb-budget-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-.bb-budget-label {
-  font-size: 13px;
-  color: #8E8E93;
-  margin-bottom: 6px;
-}
-.bb-budget-num {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1C1C1E;
-  letter-spacing: -.02em;
-}
-.bb-budget-used  { color: #1C1C1E; }
-.bb-budget-sep   { color: #C7C7CC; font-weight: 400; margin: 0 4px; }
-.bb-budget-total { color: #AEAEB2; font-size: 16px; font-weight: 500; }
-.bb-budget-pct-wrap svg { display: block; }
-
-/* 스택 바 */
-.bb-stack-bar {
-  display: flex;
-  height: 10px;
-  border-radius: 5px;
-  overflow: hidden;
-  background: #F2F3F5;
-  gap: 2px;
-  margin-bottom: 10px;
-}
-.bb-stack-seg {
-  height: 100%;
-  border-radius: 2px;
-  transition: width .4s ease;
-  flex-shrink: 0;
-}
-.bb-stack-empty { background: transparent; }
-.bb-stack-labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin-top: 4px;
-}
-.bb-stack-label {
-  font-size: 12px;
-  font-weight: 600;
-}
-.bb-stack-label-gray {
-  font-size: 12px;
-  color: #AEAEB2;
-}
-.bb-full-msg {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #15803D;
-  background: #F0FDF4;
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-top: 14px;
-}
-
-/* ── 혜택 선택 그리드 ── */
-.bb-benefit-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-.bb-benefit-card {
-  background: #fff;
-  border: 2px solid #E5E5EA;
-  border-radius: 16px;
-  padding: 18px 16px;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color .15s, box-shadow .15s, transform .1s, opacity .15s;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.bb-benefit-card:hover:not(.disabled) {
-  border-color: #C7C7CC;
-  transform: translateY(-1px);
-}
-.bb-benefit-card.picked {
-  border-color: currentColor;
-  box-shadow: 0 0 0 3px rgba(28,28,30,.07);
-}
-.bb-benefit-card.disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-.bb-benefit-card.shake {
-  animation: bb-shake .4s ease;
-}
-@keyframes bb-shake {
-  0%,100% { transform: translateX(0); }
-  20%     { transform: translateX(-6px); }
-  40%     { transform: translateX(6px); }
-  60%     { transform: translateX(-4px); }
-  80%     { transform: translateX(4px); }
-}
-
-.bb-benefit-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-.bb-benefit-icon  { font-size: 22px; }
-.bb-check-wrap    { display: flex; }
-.bb-plus-wrap {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px solid #E5E5EA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #C7C7CC;
-}
-.bb-plus-wrap.over { border-color: #FECACA; color: #FCA5A5; }
-
-.bb-benefit-label { font-size: 14px; font-weight: 700; color: #1C1C1E; }
-.bb-benefit-desc  { font-size: 13px; font-weight: 600; color: #3C3C43; }
-.bb-benefit-note  { font-size: 11px; color: #AEAEB2; margin-bottom: 8px; }
-
-.bb-benefit-cost-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 10px;
-  border-top: 1px solid #F2F3F5;
-}
-.bb-cost-amt {
-  font-size: 13px;
-  font-weight: 700;
-  color: #3C3C43;
-}
-.bb-cost-pct {
-  font-size: 12px;
-  font-weight: 600;
-  background: #F2F3F5;
-  color: #8E8E93;
-  padding: 2px 8px;
-  border-radius: 20px;
-}
-.bb-cost-pct.over { background: #FEF2F2; color: #EF4444; }
-
-/* ── 저장 버튼 ── */
-.bb-save-row {
-  display: flex;
-  justify-content: flex-end;
-  padding-bottom: 8px;
-}
-.bb-save-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #1C1C1E;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 14px 28px;
-  cursor: pointer;
-  transition: background .15s, transform .1s;
-}
-.bb-save-btn:hover { background: #3C3C43; }
-.bb-save-btn.saved { background: #22C55E; }
-.bb-save-btn:active { transform: scale(.98); }
 
 /* ── 반응형 ── */
-@media (max-width: 1100px) {
-  .bb-fee-grid     { grid-template-columns: repeat(2, 1fr); }
-  .bb-benefit-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1000px) {
+  .mp-life-hero { grid-template-columns: 180px 1fr 160px; gap: 24px; padding: 28px 28px; }
+  .mp-lstat-val { font-size: 22px; }
 }
-@media (max-width: 900px) {
-  .mp-inner { padding: 28px 24px 48px; }
+@media (max-width: 860px) {
+  .mp-inner { padding: 24px 20px 48px; }
+  .mp-life-hero { grid-template-columns: 1fr; padding: 28px; }
+  .mp-life-visual { flex-direction: row; align-items: center; }
+  .mp-life-card-wrap { width: 160px; flex-shrink: 0; }
+  .mp-life-stats { flex-wrap: wrap; }
+  .mp-lstat { min-width: 140px; }
+  .mp-life-actions { align-items: flex-start; }
   .mp-grid  { grid-template-columns: 1fr; }
-  .mp-col--right { grid-row: 1; }
+  .mp-col--right { grid-row: auto; }
   .mp-summary-bar { flex-direction: column; align-items: flex-start; gap: 20px; }
   .mp-summary-divider { display: none; }
-  .mp-summary-stats { gap: 24px; }
-  .bb-benefit-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) {
-  .mp-inner { padding: 20px 16px 40px; }
-  .mp-card  { padding: 22px 18px; }
-  .mp-summary-num { font-size: 34px; }
+  .mp-inner { padding: 16px 14px 40px; }
+  .mp-card  { padding: 20px 16px; }
+  .mp-life-hero { padding: 22px 18px; }
   .mp-benefit-table { display: none; }
-  .bb-fee-grid     { grid-template-columns: repeat(2, 1fr); }
-  .bb-benefit-grid { grid-template-columns: repeat(2, 1fr); }
+  .mp-lstat-val { font-size: 20px; }
 }

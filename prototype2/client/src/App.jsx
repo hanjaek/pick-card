@@ -15,7 +15,8 @@ import MyPage      from './pages/MyPage'
 import Terms       from './pages/Terms'
 import Support     from './pages/Support'
 import Chatbot     from './pages/Chatbot'
-import Admin       from './pages/Admin'
+import Admin              from './pages/Admin'
+import BenefitBuilderPage from './pages/BenefitBuilderPage'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -65,6 +66,7 @@ function App() {
                   <Route path="/cards/:id/apply"       element={<CardApply />}  />
                   <Route path="/cards/:id/design"      element={<CardDesign />} />
                   <Route path="/mypage"                element={<MyPage />}     />
+                  <Route path="/benefit-builder"      element={<BenefitBuilderPage />} />
                   <Route path="/terms"                 element={<Terms />}      />
                   <Route path="/support"               element={<Support />}    />
                   <Route path="/login"                 element={<Login />}      />
