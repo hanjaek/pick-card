@@ -324,6 +324,13 @@ INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm) 
 (23, 'BNK-2025-AMEX-023', '2025-06-18', '카드사업부'),
 (24, 'BNK-2025-SIMP-024', '2025-06-28', '카드사업부');
 
+-- 카드 실물 이미지 연결 (파일: prototype2/client/public/cards/card-NN.*)
+--   이미지 있으면 화면에 실물 이미지, 없으면(예: id 12) 색 그라디언트로 폴백
+UPDATE cards SET image_url = CONCAT('/cards/card-', LPAD(id, 2, '0'), '.png')
+  WHERE id BETWEEN 1 AND 24 AND id <> 12;
+UPDATE cards SET image_url = CONCAT('/cards/card-', LPAD(id, 2, '0'), '.jpg')
+  WHERE id IN (10, 13, 14, 18);
+
 -- 약관 초기 시드: 카드 8종 × 문서 3종(상품안내장/이용약관/포인트이용약관)
 -- PDF는 일단 공용 sample.pdf 로 통일 (관리자가 실제 PDF로 교체). CROSS JOIN 으로 한 번에 생성.
 -- 카드 종류별 문서 차등: 모든 카드(상품안내장·이용약관), 신용카드만(포인트이용약관)

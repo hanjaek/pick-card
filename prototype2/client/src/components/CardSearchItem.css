@@ -304,3 +304,11 @@
   background: var(--bnk-dark-red);
   box-shadow: 0 6px 18px rgba(215,25,25,0.28);
 }
+
+/* 실물 카드 이미지 (앞면 꽉 채움, 카드 틀에 맞게) */
+.csi-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}

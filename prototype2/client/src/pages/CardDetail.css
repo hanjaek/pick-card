@@ -669,3 +669,7 @@ a.cd-terms-item:hover .cd-terms-itemname { color: var(--bnk-red); }
 .cd-terms-item--none { cursor: default; }
 .cd-terms-item--none .cd-terms-itemname { color: var(--bnk-light-gray); }
 .cd-terms-item--none .cd-terms-itemmeta { color: var(--bnk-light-gray); }
+
+/* 실물 카드 이미지 (상세) */
+.cd-card-visual { overflow: hidden; }
+.cd-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

@@ -5,23 +5,31 @@ import './CardDetail.css'
 function CardVisual({ card, design }) {
   const colorFrom = design?.colorFrom || design?.color_from || card.colorFrom
   const colorTo   = design?.colorTo   || design?.color_to   || card.colorTo
+  // AI 커스텀 디자인이 없고 실물 이미지가 있으면 실물 이미지
+  const img = !design && card.imageUrl ? card.imageUrl : null
 
   return (
     <div
       className="cd-card-visual"
-      style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
+      style={img ? undefined : { background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
     >
-      <div className="cd-card-chip" />
-      <div className="cd-card-network">{card.network}</div>
-      <div className="cd-card-number">**** **** **** 1234</div>
-      <div className="cd-card-footer">
-        <span className="cd-card-name">{card.name}</span>
-        <span className="cd-card-badge">{card.type}</span>
-      </div>
-      {design && (
-        <div className="cd-card-design-badge">✨ {design.themeName || design.theme_name}</div>
+      {img ? (
+        <img className="cd-card-img" src={img} alt={card.name} />
+      ) : (
+        <>
+          <div className="cd-card-chip" />
+          <div className="cd-card-network">{card.network}</div>
+          <div className="cd-card-number">**** **** **** 1234</div>
+          <div className="cd-card-footer">
+            <span className="cd-card-name">{card.name}</span>
+            <span className="cd-card-badge">{card.type}</span>
+          </div>
+          {design && (
+            <div className="cd-card-design-badge">✨ {design.themeName || design.theme_name}</div>
+          )}
+          <div className="cd-card-shine" />
+        </>
       )}
-      <div className="cd-card-shine" />
     </div>
   )
 }
