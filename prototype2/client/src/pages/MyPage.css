@@ -1,11 +1,16 @@
 /* ================================================================
-   MyPage — BNK Pickard 소비 패턴 & 혜택 분석
+   MyPage — Web layout (desktop-first, 2-column grid)
    ================================================================ */
 
 .mp-page {
   padding-top: 70px;
   min-height: 100vh;
-  background: var(--bnk-bg);
+  background: #F5F5F7;
+}
+.mp-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 40px 64px;
 }
 
 /* ── 로딩 ── */
@@ -16,465 +21,715 @@
   min-height: 80vh;
 }
 .mp-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--bnk-border);
+  width: 36px;
+  height: 36px;
+  border: 3px solid #E5E5EA;
   border-top-color: var(--bnk-red);
   border-radius: 50%;
-  animation: mp-spin 0.8s linear infinite;
+  animation: mp-spin .8s linear infinite;
 }
 @keyframes mp-spin { to { transform: rotate(360deg); } }
 
-/* ── Hero ── */
-.mp-hero {
-  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-red) 55%, #E84040 100%);
-  padding: 44px 0 0;
-  position: relative;
-  overflow: hidden;
+/* ── 페이지 헤더 ── */
+.mp-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
 }
-.mp-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 50% 80% at 90% 40%, rgba(255,255,255,0.07) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.mp-hero-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 40px 0;
-}
-
-.mp-greeting-sub {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 6px;
-}
-.mp-greeting-name {
-  font-size: 32px;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -1px;
+.mp-page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1C1C1E;
+  letter-spacing: -.02em;
   margin-bottom: 4px;
 }
-.mp-greeting-period {
+.mp-page-sub {
   font-size: 14px;
-  color: rgba(255,255,255,0.45);
-  margin-bottom: 32px;
+  color: #8E8E93;
+}
+.mp-tenure-tag {
+  background: #fff;
+  border: 1px solid #E5E5EA;
+  color: #3C3C43;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
 }
 
-/* 3개 통계 박스 */
-.mp-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: rgba(255,255,255,0.12);
-  border-radius: 16px 16px 0 0;
-  overflow: hidden;
+/* ── 상단 요약 바 ── */
+.mp-summary-bar {
+  background: #1C1C1E;
+  border-radius: 18px;
+  padding: 28px 36px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+  color: #fff;
 }
-.mp-stat {
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(6px);
+.mp-summary-main {
+  flex-shrink: 0;
+}
+.mp-summary-label {
+  font-size: 13px;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 6px;
+  letter-spacing: .02em;
+}
+.mp-summary-num {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+.mp-summary-unit {
+  font-size: 22px;
+  font-weight: 600;
+  margin-left: 3px;
+  opacity: .8;
+}
+.mp-summary-divider {
+  width: 1px;
+  height: 52px;
+  background: rgba(255,255,255,.15);
+  margin: 0 40px;
+  flex-shrink: 0;
+}
+.mp-summary-stats {
+  display: flex;
+  gap: 40px;
+}
+.mp-sstat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mp-sstat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .03em;
+}
+.mp-sstat-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ── 2컬럼 그리드 ── */
+.mp-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  align-items: start;
+}
+.mp-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 공통 카드 ── */
+.mp-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.04);
+}
+.mp-card--green {
+  border: 1.5px solid #BBF7D0;
+  background: #F0FDF4;
+}
+.mp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.mp-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1C1C1E;
+}
+.mp-chip {
+  background: #FFF0F0;
+  color: var(--bnk-red);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.mp-chip--gray {
+  background: #F2F3F5;
+  color: #8E8E93;
+}
+
+/* ── 혜택 테이블 ── */
+.mp-benefit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+.mp-benefit-table thead tr {
+  border-bottom: 2px solid #F2F3F5;
+}
+.mp-benefit-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #AEAEB2;
+  padding: 0 8px 10px 0;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.mp-benefit-table th:last-child { padding-right: 0; }
+.mp-benefit-table tbody tr {
+  border-bottom: 1px solid #F7F7F8;
+  transition: background .1s;
+}
+.mp-benefit-table tbody tr:hover { background: #FAFAFA; }
+.mp-benefit-table tbody tr.row-miss { opacity: .65; }
+.mp-benefit-table td {
+  padding: 13px 8px 13px 0;
+  font-size: 14px;
+  color: #1C1C1E;
+}
+.td-desc { font-weight: 500; max-width: 200px; }
+.td-cat  { color: #8E8E93; font-size: 13px; white-space: nowrap; }
+.td-num  { color: #3C3C43; font-size: 13px; white-space: nowrap; }
+.td-save { font-weight: 600; color: #22C55E; white-space: nowrap; }
+.td-save:not(:empty)::before { content: ''; }
+.row-miss .td-save { color: #AEAEB2; font-weight: 400; }
+.td-status { white-space: nowrap; }
+.status-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #22C55E;
+}
+.status-off {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #F59E0B;
+}
+
+.mp-missed-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #92400E;
+  line-height: 1.5;
+}
+.mp-missed-note svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── 알림 ── */
+.mp-noti-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.mp-noti-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #F7F7F8;
+  position: relative;
+}
+.mp-noti-item:last-child { border-bottom: none; }
+.mp-noti-dot-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.mp-noti-dot-icon.type-UPGRADE_SOON { background: #6366F1; }
+.mp-noti-dot-icon.type-MISSED_BENEFIT { background: #F59E0B; }
+.mp-noti-dot-icon.type-NEW_BENEFIT { background: #22C55E; }
+.mp-noti-body {
+  flex: 1;
+  min-width: 0;
+}
+.mp-noti-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1C1C1E;
+  margin-bottom: 2px;
+}
+.mp-noti-desc {
+  font-size: 13px;
+  color: #8E8E93;
+  line-height: 1.45;
+}
+.mp-unread-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--bnk-red);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ── 업그레이드 카드 ── */
+.mp-upgrade-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.mp-upgrade-label {
+  font-size: 13px;
+  color: #8E8E93;
+  margin-bottom: 4px;
+}
+.mp-upgrade-big {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1C1C1E;
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+.mp-upgrade-pct {
+  font-size: 18px;
+  font-weight: 700;
+}
+.mp-year-badge {
+  background: #FFF0F0;
+  color: var(--bnk-red);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.mp-progress-wrap { margin-bottom: 14px; }
+.mp-progress-track {
+  height: 6px;
+  background: #F2F3F5;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.mp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bnk-dark-red), var(--bnk-red));
+  border-radius: 3px;
+  transition: width .6s ease;
+}
+.mp-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #AEAEB2;
+}
+.mp-upgrade-benefit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  background: #FFF8F8;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.mp-rate-from { color: #AEAEB2; font-weight: 600; }
+.mp-rate-to   { color: var(--bnk-red); font-weight: 700; font-size: 15px; }
+.mp-benefit-name { color: #3C3C43; }
+.mp-best-grade {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #15803D;
+  font-weight: 500;
+}
+
+/* ── 소비 패턴 ── */
+.mp-spend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+.mp-spend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mp-spend-icon  { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.mp-spend-label { font-size: 13px; color: #3C3C43; width: 68px; flex-shrink: 0; }
+.mp-bar-track   { flex: 1; height: 5px; background: #F2F3F5; border-radius: 3px; overflow: hidden; }
+.mp-bar-fill    { height: 100%; background: linear-gradient(90deg, var(--bnk-red), #FF8A8A); border-radius: 3px; transition: width .5s ease; }
+.mp-spend-pct   { font-size: 12px; color: #AEAEB2; width: 28px; text-align: right; flex-shrink: 0; }
+.mp-spend-amt   { font-size: 12px; font-weight: 600; color: #3C3C43; width: 70px; text-align: right; flex-shrink: 0; }
+
+/* ── 다른 카드 추천 ── */
+.mp-opp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 4px;
+}
+.mp-opp-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #F7F7F8;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+.mp-opp-item:last-child { border-bottom: none; }
+.mp-opp-item:hover { opacity: .7; }
+.mp-opp-color { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+.mp-opp-info  { flex: 1; min-width: 0; }
+.mp-opp-name  { font-size: 14px; font-weight: 600; color: #1C1C1E; margin-bottom: 2px; }
+.mp-opp-save  { font-size: 12px; color: #22C55E; font-weight: 500; }
+.mp-opp-arrow { font-size: 12px; color: #AEAEB2; white-space: nowrap; flex-shrink: 0; }
+
+/* ── 빈 상태 ── */
+.mp-empty-card { text-align: center; padding: 48px 28px; }
+.mp-empty-title { font-size: 18px; font-weight: 700; color: #1C1C1E; margin-bottom: 8px; }
+.mp-empty-sub   { font-size: 14px; color: #8E8E93; margin-bottom: 24px; }
+.mp-empty-btn {
+  display: inline-block;
+  background: var(--bnk-red);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+.mp-empty-btn:hover { opacity: .88; }
+
+/* ════════════════════════════════════════════════════════════
+   탭 네비게이션
+   ════════════════════════════════════════════════════════════ */
+.mp-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #E5E5EA;
+}
+.mp-tab {
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #AEAEB2;
+  padding: 10px 20px;
+  cursor: pointer;
+  position: relative;
+  transition: color .15s;
+}
+.mp-tab.active {
+  color: #1C1C1E;
+}
+.mp-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #1C1C1E;
+  border-radius: 2px 2px 0 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   혜택 구성 (BenefitBuilder)
+   ════════════════════════════════════════════════════════════ */
+.bb-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 섹션 헤더 */
+.bb-section-head {
+  margin-bottom: 14px;
+}
+.bb-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1C1C1E;
+  margin-bottom: 4px;
+}
+.bb-section-sub {
+  font-size: 13px;
+  color: #8E8E93;
+}
+
+/* ── 연회비 선택 그리드 ── */
+.bb-fee-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.bb-fee-card {
+  background: #fff;
+  border: 2px solid #E5E5EA;
+  border-radius: 16px;
+  padding: 18px 16px;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bb-fee-card:hover {
+  border-color: #C7C7CC;
+  transform: translateY(-1px);
+}
+.bb-fee-card.selected {
+  border-color: #1C1C1E;
+  box-shadow: 0 0 0 3px rgba(28,28,30,.08);
+}
+.bb-fee-card.recommended.selected {
+  border-color: var(--bnk-red);
+  box-shadow: 0 0 0 3px rgba(215,25,25,.1);
+}
+.bb-rec-tag {
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: var(--bnk-red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.bb-fee-amt {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1C1C1E;
+  letter-spacing: -.02em;
+}
+.bb-fee-sub {
+  font-size: 12px;
+  color: #8E8E93;
+}
+
+/* ── 예산 현황 카드 ── */
+.bb-budget-card {
+  background: #fff;
+  border-radius: 18px;
   padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.04);
+}
+.bb-budget-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.bb-budget-label {
+  font-size: 13px;
+  color: #8E8E93;
+  margin-bottom: 6px;
+}
+.bb-budget-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1C1C1E;
+  letter-spacing: -.02em;
+}
+.bb-budget-used  { color: #1C1C1E; }
+.bb-budget-sep   { color: #C7C7CC; font-weight: 400; margin: 0 4px; }
+.bb-budget-total { color: #AEAEB2; font-size: 16px; font-weight: 500; }
+.bb-budget-pct-wrap svg { display: block; }
+
+/* 스택 바 */
+.bb-stack-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #F2F3F5;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.bb-stack-seg {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .4s ease;
+  flex-shrink: 0;
+}
+.bb-stack-empty { background: transparent; }
+.bb-stack-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 4px;
+}
+.bb-stack-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.bb-stack-label-gray {
+  font-size: 12px;
+  color: #AEAEB2;
+}
+.bb-full-msg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #15803D;
+  background: #F0FDF4;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+
+/* ── 혜택 선택 그리드 ── */
+.bb-benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.bb-benefit-card {
+  background: #fff;
+  border: 2px solid #E5E5EA;
+  border-radius: 16px;
+  padding: 18px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s, box-shadow .15s, transform .1s, opacity .15s;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: background 0.2s;
 }
-.mp-stat:hover { background: rgba(255,255,255,0.14); }
-
-.mp-stat-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.3px;
-}
-.mp-stat-value {
-  font-size: 26px;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-}
-.mp-stat-value em {
-  font-size: 15px;
-  font-weight: 700;
-  font-style: normal;
-  margin-left: 2px;
-}
-.mp-stat--save   .mp-stat-value { color: #86efac; }
-.mp-stat--potential .mp-stat-value { color: #fcd34d; }
-
-.mp-stat-hint {
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-  margin-top: 2px;
-}
-
-/* ── Body ── */
-.mp-body {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 40px 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 36px;
-}
-
-/* ── Section ── */
-.mp-section { }
-
-.mp-section-title {
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--bnk-text);
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
-}
-.mp-section-sub {
-  font-size: 13px;
-  color: var(--bnk-gray);
-  margin-bottom: 16px;
-}
-
-/* ── 소비 패턴 카드 ── */
-.mp-card-box {
-  background: #fff;
-  border: 1px solid var(--bnk-border);
-  border-radius: 16px;
-  padding: 28px 32px;
-}
-.mp-spending-total {
-  font-size: 14px;
-  color: var(--bnk-gray);
-  margin-bottom: 20px;
-}
-.mp-spending-total strong {
-  font-size: 18px;
-  font-weight: 900;
-  color: var(--bnk-text);
-}
-
-.mp-spending-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.mp-spending-row {
-  display: grid;
-  grid-template-columns: 24px 110px 1fr 90px;
-  align-items: center;
-  gap: 12px;
-}
-.mp-spending-icon { font-size: 18px; text-align: center; }
-.mp-spending-cat {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--bnk-text);
-}
-.mp-bar-track {
-  height: 8px;
-  background: var(--bnk-bg);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.mp-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--bnk-dark-red), var(--bnk-red));
-  border-radius: 4px;
-  transition: width 0.6s ease;
-}
-.mp-spending-amt {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--bnk-text);
-  text-align: right;
-}
-
-/* ── 카드 혜택 행 목록 ── */
-.mp-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.mp-row {
-  background: #fff;
-  border: 1px solid var(--bnk-border);
-  border-radius: 16px;
-  padding: 22px 24px;
-  display: grid;
-  grid-template-columns: 130px 1fr auto;
-  gap: 20px;
-  align-items: center;
-  position: relative;
-  transition: box-shadow 0.2s, border-color 0.2s;
-}
-.mp-row:hover {
-  border-color: #ddd;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-}
-
-/* 최고 절약 강조 */
-.mp-opp--best {
-  border-color: var(--bnk-gold);
-  background: #FFFBF5;
-}
-.mp-opp--best:hover { border-color: var(--bnk-gold); }
-
-.mp-best-badge {
-  position: absolute;
-  top: -1px;
-  left: 20px;
-  transform: translateY(-50%);
-  font-size: 11px;
-  font-weight: 800;
-  background: var(--bnk-gold);
-  color: #fff;
-  padding: 3px 12px;
-  border-radius: 20px;
-  letter-spacing: 0.3px;
-}
-
-/* ── 미니 카드 ── */
-.mp-mini-card {
-  width: 130px;
-  height: 82px;
-  border-radius: 10px;
-  padding: 10px 12px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  flex-shrink: 0;
-}
-.mp-mini-chip {
-  width: 22px;
-  height: 17px;
-  background: linear-gradient(135deg, #f0c060, #c8960a);
-  border-radius: 3px;
-}
-.mp-mini-network {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 10px;
-  font-weight: 900;
-  color: rgba(255,255,255,0.8);
-  letter-spacing: 0.5px;
-}
-.mp-mini-name {
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.9);
-  line-height: 1.3;
-  word-break: keep-all;
-}
-
-/* ── 행 정보 ── */
-.mp-row-name {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--bnk-text);
-  margin-bottom: 6px;
-}
-.mp-row-msg {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--bnk-gray);
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-.mp-row-msg strong { font-weight: 900; }
-
-.mp-row-msg--saved strong    { color: #16A34A; font-size: 16px; }
-.mp-row-msg--potential strong { color: var(--bnk-gold); font-size: 16px; }
-.mp-row-msg--zero            { color: var(--bnk-light-gray); font-style: italic; }
-
-.mp-row-details {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.mp-row-details li {
-  font-size: 12px;
-  color: var(--bnk-gray);
-  padding-left: 12px;
-  position: relative;
-  line-height: 1.5;
-}
-.mp-row-details li::before {
-  content: '·';
-  position: absolute;
-  left: 0;
-  color: var(--bnk-light-gray);
-}
-
-/* ── 버튼 ── */
-.mp-row-link {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--bnk-gray);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color 0.2s;
-  flex-shrink: 0;
-}
-.mp-row-link:hover { color: var(--bnk-red); }
-
-.mp-apply-btn {
-  display: inline-block;
-  padding: 10px 20px;
-  background: var(--bnk-red);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  border-radius: 50px;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-.mp-apply-btn:hover {
-  background: var(--bnk-dark-red);
+.bb-benefit-card:hover:not(.disabled) {
+  border-color: #C7C7CC;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(139,3,4,0.25);
+}
+.bb-benefit-card.picked {
+  border-color: currentColor;
+  box-shadow: 0 0 0 3px rgba(28,28,30,.07);
+}
+.bb-benefit-card.disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.bb-benefit-card.shake {
+  animation: bb-shake .4s ease;
+}
+@keyframes bb-shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-6px); }
+  40%     { transform: translateX(6px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
 }
 
-/* ── 빈 상태 ── */
-.mp-empty {
-  background: #fff;
-  border: 1px solid var(--bnk-border);
-  border-radius: 16px;
-  padding: 56px;
-  text-align: center;
+.bb-benefit-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
-.mp-empty-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  color: var(--bnk-gold);
+.bb-benefit-icon  { font-size: 22px; }
+.bb-check-wrap    { display: flex; }
+.bb-plus-wrap {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #E5E5EA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C7C7CC;
 }
-.mp-empty-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--bnk-text);
-  margin-bottom: 8px;
+.bb-plus-wrap.over { border-color: #FECACA; color: #FCA5A5; }
+
+.bb-benefit-label { font-size: 14px; font-weight: 700; color: #1C1C1E; }
+.bb-benefit-desc  { font-size: 13px; font-weight: 600; color: #3C3C43; }
+.bb-benefit-note  { font-size: 11px; color: #AEAEB2; margin-bottom: 8px; }
+
+.bb-benefit-cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #F2F3F5;
 }
-.mp-empty-sub {
-  font-size: 14px;
-  color: var(--bnk-gray);
-  margin-bottom: 24px;
+.bb-cost-amt {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3C3C43;
 }
-.mp-empty-btn {
-  display: inline-block;
-  padding: 14px 40px;
-  background: linear-gradient(135deg, var(--bnk-dark-red) 0%, var(--bnk-gold) 100%);
+.bb-cost-pct {
+  font-size: 12px;
+  font-weight: 600;
+  background: #F2F3F5;
+  color: #8E8E93;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.bb-cost-pct.over { background: #FEF2F2; color: #EF4444; }
+
+/* ── 저장 버튼 ── */
+.bb-save-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 8px;
+}
+.bb-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1C1C1E;
   color: #fff;
+  border: none;
+  border-radius: 12px;
   font-size: 15px;
-  font-weight: 800;
-  border-radius: 50px;
-  text-decoration: none;
-  transition: var(--transition);
+  font-weight: 600;
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
 }
-.mp-empty-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(137,110,74,0.35);
-}
+.bb-save-btn:hover { background: #3C3C43; }
+.bb-save-btn.saved { background: #22C55E; }
+.bb-save-btn:active { transform: scale(.98); }
 
-/* ── Responsive ── */
+/* ── 반응형 ── */
+@media (max-width: 1100px) {
+  .bb-fee-grid     { grid-template-columns: repeat(2, 1fr); }
+  .bb-benefit-grid { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 900px) {
-  .mp-hero-inner { padding: 0 24px; }
-  .mp-body       { padding: 28px 24px 60px; }
-  .mp-stats      { grid-template-columns: 1fr 1fr; }
-  .mp-stat:last-child { grid-column: 1 / -1; }
+  .mp-inner { padding: 28px 24px 48px; }
+  .mp-grid  { grid-template-columns: 1fr; }
+  .mp-col--right { grid-row: 1; }
+  .mp-summary-bar { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .mp-summary-divider { display: none; }
+  .mp-summary-stats { gap: 24px; }
+  .bb-benefit-grid { grid-template-columns: repeat(2, 1fr); }
 }
-
-@media (max-width: 640px) {
-  .mp-hero-inner { padding: 0 16px; }
-  .mp-greeting-name { font-size: 24px; }
-  .mp-body       { padding: 20px 14px 50px; }
-  .mp-stats      { grid-template-columns: 1fr; }
-  .mp-stat:last-child { grid-column: auto; }
-  .mp-row {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .mp-mini-card  { width: 100%; height: 80px; }
-  .mp-spending-row { grid-template-columns: 24px 100px 1fr 80px; }
-  .mp-empty { padding: 40px 24px; }
-}
-
-/* ============================================================
-   내 BNK 라이프 카드 관리 (사후관리)
-   ============================================================ */
-.mp-life-top { display: grid; grid-template-columns: 300px 1fr; gap: 26px; align-items: stretch; }
-
-/* 카드 비주얼 */
-.mp-life-visual {
-  position: relative; border-radius: 18px; padding: 22px; color: #fff; min-height: 180px;
-  background: linear-gradient(145deg, #D71919 0%, #B01414 52%, #7A1010 100%);
-  box-shadow: 0 18px 44px rgba(120,12,12,0.35);
-  display: flex; flex-direction: column; justify-content: space-between;
-}
-.mp-life-net { position: absolute; top: 22px; right: 24px; font-style: italic; font-weight: 800; font-size: 17px; }
-.mp-life-chip { width: 42px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #f2d68b, #c39a44); }
-.mp-life-brand { font-size: 11px; letter-spacing: 2px; opacity: 0.8; }
-.mp-life-name { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; margin-top: 2px; }
-.mp-life-no { font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 1px; opacity: 0.75; margin-top: 8px; }
-.mp-life-tenure {
-  position: absolute; bottom: 22px; right: 24px;
-  font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.3); padding: 4px 11px; border-radius: 16px;
-}
-
-/* 정보/성장 */
-.mp-life-info { display: flex; flex-direction: column; gap: 14px; }
-.mp-life-status { display: flex; align-items: center; gap: 12px; }
-.mp-life-onoff { font-size: 13px; font-weight: 800; }
-.mp-life-onoff.on { color: #1a9e52; }
-.mp-life-onoff.off { color: #999; }
-.mp-life-stage { font-size: 13px; font-weight: 700; color: var(--bnk-red); background: #fbeae8; padding: 4px 12px; border-radius: 16px; }
-
-.mp-life-grow { background: #fff; border: 1px solid var(--bnk-border); border-radius: 14px; padding: 16px 18px; }
-.mp-life-grow-title { font-size: 12.5px; font-weight: 800; color: #999; margin-bottom: 8px; }
-.mp-life-grow-desc { font-size: 15px; color: #221; margin-bottom: 10px; }
-.mp-life-grow-desc strong { color: var(--bnk-red); }
-.mp-life-grow-year { font-size: 13px; color: #999; }
-.mp-life-bar { height: 9px; background: #f1eae6; border-radius: 6px; overflow: hidden; }
-.mp-life-bar-fill { height: 100%; background: linear-gradient(90deg, #D71919, #B01414); border-radius: 6px; transition: width 0.6s ease; }
-.mp-life-grow-hint { font-size: 12.5px; color: #888; margin-top: 8px; }
-.mp-life-grow-hint strong { color: var(--bnk-red); }
-.mp-life-saved { font-size: 15px; color: #221; }
-.mp-life-saved strong { color: var(--bnk-red); font-size: 18px; }
-
-/* 켜진 혜택 */
-.mp-life-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-.mp-life-bnf {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  background: #fff8f7; border: 1px solid #f0d2cd; border-radius: 13px; padding: 15px 18px;
-}
-.mp-life-bnf-name { font-size: 14.5px; font-weight: 700; color: #221; }
-.mp-grow-tag { font-size: 11px; font-weight: 800; color: #fff; background: var(--bnk-red); padding: 2px 8px; border-radius: 10px; margin-left: 7px; }
-.mp-life-bnf-why { font-size: 12.5px; color: var(--bnk-red); margin-top: 5px; font-weight: 600; }
-.mp-life-bnf-saved { font-size: 16px; font-weight: 800; color: var(--bnk-red); white-space: nowrap; }
-
-/* 알림 */
-.mp-noti { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
-.mp-noti-item { display: flex; gap: 13px; align-items: flex-start; background: #fff; border: 1px solid var(--bnk-border); border-radius: 12px; padding: 14px 16px; }
-.mp-noti-item.type-MISSED_BENEFIT { border-color: #f0d2cd; background: #fff8f7; }
-.mp-noti-ic { font-size: 18px; }
-.mp-noti-t { font-size: 14px; font-weight: 800; color: #221; }
-.mp-noti-b { font-size: 13px; color: #777; margin-top: 3px; line-height: 1.5; }
-
-@media (max-width: 720px) {
-  .mp-life-top { grid-template-columns: 1fr; }
-  .mp-life-benefits { grid-template-columns: 1fr; }
+@media (max-width: 600px) {
+  .mp-inner { padding: 20px 16px 40px; }
+  .mp-card  { padding: 22px 18px; }
+  .mp-summary-num { font-size: 34px; }
+  .mp-benefit-table { display: none; }
+  .bb-fee-grid     { grid-template-columns: repeat(2, 1fr); }
+  .bb-benefit-grid { grid-template-columns: repeat(2, 1fr); }
 }
