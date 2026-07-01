@@ -654,6 +654,25 @@ CREATE TABLE IF NOT EXISTS consultation_messages (
 );
 
 -- ============================================================
+-- 18. user_benefit_configs  (회원 커스텀 혜택 구성 — 혜택 구성 빌더)
+--   BNK 라이프 '혜택 구성 빌더'에서 회원이 연회비(=예산)에 맞춰 직접 고른
+--   혜택 조합을 저장. 회원당 1건(UNIQUE user_id) → 재저장 시 덮어씀(UPSERT).
+--   ※ 과거 routes/lifecard.js 에서 런타임 CREATE 하던 테이블을 스키마로 승격
+--     (스키마 단일 출처화 + FK 무결성 확보).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_benefit_configs (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id           BIGINT        NOT NULL,                 -- 구성 소유 회원
+  selected_fee      INT           NOT NULL DEFAULT 30000,   -- 선택 연회비(=혜택 예산)
+  selected_benefits JSON          NOT NULL,                 -- 선택 혜택 id 배열 (예: ["cafe","delivery","pay"])
+  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- 회원당 1건만 유지 → 라우트의 ON DUPLICATE KEY UPDATE(업서트) 기준 키
+  UNIQUE KEY uq_user_benefit_config (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ============================================================
 -- [확장 시드] 성장형·발급·알림·상담 데모 데이터
 -- ============================================================
 
@@ -720,3 +739,8 @@ JOIN (
 ) m ON 1=1
 WHERE co.entry_point = 'HOME' AND co.user_id = (SELECT id FROM users WHERE username='testuser1')
 ORDER BY m.ord;
+
+-- 커스텀 혜택 구성 데모 (testuser1, 사회초년생 → 카페·배달·간편결제, 연회비 3만원)
+INSERT IGNORE INTO user_benefit_configs (user_id, selected_fee, selected_benefits)
+SELECT id, 30000, JSON_ARRAY('cafe', 'delivery', 'pay')
+FROM users WHERE username = 'testuser1';

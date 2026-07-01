@@ -2,17 +2,8 @@ const router = require('express').Router()
 const jwt    = require('jsonwebtoken')
 const pool   = require('../db')
 
-// 커스텀 혜택 구성 테이블 자동 생성
-pool.query(`
-  CREATE TABLE IF NOT EXISTS user_benefit_configs (
-    id           BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id      BIGINT NOT NULL,
-    selected_fee INT    NOT NULL DEFAULT 30000,
-    selected_benefits JSON NOT NULL,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_user (user_id)
-  ) CHARACTER SET utf8mb4
-`).catch(err => console.error('[life-card] user_benefit_configs 생성 실패:', err.message))
+// ※ user_benefit_configs 테이블은 schema.sql 에서 정식 생성(FK·UNIQUE 포함).
+//   과거 여기서 런타임 CREATE 하던 것을 스키마 단일 출처로 이관함.
 
 /* ======================================================
    BNK 라이프 평생 카드 — 생애단계·소비 기반 자동 혜택 + 성장형
