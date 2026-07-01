@@ -39,6 +39,9 @@ export default function Signup() {
   const canvasRef   = useRef(null)
   const idTimerRef  = useRef(null)
 
+  // 본인확인 방식 선택 (null=선택화면, 'face'=얼굴인식, 'video'=영상통화, 'phone'=전화)
+  const [verifyMethod, setVerifyMethod]         = useState(null)
+
   // Face Verify Camera
   const [faceCameraOn, setFaceCameraOn]         = useState(false)
   const [faceCaptured, setFaceCaptured]         = useState(null)
@@ -62,10 +65,9 @@ export default function Signup() {
     return () => { stopCamera(); stopFaceCamera() }
   }, [])
 
-  // Auto-start/stop face camera when entering/leaving step 2
+  // 카메라 정리: step 2 벗어나면 카메라 끄고 방식 선택 초기화
   useEffect(() => {
-    if (step === 2 && !faceCaptured) startFaceCamera()
-    else if (step !== 2) stopFaceCamera()
+    if (step !== 2) { stopFaceCamera(); setVerifyMethod(null) }
   }, [step])
 
   useEffect(() => {
@@ -327,11 +329,17 @@ export default function Signup() {
       setCaptured(null)
       setStep(0)
     } else if (step === 2) {
-      stopFaceCamera()
-      setFaceCaptured(null)
-      setFaceVerified(false)
-      setFaceVerifying(false)
-      setStep(1)
+      if (verifyMethod) {
+        // 방식 선택 화면으로 되돌아가기
+        stopFaceCamera()
+        setFaceCaptured(null)
+        setFaceVerified(false)
+        setFaceVerifying(false)
+        setFaceAutoCapturing(false)
+        setVerifyMethod(null)
+      } else {
+        setStep(1)
+      }
     } else if (step > 0) {
       setStep(step - 1)
     }
@@ -466,11 +474,21 @@ export default function Signup() {
 
           {/* Title */}
           <h1 className="auth-title">
-            {currentStep.title.split('\n').map((line, i, arr) => (
+            {(step === 2 && verifyMethod === 'face' ? '얼굴 인식으로\n본인을 확인해요'
+              : step === 2 && verifyMethod === 'video' ? '영상통화로\n본인을 확인해요'
+              : step === 2 && verifyMethod === 'phone' ? 'ARS 전화로\n본인을 확인해요'
+              : currentStep.title
+            ).split('\n').map((line, i, arr) => (
               <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
             ))}
           </h1>
-          <p className="auth-subtitle">{currentStep.sub}</p>
+          <p className="auth-subtitle">
+            {step === 2 && verifyMethod === 'face' ? '카메라를 정면으로 바라봐주세요'
+              : step === 2 && verifyMethod === 'video' ? '상담사와 화상 통화로 본인을 확인합니다'
+              : step === 2 && verifyMethod === 'phone' ? '등록된 번호로 ARS 전화가 발신됩니다'
+              : step === 2 ? '본인확인 방식을 선택해주세요'
+              : currentStep.sub}
+          </p>
 
           <div className="auth-form">
 
@@ -604,68 +622,132 @@ export default function Signup() {
               </>
             )}
 
-            {/* ===== Step 2: Face Verify ===== */}
+            {/* ===== Step 2: 본인확인 방식 선택 + 각 방식 ===== */}
             {step === 2 && (
               <>
                 <canvas ref={faceCanvasRef} style={{ display: 'none' }} />
 
-                {/* 카메라 라이브 뷰 */}
-                {!faceCaptured && faceCameraOn && (
-                  <div className="face-cam-wrap">
-                    <div className="face-oval-wrap">
-                      <div className="face-oval-clip">
-                        <video ref={faceVideoRef} autoPlay playsInline muted className="face-video" />
-                        <div className={`face-scan-line${faceAutoCapturing ? ' detected' : ''}`} />
+                {/* 방식 선택 화면 */}
+                {!verifyMethod && !faceVerified && (
+                  <div className="verify-method-list">
+                    {/* 얼굴인식 — 메인 */}
+                    <button className="verify-method-item primary" onClick={() => { setVerifyMethod('face'); startFaceCamera() }}>
+                      <div className="vmi-icon">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="8" r="3.5"/>
+                          <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
+                          <path d="M9 3.5C9 3.5 9.5 2 12 2s3 1.5 3 1.5"/>
+                          <path d="M8 8s.5 2 4 2 4-2 4-2"/>
+                        </svg>
                       </div>
-                      {/* SVG 링 */}
-                      <svg className="face-oval-svg" viewBox="0 0 206 266" fill="none">
-                        <ellipse cx="103" cy="133" rx="100" ry="130" className="face-oval-track" strokeWidth="3" />
-                        <ellipse cx="103" cy="133" rx="100" ry="130"
-                          className={`face-oval-ring-path${faceAutoCapturing ? ' detected' : ''}`}
-                          strokeWidth="3" fill="none" />
-                      </svg>
-                    </div>
-                    <div className="face-status-text">
-                      <span className={`face-status-dot${faceAutoCapturing ? ' ok' : ''}`} />
-                      {faceAutoCapturing ? '촬영 중...' : '얼굴을 원 안에 맞춰주세요'}
-                    </div>
-                  </div>
-                )}
+                      <div className="vmi-text">
+                        <span className="vmi-title">얼굴 인식 <span className="vmi-badge">추천</span></span>
+                        <span className="vmi-desc">카메라로 실시간 얼굴을 대조해요</span>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
 
-                {/* 카메라 미시작 */}
-                {!faceCaptured && !faceCameraOn && !faceVerified && (
-                  <div className="face-start-area">
-                    <div className="face-start-icon">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--bnk-red)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="4"/>
-                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                        <path d="M15 5.5l1.5 1.5-1.5 1.5M9 5.5L7.5 7 9 8.5"/>
-                      </svg>
-                    </div>
-                    <p className="id-guide-text">정면 카메라로 본인 얼굴을<br/>촬영해 신분증과 대조합니다</p>
-                    {error && <div className="auth-error">{error}</div>}
-                    <button className="auth-btn auth-btn-primary" style={{ width: '100%' }} onClick={startFaceCamera}>
-                      카메라 시작하기
+                    {/* 영상통화 */}
+                    <button className="verify-method-item" onClick={() => setVerifyMethod('video')}>
+                      <div className="vmi-icon secondary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="23 7 16 12 23 17 23 7"/>
+                          <rect x="1" y="5" width="15" height="14" rx="2"/>
+                        </svg>
+                      </div>
+                      <div className="vmi-text">
+                        <span className="vmi-title">영상 통화</span>
+                        <span className="vmi-desc">상담사와 화상 통화로 본인을 확인해요</span>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+
+                    {/* 전화 인증 */}
+                    <button className="verify-method-item" onClick={() => setVerifyMethod('phone')}>
+                      <div className="vmi-icon secondary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.45 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.55a16 16 0 0 0 6.54 6.54l.85-.85a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                      </div>
+                      <div className="vmi-text">
+                        <span className="vmi-title">ARS 전화 인증</span>
+                        <span className="vmi-desc">자동 응답 전화로 간편하게 인증해요</span>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
                   </div>
                 )}
 
-                {/* 분석 중 */}
-                {faceCaptured && faceVerifying && (
-                  <div className="face-cam-wrap">
-                    <div className="face-oval-wrap">
-                      <div className="face-oval-clip">
-                        <img src={faceCaptured} alt="셀피" className="face-video" style={{ objectFit: 'cover', transform: 'none' }} />
-                        <div className="face-analyzing-overlay" />
+                {/* 얼굴인식 플로우 */}
+                {verifyMethod === 'face' && !faceVerified && (
+                  <>
+                    {/* 카메라 라이브 뷰 */}
+                    {faceCameraOn && !faceCaptured && (
+                      <div className="face-cam-wrap">
+                        <div className="face-oval-wrap">
+                          <div className="face-oval-clip">
+                            <video ref={faceVideoRef} autoPlay playsInline muted className="face-video" />
+                            <div className={`face-scan-line${faceAutoCapturing ? ' detected' : ''}`} />
+                          </div>
+                          <svg className="face-oval-svg" viewBox="0 0 206 266" fill="none">
+                            <ellipse cx="103" cy="133" rx="100" ry="130" className="face-oval-track" strokeWidth="3" />
+                            <ellipse cx="103" cy="133" rx="100" ry="130"
+                              className={`face-oval-ring-path${faceAutoCapturing ? ' detected' : ''}`}
+                              strokeWidth="3" fill="none" />
+                          </svg>
+                        </div>
+                        <div className="face-status-text">
+                          <span className={`face-status-dot${faceAutoCapturing ? ' ok' : ''}`} />
+                          {faceAutoCapturing ? '촬영 중...' : '얼굴을 원 안에 맞춰주세요'}
+                        </div>
                       </div>
-                      <svg className="face-oval-svg" viewBox="0 0 206 266" fill="none">
-                        <ellipse cx="103" cy="133" rx="100" ry="130" className="face-oval-ring-path detected" strokeWidth="3" fill="none" />
+                    )}
+                    {/* 분석 중 */}
+                    {faceCaptured && faceVerifying && (
+                      <div className="face-cam-wrap">
+                        <div className="face-oval-wrap">
+                          <div className="face-oval-clip">
+                            <img src={faceCaptured} alt="셀피" className="face-video" style={{ objectFit: 'cover', transform: 'none' }} />
+                            <div className="face-analyzing-overlay" />
+                          </div>
+                          <svg className="face-oval-svg" viewBox="0 0 206 266" fill="none">
+                            <ellipse cx="103" cy="133" rx="100" ry="130" className="face-oval-ring-path detected" strokeWidth="3" fill="none" />
+                          </svg>
+                        </div>
+                        <div className="face-status-text">
+                          <span className="face-status-dot ok" />
+                          AI가 얼굴을 인식하고 있어요...
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 영상통화 플로우 */}
+                {verifyMethod === 'video' && (
+                  <div className="verify-waiting">
+                    <div className="verify-waiting-icon">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--bnk-red)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
                       </svg>
                     </div>
-                    <div className="face-status-text">
-                      <span className="face-status-dot ok" />
-                      AI가 얼굴을 인식하고 있어요...
+                    <p className="verify-waiting-title">영상통화 연결 중</p>
+                    <p className="verify-waiting-desc">잠시만 기다려주세요.<br/>상담사와 연결되면 알려드립니다.</p>
+                    <div className="verify-waiting-dots"><span/><span/><span/></div>
+                  </div>
+                )}
+
+                {/* ARS 전화 인증 플로우 */}
+                {verifyMethod === 'phone' && (
+                  <div className="verify-waiting">
+                    <div className="verify-waiting-icon">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--bnk-red)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.45 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.55a16 16 0 0 0 6.54 6.54l.85-.85a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                      </svg>
                     </div>
+                    <p className="verify-waiting-title">ARS 전화 발신 중</p>
+                    <p className="verify-waiting-desc">등록된 번호로 전화가 갑니다.<br/>안내에 따라 인증 번호를 눌러주세요.</p>
+                    <div className="verify-waiting-dots"><span/><span/><span/></div>
                   </div>
                 )}
 
