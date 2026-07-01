@@ -9,11 +9,12 @@ const DECO_CARDS = [
 ]
 
 const STEPS = [
-  { key: 'idCapture', title: '신분증을 촬영해주세요',             sub: '주민등록증 또는 운전면허증을 준비해주세요' },
-  { key: 'idConfirm', title: '정보를 확인해주세요',               sub: '신분증에서 읽어낸 정보입니다' },
-  { key: 'username',  title: '사용할 아이디를\n입력해주세요',      sub: '영문/숫자 조합 6자 이상' },
-  { key: 'password',  title: '비밀번호를\n설정해주세요',           sub: '8자 이상으로 입력해주세요' },
-  { key: 'email',     title: '이메일 주소를\n입력해주세요',        sub: '카드 발급 안내를 받을 주소예요' },
+  { key: 'idCapture',  title: '신분증을 촬영해주세요',              sub: '주민등록증 또는 운전면허증을 준비해주세요' },
+  { key: 'idConfirm',  title: '정보를 확인해주세요',                sub: '신분증에서 읽어낸 정보입니다' },
+  { key: 'faceVerify', title: '얼굴 인식으로\n본인을 확인해요',     sub: '카메라를 정면으로 바라봐주세요' },
+  { key: 'username',   title: '사용할 아이디를\n입력해주세요',      sub: '영문/숫자 조합 6자 이상' },
+  { key: 'password',   title: '비밀번호를\n설정해주세요',           sub: '8자 이상으로 입력해주세요' },
+  { key: 'email',      title: '이메일 주소를\n입력해주세요',        sub: '카드 발급 안내를 받을 주소예요' },
 ]
 
 export default function Signup() {
@@ -28,13 +29,26 @@ export default function Signup() {
   const [done, setDone]         = useState(false)
   const [showPw, setShowPw]     = useState(false)
 
-  // Camera
-  const [cameraOn, setCameraOn]       = useState(false)
-  const [captured, setCaptured]       = useState(null)
-  const [verifying, setVerifying]     = useState(false)
+  // ID Card Camera
+  const [cameraOn, setCameraOn]             = useState(false)
+  const [captured, setCaptured]             = useState(null)
+  const [verifying, setVerifying]           = useState(false)
+  const [idAutoCapturing, setIdAutoCapturing] = useState(false)
   const videoRef    = useRef(null)
   const streamRef   = useRef(null)
   const canvasRef   = useRef(null)
+  const idTimerRef  = useRef(null)
+
+  // Face Verify Camera
+  const [faceCameraOn, setFaceCameraOn]         = useState(false)
+  const [faceCaptured, setFaceCaptured]         = useState(null)
+  const [faceVerifying, setFaceVerifying]       = useState(false)
+  const [faceVerified, setFaceVerified]         = useState(false)
+  const [faceAutoCapturing, setFaceAutoCapturing] = useState(false)
+  const faceVideoRef  = useRef(null)
+  const faceStreamRef = useRef(null)
+  const faceCanvasRef = useRef(null)
+  const faceTimerRef  = useRef(null)
 
   const navigate = useNavigate()
   const inputRef = useRef(null)
@@ -43,10 +57,22 @@ export default function Signup() {
     if (step >= 2) setTimeout(() => inputRef.current?.focus(), 120)
   }, [step])
 
-  // Cleanup camera on unmount
+  // Cleanup cameras on unmount
   useEffect(() => {
-    return () => stopCamera()
+    return () => { stopCamera(); stopFaceCamera() }
   }, [])
+
+  // Auto-start/stop face camera when entering/leaving step 2
+  useEffect(() => {
+    if (step === 2 && !faceCaptured) startFaceCamera()
+    else if (step !== 2) stopFaceCamera()
+  }, [step])
+
+  useEffect(() => {
+    if (faceCameraOn && faceVideoRef.current && faceStreamRef.current) {
+      faceVideoRef.current.srcObject = faceStreamRef.current
+    }
+  }, [faceCameraOn])
 
   const set = (key, val) => {
     setForm(prev => ({ ...prev, [key]: val }))
@@ -60,6 +86,62 @@ export default function Signup() {
       videoRef.current.srcObject = streamRef.current
     }
   }, [cameraOn])
+
+  // Face detection via canvas pixel analysis — auto-captures when face is actually in frame
+  useEffect(() => {
+    if (!faceCameraOn) return
+    let goodFrames = 0
+    let didCapture = false
+
+    const interval = setInterval(async () => {
+      if (didCapture || !faceVideoRef.current || !faceCanvasRef.current) return
+      const video = faceVideoRef.current
+      if (video.videoWidth === 0) return
+
+      const canvas = faceCanvasRef.current
+      canvas.width = 64; canvas.height = 64
+      const ctx = canvas.getContext('2d')
+      ctx.translate(64, 0); ctx.scale(-1, 1)
+      ctx.drawImage(video, 0, 0, 64, 64)
+
+      const { data: px } = ctx.getImageData(8, 0, 48, 64)
+      let sum = 0
+      for (let i = 0; i < px.length; i += 4)
+        sum += px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114
+      const mean = sum / (px.length / 4)
+      let variance = 0
+      for (let i = 0; i < px.length; i += 4) {
+        const lum = px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114
+        variance += (lum - mean) ** 2
+      }
+      variance /= (px.length / 4)
+
+      // Face-like: decent brightness + enough color variation
+      if (mean > 40 && mean < 230 && variance > 150) {
+        goodFrames++
+        if (goodFrames >= 3) {
+          didCapture = true
+          clearInterval(interval)
+          setFaceAutoCapturing(true)
+          setTimeout(async () => {
+            if (!faceVideoRef.current || !faceCanvasRef.current) return
+            const v = faceVideoRef.current; const c = faceCanvasRef.current
+            c.width = v.videoWidth; c.height = v.videoHeight
+            const ctx2 = c.getContext('2d')
+            ctx2.drawImage(v, 0, 0)
+            const resized = await resizeImage(c.toDataURL('image/jpeg', 0.8))
+            setFaceCaptured(resized); stopFaceCamera(); setFaceAutoCapturing(false)
+            setFaceVerifying(true)
+            setTimeout(() => { setFaceVerifying(false); setFaceVerified(true) }, 2000)
+          }, 500)
+        }
+      } else {
+        goodFrames = Math.max(0, goodFrames - 1)
+      }
+    }, 500)
+
+    return () => clearInterval(interval)
+  }, [faceCameraOn])
 
   const startCamera = useCallback(async () => {
     try {
@@ -122,9 +204,57 @@ export default function Signup() {
   }
 
   const retakePhoto = () => {
+    clearTimeout(idTimerRef.current)
+    setIdAutoCapturing(false)
     setCaptured(null)
     setError('')
     startCamera()
+  }
+
+  /* ---- Face Camera ---- */
+  const startFaceCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+      })
+      faceStreamRef.current = stream
+      setFaceCameraOn(true)
+      setError('')
+    } catch {
+      setError('카메라 접근 권한이 필요합니다')
+    }
+  }
+
+  const stopFaceCamera = () => {
+    if (faceStreamRef.current) {
+      faceStreamRef.current.getTracks().forEach(t => t.stop())
+      faceStreamRef.current = null
+    }
+    setFaceCameraOn(false)
+  }
+
+  const captureFace = async () => {
+    if (!faceVideoRef.current || !faceCanvasRef.current) return
+    const video = faceVideoRef.current
+    const canvas = faceCanvasRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0)
+    const resized = await resizeImage(canvas.toDataURL('image/jpeg', 0.8))
+    setFaceCaptured(resized)
+    stopFaceCamera()
+    setFaceVerifying(true)
+    setTimeout(() => { setFaceVerifying(false); setFaceVerified(true) }, 2200)
+  }
+
+  const retakeFace = () => {
+    clearTimeout(faceTimerRef.current)
+    setFaceAutoCapturing(false)
+    setFaceCaptured(null)
+    setFaceVerified(false)
+    setFaceVerifying(false)
+    setError('')
+    startFaceCamera()
   }
 
   /* ---- Verify ID ---- */
@@ -196,6 +326,12 @@ export default function Signup() {
     if (step === 1) {
       setCaptured(null)
       setStep(0)
+    } else if (step === 2) {
+      stopFaceCamera()
+      setFaceCaptured(null)
+      setFaceVerified(false)
+      setFaceVerifying(false)
+      setStep(1)
     } else if (step > 0) {
       setStep(step - 1)
     }
@@ -376,28 +512,26 @@ export default function Signup() {
                 {cameraOn && !captured && (
                   <div className="id-camera-area">
                     <div className="id-viewfinder">
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="id-video"
-                      />
+                      <video ref={videoRef} autoPlay playsInline muted className="id-video" />
                       <div className="id-guide-overlay">
-                        <div className="id-guide-rect">
-                          <span className="id-corner tl" />
-                          <span className="id-corner tr" />
-                          <span className="id-corner bl" />
-                          <span className="id-corner br" />
+                        <div className={`id-guide-rect${idAutoCapturing ? ' detected' : ''}`}>
+                          <span className="id-corner tl" /><span className="id-corner tr" />
+                          <span className="id-corner bl" /><span className="id-corner br" />
                         </div>
                         <p className="id-guide-label">신분증을 가이드 안에 맞춰주세요</p>
                       </div>
                     </div>
-                    <div className="id-camera-btns">
-                      <button className="id-capture-btn" onClick={capturePhoto}>
-                        <div className="id-capture-inner" />
-                      </button>
-                    </div>
+                    <button
+                      className={`id-capture-btn${idAutoCapturing ? ' capturing' : ''}`}
+                      disabled={idAutoCapturing}
+                      onClick={() => {
+                        setIdAutoCapturing(true)
+                        capturePhoto().then(() => setIdAutoCapturing(false))
+                      }}
+                    >
+                      <span className="id-capture-btn-circle" />
+                      {idAutoCapturing ? '촬영 중...' : '촬영하기'}
+                    </button>
                   </div>
                 )}
 
@@ -470,8 +604,92 @@ export default function Signup() {
               </>
             )}
 
-            {/* ===== Step 2: Username ===== */}
+            {/* ===== Step 2: Face Verify ===== */}
             {step === 2 && (
+              <>
+                <canvas ref={faceCanvasRef} style={{ display: 'none' }} />
+
+                {/* 카메라 라이브 뷰 */}
+                {!faceCaptured && faceCameraOn && (
+                  <div className="face-cam-wrap">
+                    <div className="face-oval-wrap">
+                      <div className="face-oval-clip">
+                        <video ref={faceVideoRef} autoPlay playsInline muted className="face-video" />
+                        <div className={`face-scan-line${faceAutoCapturing ? ' detected' : ''}`} />
+                      </div>
+                      {/* SVG 링 */}
+                      <svg className="face-oval-svg" viewBox="0 0 206 266" fill="none">
+                        <ellipse cx="103" cy="133" rx="100" ry="130" className="face-oval-track" strokeWidth="3" />
+                        <ellipse cx="103" cy="133" rx="100" ry="130"
+                          className={`face-oval-ring-path${faceAutoCapturing ? ' detected' : ''}`}
+                          strokeWidth="3" fill="none" />
+                      </svg>
+                    </div>
+                    <div className="face-status-text">
+                      <span className={`face-status-dot${faceAutoCapturing ? ' ok' : ''}`} />
+                      {faceAutoCapturing ? '촬영 중...' : '얼굴을 원 안에 맞춰주세요'}
+                    </div>
+                  </div>
+                )}
+
+                {/* 카메라 미시작 */}
+                {!faceCaptured && !faceCameraOn && !faceVerified && (
+                  <div className="face-start-area">
+                    <div className="face-start-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--bnk-red)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                        <path d="M15 5.5l1.5 1.5-1.5 1.5M9 5.5L7.5 7 9 8.5"/>
+                      </svg>
+                    </div>
+                    <p className="id-guide-text">정면 카메라로 본인 얼굴을<br/>촬영해 신분증과 대조합니다</p>
+                    {error && <div className="auth-error">{error}</div>}
+                    <button className="auth-btn auth-btn-primary" style={{ width: '100%' }} onClick={startFaceCamera}>
+                      카메라 시작하기
+                    </button>
+                  </div>
+                )}
+
+                {/* 분석 중 */}
+                {faceCaptured && faceVerifying && (
+                  <div className="face-cam-wrap">
+                    <div className="face-oval-wrap">
+                      <div className="face-oval-clip">
+                        <img src={faceCaptured} alt="셀피" className="face-video" style={{ objectFit: 'cover', transform: 'none' }} />
+                        <div className="face-analyzing-overlay" />
+                      </div>
+                      <svg className="face-oval-svg" viewBox="0 0 206 266" fill="none">
+                        <ellipse cx="103" cy="133" rx="100" ry="130" className="face-oval-ring-path detected" strokeWidth="3" fill="none" />
+                      </svg>
+                    </div>
+                    <div className="face-status-text">
+                      <span className="face-status-dot ok" />
+                      AI가 얼굴을 인식하고 있어요...
+                    </div>
+                  </div>
+                )}
+
+                {/* 인증 완료 */}
+                {faceVerified && (
+                  <div className="face-success-area">
+                    <div className="face-success-icon">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                    <p className="face-success-title">본인 확인 완료!</p>
+                    <p className="face-success-desc">얼굴 인식이 성공적으로 완료되었습니다.<br/>이제 계정 정보를 입력해주세요.</p>
+                    <div className="auth-btn-area" style={{ width: '100%' }}>
+                      <button className="auth-btn auth-btn-primary" onClick={goNext}>다음으로</button>
+                      <button className="auth-btn auth-btn-secondary" onClick={retakeFace}>다시 촬영</button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ===== Step 3: Username ===== */}
+            {step === 3 && (
               <div className="auth-field">
                 <label className="auth-label">아이디</label>
                 <input
@@ -494,8 +712,8 @@ export default function Signup() {
               </div>
             )}
 
-            {/* ===== Step 3: Password ===== */}
-            {step === 3 && (
+            {/* ===== Step 4: Password ===== */}
+            {step === 4 && (
               <>
                 <div className="auth-field">
                   <label className="auth-label">비밀번호</label>
@@ -557,8 +775,8 @@ export default function Signup() {
               </>
             )}
 
-            {/* ===== Step 4: Email ===== */}
-            {step === 4 && (
+            {/* ===== Step 5: Email ===== */}
+            {step === 5 && (
               <div className="auth-field">
                 <label className="auth-label">이메일</label>
                 <input
@@ -575,8 +793,8 @@ export default function Signup() {
               </div>
             )}
 
-            {/* Next button (steps 2~4) */}
-            {step >= 2 && (
+            {/* Next button (steps 3~5) */}
+            {step >= 3 && (
               <div className="auth-btn-area">
                 <button
                   className="auth-btn auth-btn-primary"
@@ -585,7 +803,7 @@ export default function Signup() {
                 >
                   {loading ? '처리 중...' : isLast ? '가입하기' : '다음'}
                 </button>
-                {step === 2 && (
+                {step === 3 && (
                   <p className="auth-footer">
                     이미 계정이 있으신가요? <Link to="/login">로그인</Link>
                   </p>

@@ -5,20 +5,20 @@
 
 /* ---- Page Shell ---- */
 .auth-page {
-  min-height: 100vh;
-  padding-top: 70px;
+  position: fixed;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bnk-bg);
-  padding: 70px 24px 40px;
+  overflow: hidden;
 }
 
 /* ---- 2-Panel Card ---- */
 .auth-card {
   display: flex;
   width: 960px;
-  height: 620px;
+  height: min(660px, calc(100vh - 40px));
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(101,92,79,0.12);
@@ -174,13 +174,11 @@
 /* ---- Right: Form Panel ---- */
 .auth-form-side {
   flex: 1;
-  padding: 48px 52px;
+  padding: 36px 48px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  scrollbar-width: none;
+  overflow: hidden;
 }
-.auth-form-side::-webkit-scrollbar { display: none; }
 
 /* Back button */
 .auth-back {
@@ -190,7 +188,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--bnk-light-gray);
-  margin-bottom: 32px;
+  margin-bottom: 18px;
   transition: color 0.2s;
   align-self: flex-start;
 }
@@ -203,7 +201,7 @@
 .auth-steps {
   display: flex;
   gap: 6px;
-  margin-bottom: 36px;
+  margin-bottom: 20px;
 }
 
 .auth-step-dot {
@@ -227,19 +225,19 @@
 
 /* Title / Subtitle */
 .auth-title {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 900;
   color: var(--bnk-text);
-  line-height: 1.4;
+  line-height: 1.35;
   letter-spacing: -0.8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   word-break: keep-all;
 }
 
 .auth-subtitle {
   font-size: 14px;
   color: var(--bnk-light-gray);
-  margin-bottom: 36px;
+  margin-bottom: 20px;
   line-height: 1.6;
 }
 
@@ -496,7 +494,9 @@
 .id-camera-area {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
 }
 
 .id-viewfinder {
@@ -504,7 +504,8 @@
   border-radius: 16px;
   overflow: hidden;
   background: #000;
-  aspect-ratio: 16/10;
+  flex: 1;
+  min-height: 0;
 }
 
 .id-video {
@@ -559,38 +560,49 @@
 }
 
 /* Capture button */
-.id-camera-btns {
-  display: flex;
-  justify-content: center;
-}
-
 .id-capture-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #fff;
-  border: 4px solid var(--bnk-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.id-capture-btn:hover {
-  border-color: var(--bnk-red);
-  transform: scale(1.05);
-}
-
-.id-capture-btn:active {
-  transform: scale(0.95);
-}
-
-.id-capture-inner {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
   background: var(--bnk-red);
-  transition: background 0.15s ease;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.id-capture-btn:hover:not(:disabled) {
+  background: var(--bnk-dark-red);
+  transform: translateY(-1px);
+}
+
+.id-capture-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.id-capture-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.id-capture-btn.capturing {
+  background: #555;
+}
+
+.id-capture-btn-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  border: 2px solid rgba(255,255,255,0.7);
+  flex-shrink: 0;
 }
 
 /* Preview */
@@ -707,4 +719,256 @@
     flex: 1;
   }
   .auth-title { font-size: 22px; }
+}
+
+/* ================================================================
+   얼굴 인식 본인확인 (Face Verify Step)
+   ================================================================ */
+
+/* 카메라 시작 전 안내 */
+.face-start-area {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 16px; text-align: center; padding: 8px 0;
+}
+.face-start-icon {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: #fbeae8; border: 2px solid #f3d4cf;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 카메라 라이브 뷰 */
+.face-camera-area {
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.face-viewfinder {
+  position: relative;
+  width: 240px; height: 300px;
+  border-radius: 50% / 50%;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 3px var(--bnk-red),
+    0 0 0 8px rgba(215,25,25,0.12),
+    0 20px 50px rgba(215,25,25,0.2);
+}
+.face-video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+/* 타원형 링 오버레이 */
+.face-oval-ring {
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  border: 2.5px solid rgba(255,255,255,0.5);
+  pointer-events: none;
+}
+/* 스캔 라인 */
+.face-scan-bar {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(215,25,25,0.8) 50%, transparent 100%);
+  animation: faceScanMove 2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes faceScanMove {
+  0%   { top: 10%; opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { top: 90%; opacity: 0; }
+}
+.face-guide-label {
+  font-size: 13.5px; color: #666; text-align: center; line-height: 1.6;
+}
+
+/* 분석 중 */
+.face-verifying-area {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.face-preview-wrap {
+  position: relative;
+  width: 200px; height: 250px;
+  border-radius: 50% / 50%;
+  overflow: hidden;
+  border: 3px solid var(--bnk-red);
+  box-shadow: 0 0 0 6px rgba(215,25,25,0.12);
+}
+.face-preview-img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.face-scan-overlay {
+  position: absolute; inset: 0;
+  background: rgba(215,25,25,0.08);
+}
+.face-scan-moving {
+  position: absolute; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--bnk-red), transparent);
+  animation: faceScanMove 1.4s ease-in-out infinite;
+}
+.face-verifying-text {
+  font-size: 15px; font-weight: 700; color: #333;
+}
+.face-dots::after {
+  content: '';
+  animation: dotdot 1.4s steps(4, end) infinite;
+}
+@keyframes dotdot {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
+/* 인증 완료 */
+.face-success-area {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; text-align: center; flex: 1; justify-content: center;
+}
+.face-success-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 30px rgba(16,185,129,0.35);
+  animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.face-success-title {
+  font-size: 22px; font-weight: 900; color: #1E1A17; letter-spacing: -0.5px;
+}
+.face-success-desc {
+  font-size: 14px; color: #888; line-height: 1.65;
+}
+
+/* ---- 얼굴 인식 (새 UI) ---- */
+.face-cam-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 0;
+}
+
+.face-oval-wrap {
+  position: relative;
+  width: 190px;
+  height: 250px;
+  flex-shrink: 0;
+}
+
+.face-oval-clip {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background: #111;
+}
+
+.face-oval-clip .face-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.face-oval-svg {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.face-oval-track {
+  stroke: rgba(215,25,25,0.18);
+}
+
+.face-oval-ring-path {
+  stroke: var(--bnk-red);
+  stroke-linecap: round;
+  stroke-dasharray: 730;
+  stroke-dashoffset: 730;
+  transition: stroke 0.4s ease;
+  animation: ovalFill 1.7s linear forwards;
+}
+
+.face-oval-ring-path.detected {
+  stroke: #22c55e;
+  stroke-dashoffset: 0;
+  animation: none;
+}
+
+@keyframes ovalFill {
+  from { stroke-dashoffset: 730; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.face-scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(215,25,25,0.7), transparent);
+  pointer-events: none;
+  animation: faceScanLine 1.8s ease-in-out infinite;
+}
+
+.face-scan-line.detected {
+  background: linear-gradient(90deg, transparent, rgba(34,197,94,0.8), transparent);
+}
+
+@keyframes faceScanLine {
+  0%   { top: 5%;  opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { top: 95%; opacity: 0; }
+}
+
+.face-status-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+}
+
+.face-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bnk-red);
+  animation: detectPulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.face-status-dot.ok {
+  background: #22c55e;
+  animation: none;
+}
+
+@keyframes detectPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%  { opacity: 0.35; transform: scale(0.8); }
+}
+
+.face-analyzing-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(215,25,25,0.06);
+  animation: analyzeFlicker 1.2s ease-in-out infinite;
+}
+
+@keyframes analyzeFlicker {
+  0%, 100% { opacity: 1; }
+  50%  { opacity: 0.4; }
+}
+
+.id-guide-rect.detected .id-corner {
+  border-color: #22c55e;
 }
