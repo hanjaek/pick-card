@@ -6,7 +6,7 @@ import groq
 from google import genai
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 from dotenv import load_dotenv
 import pytesseract
 from PIL import Image, ImageFilter, ImageEnhance, ImageOps
@@ -23,6 +23,7 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:4000")
 # 글로벌 변수 선언: 앱 시작 후 임베딩 모델과 DB 클라이언트를 한 번만 로드하여 재사용하기 위함
 _embedder = None
 _chroma_client = None
+_reranker = None
 
 
 def get_embedder() -> SentenceTransformer:
@@ -34,6 +35,17 @@ def get_embedder() -> SentenceTransformer:
     if _embedder is None:
         _embedder = SentenceTransformer("jhgan/ko-sroberta-multitask")
     return _embedder
+
+
+def get_reranker() -> CrossEncoder:
+    """
+    검색된 문서를 다시 정밀하게 정렬(Re-ranking)해 주는 크로스 인코더 모델을 반환합니다.
+    (Dongjin-kr/ko-reranker 사용: 한국어 재정렬에 뛰어남)
+    """
+    global _reranker
+    if _reranker is None:
+        _reranker = CrossEncoder("Dongjin-kr/ko-reranker")
+    return _reranker
 
 
 def get_collection():
@@ -136,16 +148,30 @@ async def recommend(req: RecommendRequest):
     if collection.count() == 0:
         raise HTTPException(status_code=400, detail="먼저 POST /index 를 호출해 카드를 인덱싱하세요")
 
-    # [1단계] 사용자 질문(query) 임베딩 및 가장 유사한 카드(top-k) 검색
+    # [1단계] 초벌 검색 (Retrieval) - 넉넉하게 최대 15개 검색
     embedder  = get_embedder()
     q_embed   = embedder.encode([req.query]).tolist()
     results   = collection.query(
         query_embeddings=q_embed,
-        n_results=min(req.top_k, collection.count()),
+        n_results=min(15, collection.count()),
     )
 
-    docs  = results["documents"][0]
-    metas = results["metadatas"][0]
+    retrieved_docs  = results["documents"][0]
+    retrieved_metas = results["metadatas"][0]
+    
+    # [2단계] 재정렬 (Re-ranking) ✨
+    reranker = get_reranker()
+    pairs = [[req.query, doc] for doc in retrieved_docs]
+    scores = reranker.predict(pairs)
+    
+    # 점수에 따라 내림차순 정렬
+    scored_results = sorted(zip(scores, retrieved_docs, retrieved_metas), key=lambda x: x[0], reverse=True)
+    
+    # 사용자가 요청한 개수(top_k)만큼 최상위 결과 자르기
+    top_results = scored_results[:req.top_k]
+    
+    docs = [item[1] for item in top_results]
+    metas = [item[2] for item in top_results]
     
     # 검색된 카드 정보들을 하나의 문자열 문맥(Context)으로 결합
     context = "\n".join(f"- {d}" for d in docs)
@@ -158,7 +184,7 @@ async def recommend(req: RecommendRequest):
 검색된 카드 정보:
 {context}"""
 
-    # [2단계] 선택된 LLM(Groq, Gemini, Claude)을 호출하여 최종 답변 생성
+    # [3단계] 선택된 LLM(Groq, Gemini, Claude)을 호출하여 최종 답변 생성
     if req.model == "groq":
         # 완전 무료이면서 매우 빠른 Groq API (Llama 3 모델) 사용
         groq_key = os.getenv("GROQ_API_KEY")
