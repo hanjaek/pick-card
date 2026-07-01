@@ -411,3 +411,70 @@
   .mp-spending-row { grid-template-columns: 24px 100px 1fr 80px; }
   .mp-empty { padding: 40px 24px; }
 }
+
+/* ============================================================
+   내 BNK 라이프 카드 관리 (사후관리)
+   ============================================================ */
+.mp-life-top { display: grid; grid-template-columns: 300px 1fr; gap: 26px; align-items: stretch; }
+
+/* 카드 비주얼 */
+.mp-life-visual {
+  position: relative; border-radius: 18px; padding: 22px; color: #fff; min-height: 180px;
+  background: linear-gradient(145deg, #D71919 0%, #B01414 52%, #7A1010 100%);
+  box-shadow: 0 18px 44px rgba(120,12,12,0.35);
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.mp-life-net { position: absolute; top: 22px; right: 24px; font-style: italic; font-weight: 800; font-size: 17px; }
+.mp-life-chip { width: 42px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #f2d68b, #c39a44); }
+.mp-life-brand { font-size: 11px; letter-spacing: 2px; opacity: 0.8; }
+.mp-life-name { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; margin-top: 2px; }
+.mp-life-no { font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 1px; opacity: 0.75; margin-top: 8px; }
+.mp-life-tenure {
+  position: absolute; bottom: 22px; right: 24px;
+  font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3); padding: 4px 11px; border-radius: 16px;
+}
+
+/* 정보/성장 */
+.mp-life-info { display: flex; flex-direction: column; gap: 14px; }
+.mp-life-status { display: flex; align-items: center; gap: 12px; }
+.mp-life-onoff { font-size: 13px; font-weight: 800; }
+.mp-life-onoff.on { color: #1a9e52; }
+.mp-life-onoff.off { color: #999; }
+.mp-life-stage { font-size: 13px; font-weight: 700; color: var(--bnk-red); background: #fbeae8; padding: 4px 12px; border-radius: 16px; }
+
+.mp-life-grow { background: #fff; border: 1px solid var(--bnk-border); border-radius: 14px; padding: 16px 18px; }
+.mp-life-grow-title { font-size: 12.5px; font-weight: 800; color: #999; margin-bottom: 8px; }
+.mp-life-grow-desc { font-size: 15px; color: #221; margin-bottom: 10px; }
+.mp-life-grow-desc strong { color: var(--bnk-red); }
+.mp-life-grow-year { font-size: 13px; color: #999; }
+.mp-life-bar { height: 9px; background: #f1eae6; border-radius: 6px; overflow: hidden; }
+.mp-life-bar-fill { height: 100%; background: linear-gradient(90deg, #D71919, #B01414); border-radius: 6px; transition: width 0.6s ease; }
+.mp-life-grow-hint { font-size: 12.5px; color: #888; margin-top: 8px; }
+.mp-life-grow-hint strong { color: var(--bnk-red); }
+.mp-life-saved { font-size: 15px; color: #221; }
+.mp-life-saved strong { color: var(--bnk-red); font-size: 18px; }
+
+/* 켜진 혜택 */
+.mp-life-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.mp-life-bnf {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  background: #fff8f7; border: 1px solid #f0d2cd; border-radius: 13px; padding: 15px 18px;
+}
+.mp-life-bnf-name { font-size: 14.5px; font-weight: 700; color: #221; }
+.mp-grow-tag { font-size: 11px; font-weight: 800; color: #fff; background: var(--bnk-red); padding: 2px 8px; border-radius: 10px; margin-left: 7px; }
+.mp-life-bnf-why { font-size: 12.5px; color: var(--bnk-red); margin-top: 5px; font-weight: 600; }
+.mp-life-bnf-saved { font-size: 16px; font-weight: 800; color: var(--bnk-red); white-space: nowrap; }
+
+/* 알림 */
+.mp-noti { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.mp-noti-item { display: flex; gap: 13px; align-items: flex-start; background: #fff; border: 1px solid var(--bnk-border); border-radius: 12px; padding: 14px 16px; }
+.mp-noti-item.type-MISSED_BENEFIT { border-color: #f0d2cd; background: #fff8f7; }
+.mp-noti-ic { font-size: 18px; }
+.mp-noti-t { font-size: 14px; font-weight: 800; color: #221; }
+.mp-noti-b { font-size: 13px; color: #777; margin-top: 3px; line-height: 1.5; }
+
+@media (max-width: 720px) {
+  .mp-life-top { grid-template-columns: 1fr; }
+  .mp-life-benefits { grid-template-columns: 1fr; }
+}

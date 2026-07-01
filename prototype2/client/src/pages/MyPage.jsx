@@ -54,6 +54,7 @@ export default function MyPage() {
   const [allCards, setAllCards] = useState([])
   const [applied,  setApplied]  = useState([])
   const [spending, setSpending] = useState([])   // DB 거래 집계 (카테고리별)
+  const [lifeMy,   setLifeMy]   = useState(null) // 라이프카드 사후관리(성장·알림)
   const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
@@ -63,10 +64,12 @@ export default function MyPage() {
       fetch('/api/cards').then(r => r.json()),
       fetch('/api/applications/me', auth).then(r => r.json()),
       fetch('/api/mypage/spending', auth).then(r => r.json()),
+      fetch('/api/life-card/my', auth).then(r => (r.ok ? r.json() : null)).catch(() => null),
     ])
-      .then(([cards, apps, spend]) => {
+      .then(([cards, apps, spend, life]) => {
         setAllCards(Array.isArray(cards) ? cards : [])
         setApplied(Array.isArray(apps)  ? apps  : [])
+        setLifeMy(life)
         // DB 집계(카테고리·금액)를 config(아이콘·키워드)와 합쳐 표시용 배열 구성
         const amountByCat = {}
         ;(Array.isArray(spend) ? spend : []).forEach(s => { amountByCat[s.category] = Number(s.amount) })
@@ -134,6 +137,85 @@ export default function MyPage() {
       </div>
 
       <div className="mp-body">
+
+        {/* ── 내 BNK 라이프 카드 관리 (사후관리) ── */}
+        {lifeMy?.isHolder && (
+          <section className="mp-section">
+            <h2 className="mp-section-title">내 BNK 라이프 카드 관리</h2>
+            <p className="mp-section-sub">시간이 지날수록 혜택이 자라는 평생 카드예요</p>
+
+            <div className="mp-life-top">
+              {/* 카드 비주얼 */}
+              <div className="mp-life-visual">
+                <span className="mp-life-net">{lifeMy.stageLabel ? 'VISA' : 'VISA'}</span>
+                <div className="mp-life-chip" />
+                <div className="mp-life-visual-bottom">
+                  <p className="mp-life-brand">BNK LIFE</p>
+                  <p className="mp-life-name">BNK 라이프</p>
+                  <p className="mp-life-no">{lifeMy.membership.cardNo}</p>
+                </div>
+                <span className="mp-life-tenure">{lifeMy.membership.tenureYear}년차</span>
+              </div>
+
+              {/* 성장 진행률 + 상태 */}
+              <div className="mp-life-info">
+                <div className="mp-life-status">
+                  <span className={`mp-life-onoff ${lifeMy.membership.onoff === 'ON' ? 'on' : 'off'}`}>
+                    {lifeMy.membership.onoff === 'ON' ? '● 사용 중' : '○ 사용 중지'}
+                  </span>
+                  <span className="mp-life-stage">{lifeMy.stageLabel?.label}</span>
+                </div>
+                {lifeMy.nextUpgrade ? (
+                  <div className="mp-life-grow">
+                    <p className="mp-life-grow-title">다음 혜택 업그레이드</p>
+                    <p className="mp-life-grow-desc">
+                      {lifeMy.nextUpgrade.benefit} <strong>{lifeMy.nextUpgrade.fromRate}% → {lifeMy.nextUpgrade.toRate}%</strong>
+                      <span className="mp-life-grow-year"> ({lifeMy.nextUpgrade.atYear}년차)</span>
+                    </p>
+                    <div className="mp-life-bar"><div className="mp-life-bar-fill" style={{ width: `${lifeMy.nextUpgrade.yearProgress}%` }} /></div>
+                    <p className="mp-life-grow-hint">다음 단계까지 <strong>{100 - lifeMy.nextUpgrade.yearProgress}%</strong> 남았어요</p>
+                  </div>
+                ) : (
+                  <div className="mp-life-grow"><p className="mp-life-grow-title">최고 등급 혜택 적용 중 🎉</p></div>
+                )}
+                <p className="mp-life-saved">이번 달 <strong>{lifeMy.totalSaved.toLocaleString()}원</strong> 절약 중</p>
+              </div>
+            </div>
+
+            {/* 켜진 혜택 (성장 적용) */}
+            <div className="mp-life-benefits">
+              {lifeMy.active.filter(b => b.saved > 0 || b.grown).slice(0, 4).map((b, i) => (
+                <div key={i} className="mp-life-bnf">
+                  <div className="mp-life-bnf-main">
+                    <p className="mp-life-bnf-name">
+                      {b.desc}
+                      {b.grown && <span className="mp-grow-tag">성장 {b.effRate}%</span>}
+                    </p>
+                    {b.reason && <p className="mp-life-bnf-why">{b.reason}</p>}
+                  </div>
+                  {b.saved > 0 && <span className="mp-life-bnf-saved">+{b.saved.toLocaleString()}원</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* 사후관리 알림 */}
+            {lifeMy.notifications?.length > 0 && (
+              <div className="mp-noti">
+                {lifeMy.notifications.slice(0, 3).map(n => (
+                  <div key={n.id} className={`mp-noti-item type-${n.type}`}>
+                    <span className="mp-noti-ic">
+                      {n.type === 'MISSED_BENEFIT' ? '⚠️' : n.type === 'UPGRADE_SOON' ? '⏳' : '🎁'}
+                    </span>
+                    <div>
+                      <p className="mp-noti-t">{n.title}</p>
+                      <p className="mp-noti-b">{n.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* ── 이달 소비 패턴 ── */}
         <section className="mp-section">
