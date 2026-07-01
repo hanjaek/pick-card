@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Header     from './components/Header'
 import Footer     from './components/Footer'
+import ChatWidget from './components/ChatWidget'
 import Home       from './pages/Home'
 import LifeCard   from './pages/LifeCard'
 import Login      from './pages/Login'
@@ -71,6 +72,7 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <ChatWidget />
             </>
           }
         />
