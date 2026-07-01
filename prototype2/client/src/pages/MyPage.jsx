@@ -65,7 +65,7 @@ function Ring({ pct = 0, size = 208, stroke = 18, children }) {
   return (
     <div className="mp-ring" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEFF2" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EAE1D8" strokeWidth={stroke} />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke="url(#mp-ring-grad)" strokeWidth={stroke} strokeLinecap="round"
@@ -75,8 +75,8 @@ function Ring({ pct = 0, size = 208, stroke = 18, children }) {
         />
         <defs>
           <linearGradient id="mp-ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#D71919" />
-            <stop offset="100%" stopColor="#FF7B7B" />
+            <stop offset="0%" stopColor="#16A34A" />
+            <stop offset="100%" stopColor="#5CE08A" />
           </linearGradient>
         </defs>
       </svg>
@@ -90,6 +90,31 @@ const IconArrow = () => (
     <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
+
+/* 카테고리 단색 라인 아이콘 (이모지 대체 — 은행앱 톤) */
+const CAT_PATHS = {
+  CAFE:         <><path d="M5 8h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V8Z" /><path d="M16 9h2.3a2.3 2.3 0 0 1 0 4.6H16" /><path d="M8 3.5v2M12 3.5v2" /></>,
+  CONVENIENCE:  <><path d="M4 9l1.6-4h12.8L20 9" /><path d="M4.8 9h14.4v9a1 1 0 0 1-1 1h-12.4a1 1 0 0 1-1-1V9Z" /><path d="M9 19v-5h6v5" /></>,
+  DELIVERY:     <><path d="M5.5 8l1.4-3h10.2L18.5 8" /><path d="M5 8h14v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8Z" /><path d="M12 8v11M5 12.5h14" /></>,
+  TRANSPORT:    <><rect x="5" y="4" width="14" height="12" rx="2" /><path d="M5 11.5h14M9 16v2.5M15 16v2.5" /><circle cx="8.5" cy="13.6" r=".9" /><circle cx="15.5" cy="13.6" r=".9" /></>,
+  SHOPPING:     <><path d="M4 5h2l1.8 10.2a1.2 1.2 0 0 0 1.2 1h7.3a1.2 1.2 0 0 0 1.2-1L20 8H6.2" /><circle cx="9.5" cy="19.4" r="1.1" /><circle cx="17" cy="19.4" r="1.1" /></>,
+  SUBSCRIPTION: <><rect x="3" y="5" width="18" height="12" rx="2" /><path d="M8 21h8M12 17v4" /><path d="M11 9.2l3 1.8-3 1.8V9.2Z" fill="currentColor" stroke="none" /></>,
+  TELECOM:      <><rect x="7" y="3" width="10" height="18" rx="2.4" /><path d="M11 18h2" /></>,
+  CULTURE:      <><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18M7 6l2 4M12 6l2 4M17 6l2 4" /></>,
+  PAY:          <><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18M7 15h4" /></>,
+  MEDICAL:      <><rect x="4" y="4" width="16" height="16" rx="4.5" /><path d="M12 8.5v7M8.5 12h7" /></>,
+  FUEL:         <><path d="M6 20V6a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v14M5 20h11" /><path d="M8 11h5" /><path d="M15 8.5l2.6 2.6a1.5 1.5 0 0 1 .4 1V16a1.5 1.5 0 0 0 3 0V9.5L18.5 7" /></>,
+  EDUCATION:    <><path d="M5 4.5h10a2 2 0 0 1 2 2V20H7a2 2 0 0 1-2-2V4.5Z" /><path d="M17 16H7a2 2 0 0 0-2 2" /></>,
+  TRAVEL:       <><path d="M21 4L3.5 11l6 2.2L11.7 20 21 4Z" /><path d="M9.5 13.2L21 4" /></>,
+}
+function CatIcon({ cat, size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      {CAT_PATHS[cat] || <circle cx="12" cy="12" r="3.5" />}
+    </svg>
+  )
+}
 
 export default function MyPage() {
   const navigate = useNavigate()
@@ -142,12 +167,14 @@ export default function MyPage() {
     .map(b => {
       const cap = Number(b.monthlyLimit) || 0
       const sv  = Number(b.saved) || 0
-      const util = cap > 0 ? Math.min(100, Math.round(sv / cap * 100)) : (b.matched ? 100 : 0)
-      return { ...b, cap, sv, util }
+      const util = cap > 0 ? Math.min(100, Math.round(sv / cap * 100)) : (sv > 0 ? 100 : 0)
+      // used = 실제 할인 받음 / nosave = 결제했지만 할인 0 / unused = 미사용
+      const state = sv > 0 ? 'used' : (b.matched ? 'nosave' : 'unused')
+      return { ...b, cap, sv, util, state }
     })
     .sort((a, b) => b.sv - a.sv)
 
-  const usedCount  = report.filter(b => b.matched).length
+  const usedCount  = report.filter(b => b.sv > 0).length
   const totalCap   = report.reduce((s, b) => s + b.cap, 0)
   const totalSaved = report.reduce((s, b) => s + b.sv, 0)
   const overallUtil = totalCap > 0 ? Math.min(100, Math.round(totalSaved / totalCap * 100)) : 0
@@ -248,7 +275,7 @@ export default function MyPage() {
                   <p className="mp-my-config-label">내 혜택 구성</p>
                   <div className="mp-my-config-chips">
                     {(lifeMy.savedConfig.items || []).map(it => (
-                      <span key={it.cd} className="mp-my-chip">{it.icon} {it.label}</span>
+                      <span key={it.cd} className="mp-my-chip"><CatIcon cat={it.cd} size={13} /> {it.label}</span>
                     ))}
                   </div>
                   <p className="mp-my-config-fee">연회비 {lifeMy.savedConfig.selectedFee.toLocaleString()}원</p>
@@ -276,16 +303,15 @@ export default function MyPage() {
           <section className="mp-section">
             <div className="mp-section-head">
               <div>
-                <h2 className="mp-section-title">이번 달 혜택 활용 리포트</h2>
-                <p className="mp-section-sub">{period} · 받을 수 있는 할인 중 얼마나 챙겼는지 한눈에 보세요</p>
+                <h2 className="mp-section-title">이번 달, 내 혜택 얼마나 챙겼을까?</h2>
+                <p className="mp-section-sub">{period} · 받을 수 있는 할인을 얼마나 썼는지 보여드려요</p>
               </div>
-              <span className="mp-chip">{usedCount} / {report.length} 활용</span>
             </div>
 
             <div className="mp-report">
               {/* 좌: 전체 활용률 게이지 */}
               <div className="mp-gauge">
-                <Ring pct={anim ? overallUtil : 0}>
+                <Ring pct={anim ? overallUtil : 0} size={184}>
                   <span className="mp-gauge-pct">{utilCount}<em>%</em></span>
                   <span className="mp-gauge-cap">할인 활용률</span>
                 </Ring>
@@ -304,39 +330,26 @@ export default function MyPage() {
                 )}
               </div>
 
-              {/* 우: 혜택별 활용 바 */}
-              <div className="mp-util-list">
+              {/* 우: 혜택별 활용 — 한 박스에 촘촘히 */}
+              <div className="mp-util-box">
                 {report.map((b, i) => (
-                  <div key={i} className={`mp-util-row ${b.matched ? 'on' : 'off'}`}>
-                    <div className="mp-util-head">
-                      <span className="mp-util-icon">{CAT_ICON[b.category] || '•'}</span>
-                      <div className="mp-util-txt">
-                        <p className="mp-util-name">{b.desc}</p>
-                        <p className="mp-util-meta">
-                          {CAT_FULL[b.category] || b.category}
-                          {b.matched ? ` · 이달 ${(b.spent || 0).toLocaleString()}원 소비` : ' · 이번 달 미사용'}
-                        </p>
-                      </div>
-                      <span className="mp-util-rate">{b.effRate ?? b.baseRate ?? 0}%</span>
+                  <div key={i} className={`mp-uline ${b.state}`}>
+                    <span className="mp-uline-cat">
+                      <CatIcon cat={b.category} size={16} />
+                      <span className="mp-uline-name">{CAT_FULL[b.category] || b.desc}</span>
+                    </span>
+                    <div className="mp-uline-track">
+                      <div
+                        className="mp-uline-fill"
+                        style={{ width: anim ? `${b.util}%` : 0, transitionDelay: anim ? `${i * 90}ms` : '0ms' }}
+                      />
                     </div>
-                    <div className="mp-util-barrow">
-                      <div className="mp-util-track">
-                        <div className={`mp-util-fill ${b.matched ? '' : 'zero'}`} style={{ width: anim ? `${b.util}%` : 0 }} />
-                      </div>
-                      <span className={`mp-util-pct ${b.matched ? '' : 'zero'}`}>{b.matched ? b.util : 0}%</span>
-                    </div>
-                    <div className="mp-util-foot">
-                      {b.matched ? (
-                        <span className="mp-util-saved">+{b.sv.toLocaleString()}원 아낌 <em>/ 최대 {b.cap.toLocaleString()}원</em></span>
-                      ) : (
-                        <span className="mp-util-cta">
-                          0원 — 이 카테고리에서 결제하면 자동 적용돼요
-                          <Link to="/benefit-builder" className="mp-util-swap">다른 혜택으로 변경 <IconArrow /></Link>
-                        </span>
-                      )}
-                    </div>
+                    <span className="mp-uline-pct">{b.util}%</span>
                   </div>
                 ))}
+                <Link to="/benefit-builder" className="mp-util-edit">
+                  혜택 구성 변경하기 <IconArrow />
+                </Link>
               </div>
             </div>
           </section>
@@ -356,7 +369,7 @@ export default function MyPage() {
             <div className="mp-growth">
               {/* 대표 혜택 성장 막대 그래프 */}
               <div className="mp-gchart">
-                <p className="mp-gchart-subj"><span>{CAT_ICON[rep.category] || '•'}</span> {rep.desc} 기준</p>
+                <p className="mp-gchart-subj"><CatIcon cat={rep.category} size={16} /> {rep.desc} 기준</p>
                 <div className="mp-gbars">
                   {gcols.map(d => (
                     <div key={d.year} className={`mp-gcol ${d.year === curYear ? 'now' : ''} ${d.year <= curYear ? 'reached' : ''}`}>
@@ -379,7 +392,7 @@ export default function MyPage() {
                   const cur  = base + (curYear - 1)
                   return (
                     <div key={i} className="mp-grow-row">
-                      <span className="mp-grow-name">{CAT_ICON[b.category] || '•'} {CAT_FULL[b.category] || b.category}</span>
+                      <span className="mp-grow-name"><CatIcon cat={b.category} size={16} /> {CAT_FULL[b.category] || b.category}</span>
                       <span className="mp-grow-flow">
                         <em>{base}%</em><i className="mp-grow-arrow"><IconArrow /></i><strong>{cur}%</strong>
                       </span>
@@ -410,7 +423,7 @@ export default function MyPage() {
             <div className="mp-spend-list">
               {spending.map(cat => (
                 <div key={cat.cd} className="mp-spend-row">
-                  <span className="mp-spend-icon">{cat.icon}</span>
+                  <span className="mp-spend-icon"><CatIcon cat={cat.cd} size={17} /></span>
                   <span className="mp-spend-label">{cat.label}</span>
                   <div className="mp-bar-track"><div className="mp-bar-fill" style={{ width: anim ? `${(cat.amount / maxAmt) * 100}%` : 0 }} /></div>
                   <span className="mp-spend-pct">{Math.round(cat.amount / total * 100)}%</span>
@@ -444,7 +457,7 @@ export default function MyPage() {
           {opps.length > 0 && (
             <div className="mp-card">
               <div className="mp-card-head">
-                <h2 className="mp-card-title">이 카드도 써보세요</h2>
+                <h2 className="mp-card-title">{isHolder ? '이 카드도 써보세요' : '내 소비 패턴 추천 카드'}</h2>
                 <span className="mp-chip mp-chip--gray">소비 패턴 기반</span>
               </div>
               <div className="mp-opp-list">
@@ -459,11 +472,14 @@ export default function MyPage() {
                   </Link>
                 ))}
               </div>
+              {!isHolder && (
+                <Link to="/cards" className="mp-opp-more">전체 카드 보기 <IconArrow /></Link>
+              )}
             </div>
           )}
         </div>
 
-        {myCards.length === 0 && !isHolder && (
+        {myCards.length === 0 && !isHolder && opps.length === 0 && (
           <div className="mp-card mp-empty-card">
             <p className="mp-empty-title">아직 신청한 카드가 없어요</p>
             <p className="mp-empty-sub">내 소비 패턴에 맞는 BNK 카드를 찾아보세요</p>
