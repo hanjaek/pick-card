@@ -3,7 +3,7 @@ const jwt    = require('jsonwebtoken')
 const pool   = require('../db')
 
 /* ======================================================
-   BNK 라이프 평생 카드 — 생애단계·소비 기반 자동 혜택
+   BNK 라이프 평생 카드 — 생애단계·소비 기반 자동 혜택 + 성장형
    ====================================================== */
 
 const LIFE_CARD_NAME = 'BNK 라이프 평생 카드'
@@ -16,7 +16,6 @@ const STAGE_META  = {
   SENIOR: { age: '60대+',   label: '시니어',     desc: '의료·여행 중심, 안정적인 소비' },
 }
 
-// 거래 카테고리 한글 라벨 (소비 분석 표시용)
 const CAT_LABEL = {
   CAFE: '카페·디저트', TRANSPORT: '대중교통', SHOPPING: '쇼핑·마트',
   TELECOM: '통신요금', CULTURE: '문화·여가', PAY: '간편결제',
@@ -24,18 +23,66 @@ const CAT_LABEL = {
   FUEL: '주유', EDUCATION: '교육', TRAVEL: '여행', CONVENIENCE: '편의점',
 }
 
-// 라이프 카드 + 혜택 전체 로드
+// 라이프 카드 + 혜택(+성장형 단계 benefit_tiers) 로드
 async function loadLifeCard() {
   const [cards] = await pool.query('SELECT * FROM cards WHERE prd_nm = ? LIMIT 1', [LIFE_CARD_NAME])
   if (cards.length === 0) return null
   const card = cards[0]
   const [benefits] = await pool.query(
-    `SELECT bnft_type_cd AS type, bnft_desc AS \`desc\`, discount_rate AS rate,
+    `SELECT id, bnft_type_cd AS type, bnft_desc AS \`desc\`, discount_rate AS rate,
             monthly_limit_amt AS monthlyLimit, life_stage_cd AS stage, category_cd AS category
      FROM card_benefits WHERE card_id = ? ORDER BY id`,
     [card.id]
   )
+  const ids = benefits.map(b => b.id)
+  let tiers = []
+  if (ids.length) {
+    const [tr] = await pool.query(
+      `SELECT benefit_id, tenure_year, discount_rate AS rate, monthly_limit_amt AS monthlyLimit, tier_label
+       FROM benefit_tiers WHERE benefit_id IN (?) ORDER BY tenure_year`,
+      [ids]
+    )
+    tiers = tr
+  }
+  const tierMap = {}
+  tiers.forEach(t => { (tierMap[t.benefit_id] = tierMap[t.benefit_id] || []).push(t) })
+  benefits.forEach(b => { b.tiers = tierMap[b.id] || [] })
   return { card, benefits }
+}
+
+// 성장형: 가입연차(tenureYear) 기준 유효 율/한도 계산
+//  - benefit_tiers 중 tenure_year <= 내연차 인 것 중 가장 큰 단계를 적용
+//  - 없으면 기본(card_benefits.rate)
+function applyTenure(benefit, tenureYear) {
+  const base = benefit.rate == null ? null : Number(benefit.rate)
+  let rate = base, limit = benefit.monthlyLimit, appliedTier = null, nextTier = null
+  for (const t of benefit.tiers) {          // tenure_year 오름차순
+    if (t.tenure_year <= tenureYear) { rate = Number(t.rate); limit = t.monthlyLimit; appliedTier = t }
+    else if (!nextTier) { nextTier = t }
+  }
+  return { base, rate, limit, appliedTier, nextTier }
+}
+
+// 유저의 라이프카드 발급(보유) 조회
+async function getMembership(userId, cardId) {
+  const [rows] = await pool.query(
+    `SELECT id, card_no_masked, issued_dt, valid_thru, membership_status, card_onoff
+     FROM card_memberships
+     WHERE user_id = ? AND card_id = ? AND membership_status = 'ACTIVE'
+     ORDER BY issued_dt LIMIT 1`,
+    [userId, cardId]
+  )
+  return rows[0] || null
+}
+
+// 발급일 → 가입연차(정수) + 올해 진행률(0~100)
+function tenureFrom(issuedDt) {
+  const issued = new Date(issuedDt)
+  const now = new Date()
+  const years = (now - issued) / (365.25 * 24 * 3600 * 1000)
+  const tenureYear = Math.max(0, Math.floor(years))
+  const yearProgress = Math.min(100, Math.max(0, Math.round((years - tenureYear) * 100)))
+  return { tenureYear, yearProgress }
 }
 
 /* ------------------------------------------------------
@@ -49,21 +96,16 @@ router.get('/', async (req, res) => {
     const stages = STAGE_ORDER.map(cd => ({
       stage:    cd,
       ...STAGE_META[cd],
-      benefits: data.benefits.filter(b => b.stage === cd),
+      benefits: data.benefits.filter(b => b.stage === cd).map(b => ({ ...b, tiers: undefined })),
     }))
-    const common = data.benefits.filter(b => b.stage === 'ALL')
+    const common = data.benefits.filter(b => b.stage === 'ALL').map(b => ({ ...b, tiers: undefined }))
 
     res.json({
       card: {
-        id:        data.card.id,
-        name:      data.card.prd_nm,
-        network:   data.card.network,
-        colorFrom: data.card.color_from,
-        colorTo:   data.card.color_to,
-        feature:   data.card.product_feature,
+        id: data.card.id, name: data.card.prd_nm, network: data.card.network,
+        colorFrom: data.card.color_from, colorTo: data.card.color_to, feature: data.card.product_feature,
       },
-      stages,
-      common,
+      stages, common,
     })
   } catch (err) {
     console.error('[life-card GET /]', err)
@@ -72,7 +114,7 @@ router.get('/', async (req, res) => {
 })
 
 /* ------------------------------------------------------
-   GET /api/life-card/my  —  나이 + 소비 기반 개인화 (See Why)
+   GET /api/life-card/my  —  나이+소비+성장형 개인화 (See Why)
    ------------------------------------------------------ */
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization
@@ -119,37 +161,60 @@ router.get('/my', authMiddleware, async (req, res) => {
     const topCats = spend.map(s => s.category_cd)
     const totalSpend = spend.reduce((sum, s) => sum + Number(s.amt), 0)
     const spending = spend.map(s => ({
-      category: s.category_cd,
-      label:    CAT_LABEL[s.category_cd] || s.category_cd,
-      amount:   Number(s.amt),
-      pct:      totalSpend ? Math.round(Number(s.amt) / totalSpend * 100) : 0,
+      category: s.category_cd, label: CAT_LABEL[s.category_cd] || s.category_cd,
+      amount: Number(s.amt), pct: totalSpend ? Math.round(Number(s.amt) / totalSpend * 100) : 0,
     }))
 
-    // 3) 내 단계 + 공통 혜택 → 소비 매칭 혜택을 "활성"으로 (See Why)
+    // 3) 보유(발급) 카드 → 가입연차 (성장형 기준)
+    const membership = await getMembership(req.user.id, data.card.id)
+    const { tenureYear, yearProgress } = membership ? tenureFrom(membership.issued_dt) : { tenureYear: 0, yearProgress: 0 }
+    const isHolder = !!membership
+
+    // 4) 내 단계+공통 혜택 → 성장형 율 적용 + 소비 매칭(See Why)
     const eligible = data.benefits.filter(b => b.stage === stage || b.stage === 'ALL')
+    let nextUpgrade = null
     const active = eligible.map(b => {
+      const { base, rate, limit, appliedTier, nextTier } = applyTenure(b, tenureYear)
       const matched = !!(b.category && topCats.includes(b.category))
       const spent   = b.category ? (spendByCat[b.category] || 0) : 0
-      const saved   = (matched && b.rate)
-        ? Math.min(Math.round(spent * Number(b.rate) / 100), b.monthlyLimit || Infinity)
-        : 0
+      const saved   = (matched && rate) ? Math.min(Math.round(spent * rate / 100), limit || Infinity) : 0
+      const grown   = base != null && rate != null && rate > base
+      // 매칭된 혜택 중 다음 단계가 있으면 대표 업그레이드로 노출
+      if (matched && nextTier && !nextUpgrade) {
+        nextUpgrade = {
+          benefit: b.desc, fromRate: rate, toRate: Number(nextTier.rate),
+          atYear: nextTier.tenure_year, label: nextTier.tier_label, yearProgress,
+        }
+      }
       return {
-        ...b, matched, spent, saved,
-        reason: matched && b.rate
-          ? `이번 달 ${CAT_LABEL[b.category] || b.category} ${spent.toLocaleString()}원 사용 → ${Number(b.rate)}% 적용`
+        type: b.type, desc: b.desc, category: b.category, stage: b.stage,
+        baseRate: base, effRate: rate, monthlyLimit: limit, grown,
+        matched, spent, saved,
+        reason: matched && rate
+          ? `이번 달 ${CAT_LABEL[b.category] || b.category} ${spent.toLocaleString()}원 사용 → ${rate}% 적용${grown ? ` (${tenureYear}년차 우대)` : ''}`
           : null,
       }
     }).sort((a, b) => b.saved - a.saved)
 
+    // 5) 사후관리 알림
+    const [notifications] = await pool.query(
+      `SELECT id, noti_type AS type, title, body, is_read AS isRead, created_at AS createdAt
+       FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 10`,
+      [req.user.id]
+    )
+
     res.json({
-      stage,
-      stageLabel: STAGE_META[stage],
-      age,
-      spending,            // 카테고리별 소비 분석
-      totalSpend,          // 이번 달 총 소비
-      topCats,
-      active,              // 켜진 혜택 (See Why 포함)
-      totalSaved: active.reduce((s, b) => s + b.saved, 0),
+      stage, stageLabel: STAGE_META[stage], age,
+      spending, totalSpend, topCats,
+      active, totalSaved: active.reduce((s, b) => s + b.saved, 0),
+      isHolder,
+      membership: membership ? {
+        cardNo: membership.card_no_masked, issuedDt: membership.issued_dt,
+        validThru: membership.valid_thru, onoff: membership.card_onoff,
+        tenureYear, yearProgress,
+      } : null,
+      nextUpgrade,          // 다음 혜택 업그레이드 (연차·율·진행률)
+      notifications,        // 사후관리 알림
     })
   } catch (err) {
     console.error('[life-card GET /my]', err)
