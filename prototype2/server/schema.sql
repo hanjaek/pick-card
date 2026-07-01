@@ -687,6 +687,10 @@ CREATE TABLE IF NOT EXISTS benefit_catalog (
   note          VARCHAR(100),                        -- 부가 설명(월 최대 3,000원)
   cost          INT           NOT NULL,              -- 예산 소진 비용(원)
   color         VARCHAR(20),                         -- 표시 색
+  -- 연동용 숫자 필드: 소비(transactions)와 매칭해 절약액(spent×rate, limit 상한) 계산
+  --   rate NULL = 정률이 아닌 정액/횟수형 혜택(예: 통신 월 2,000원, 문화 월 1회) → 매칭 시 limit 만큼 적용
+  discount_rate     DECIMAL(5,2) NULL,               -- 1년차 기본 할인/적립률(%)
+  monthly_limit_amt INT          NULL,               -- 1년차 월 한도(원)
   category_cd   ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
                      'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
                      'TRAVEL','CONVENIENCE') NULL,    -- 소비 카테고리(card_benefits와 동일 체계)
@@ -705,6 +709,9 @@ CREATE TABLE IF NOT EXISTS benefit_catalog_tiers (
   catalog_id   BIGINT        NOT NULL,
   tenure_year  INT           NOT NULL,               -- 1,3,5…
   display_val  VARCHAR(30)   NOT NULL,               -- 그 연차의 표시값(5% / 2,000원 / 월 2회)
+  -- 연동용 숫자값(연차별 성장) — display_val 은 표시, 아래는 계산용
+  rate              DECIMAL(5,2) NULL,               -- 그 연차의 할인/적립률(%) (정액형은 NULL)
+  monthly_limit_amt INT          NULL,               -- 그 연차의 월 한도(원)
   FOREIGN KEY (catalog_id) REFERENCES benefit_catalog(id) ON DELETE CASCADE,
   UNIQUE KEY uq_catalog_year (catalog_id, tenure_year)
 );
@@ -783,43 +790,43 @@ SELECT id, 30000, JSON_ARRAY('cafe', 'delivery', 'pay')
 FROM users WHERE username = 'testuser1';
 
 -- 혜택 구성 빌더 카탈로그 (선택 가능한 혜택 8종 — 프론트 하드코딩 POOL 이관)
-INSERT IGNORE INTO benefit_catalog (benefit_cd, label, icon, base_desc, note, cost, color, category_cd, sort_order) VALUES
-('transport', '대중교통',    '🚌', '3% 할인',         '월 최대 2,000원', 5000,  '#2563EB', 'TRANSPORT', 1),
-('pay',       '간편결제',    '💳', '1% 적립',         '월 최대 1,500원', 4000,  '#0891B2', 'PAY',       2),
-('cafe',      '카페·편의점', '☕', '5% 적립',         '월 최대 3,000원', 8000,  '#D97706', 'CAFE',      3),
-('shopping',  '온라인쇼핑',  '🛍', '2% 캐시백',       '월 최대 4,000원', 10000, '#7C3AED', 'SHOPPING',  4),
-('medical',   '약국·의료',   '💊', '5% 할인',         '월 최대 2,000원', 7000,  '#059669', 'MEDICAL',   5),
-('telecom',   '통신요금',    '📱', '월 2,000원 할인', '자동 적용',       12000, '#DC2626', 'TELECOM',   6),
-('delivery',  '배달앱',      '🛵', '3% 할인',         '월 최대 3,000원', 15000, '#EA580C', 'DELIVERY',  7),
-('culture',   '영화·문화',   '🎬', '월 1회 50% 할인', '최대 7,000원',    20000, '#9333EA', 'CULTURE',   8);
+INSERT IGNORE INTO benefit_catalog (benefit_cd, label, icon, base_desc, note, cost, color, category_cd, discount_rate, monthly_limit_amt, sort_order) VALUES
+('transport', '대중교통',    '🚌', '3% 할인',         '월 최대 2,000원', 5000,  '#2563EB', 'TRANSPORT',  3.00, 2000, 1),
+('pay',       '간편결제',    '💳', '1% 적립',         '월 최대 1,500원', 4000,  '#0891B2', 'PAY',        1.00, 1500, 2),
+('cafe',      '카페·편의점', '☕', '5% 적립',         '월 최대 3,000원', 8000,  '#D97706', 'CAFE',       5.00, 3000, 3),
+('shopping',  '온라인쇼핑',  '🛍', '2% 캐시백',       '월 최대 4,000원', 10000, '#7C3AED', 'SHOPPING',   2.00, 4000, 4),
+('medical',   '약국·의료',   '💊', '5% 할인',         '월 최대 2,000원', 7000,  '#059669', 'MEDICAL',    5.00, 2000, 5),
+('telecom',   '통신요금',    '📱', '월 2,000원 할인', '자동 적용',       12000, '#DC2626', 'TELECOM',    NULL, 2000, 6),
+('delivery',  '배달앱',      '🛵', '3% 할인',         '월 최대 3,000원', 15000, '#EA580C', 'DELIVERY',   3.00, 3000, 7),
+('culture',   '영화·문화',   '🎬', '월 1회 50% 할인', '최대 7,000원',    20000, '#9333EA', 'CULTURE',   50.00, 7000, 8);
 
 -- 카탈로그 혜택별 연차 성장값 (benefit_cd 로 안전하게 연결)
-INSERT IGNORE INTO benefit_catalog_tiers (catalog_id, tenure_year, display_val)
-SELECT c.id, t.yr, t.val
+INSERT IGNORE INTO benefit_catalog_tiers (catalog_id, tenure_year, display_val, rate, monthly_limit_amt)
+SELECT c.id, t.yr, t.val, t.rate, t.lim
 FROM benefit_catalog c
 JOIN (
-            SELECT 'transport' AS cd, 1 AS yr, '3%'      AS val
-  UNION ALL SELECT 'transport', 3, '5%'
-  UNION ALL SELECT 'transport', 5, '7%'
-  UNION ALL SELECT 'pay',       1, '1%'
-  UNION ALL SELECT 'pay',       3, '2%'
-  UNION ALL SELECT 'pay',       5, '3%'
-  UNION ALL SELECT 'cafe',      1, '5%'
-  UNION ALL SELECT 'cafe',      3, '8%'
-  UNION ALL SELECT 'cafe',      5, '10%'
-  UNION ALL SELECT 'shopping',  1, '2%'
-  UNION ALL SELECT 'shopping',  3, '3%'
-  UNION ALL SELECT 'shopping',  5, '5%'
-  UNION ALL SELECT 'medical',   1, '5%'
-  UNION ALL SELECT 'medical',   3, '7%'
-  UNION ALL SELECT 'medical',   5, '10%'
-  UNION ALL SELECT 'telecom',   1, '2,000원'
-  UNION ALL SELECT 'telecom',   3, '4,000원'
-  UNION ALL SELECT 'telecom',   5, '6,000원'
-  UNION ALL SELECT 'delivery',  1, '3%'
-  UNION ALL SELECT 'delivery',  3, '5%'
-  UNION ALL SELECT 'delivery',  5, '7%'
-  UNION ALL SELECT 'culture',   1, '월 1회'
-  UNION ALL SELECT 'culture',   3, '월 2회'
-  UNION ALL SELECT 'culture',   5, '월 3회'
+            SELECT 'transport' AS cd, 1 AS yr, '3%'      AS val,  3.00 AS rate,  2000 AS lim
+  UNION ALL SELECT 'transport', 3, '5%',       5.00,  3000
+  UNION ALL SELECT 'transport', 5, '7%',       7.00,  4000
+  UNION ALL SELECT 'pay',       1, '1%',       1.00,  1500
+  UNION ALL SELECT 'pay',       3, '2%',       2.00,  2000
+  UNION ALL SELECT 'pay',       5, '3%',       3.00,  2500
+  UNION ALL SELECT 'cafe',      1, '5%',       5.00,  3000
+  UNION ALL SELECT 'cafe',      3, '8%',       8.00,  4000
+  UNION ALL SELECT 'cafe',      5, '10%',     10.00,  5000
+  UNION ALL SELECT 'shopping',  1, '2%',       2.00,  4000
+  UNION ALL SELECT 'shopping',  3, '3%',       3.00,  5000
+  UNION ALL SELECT 'shopping',  5, '5%',       5.00,  6000
+  UNION ALL SELECT 'medical',   1, '5%',       5.00,  2000
+  UNION ALL SELECT 'medical',   3, '7%',       7.00,  3000
+  UNION ALL SELECT 'medical',   5, '10%',     10.00,  4000
+  UNION ALL SELECT 'telecom',   1, '2,000원',  NULL,  2000
+  UNION ALL SELECT 'telecom',   3, '4,000원',  NULL,  4000
+  UNION ALL SELECT 'telecom',   5, '6,000원',  NULL,  6000
+  UNION ALL SELECT 'delivery',  1, '3%',       3.00,  3000
+  UNION ALL SELECT 'delivery',  3, '5%',       5.00,  4000
+  UNION ALL SELECT 'delivery',  5, '7%',       7.00,  5000
+  UNION ALL SELECT 'culture',   1, '월 1회',  50.00,  7000
+  UNION ALL SELECT 'culture',   3, '월 2회',  50.00, 14000
+  UNION ALL SELECT 'culture',   5, '월 3회',  50.00, 21000
 ) t ON t.cd = c.benefit_cd;

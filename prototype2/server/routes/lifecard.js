@@ -66,6 +66,45 @@ function applyTenure(benefit, tenureYear) {
   return { base, rate, limit, appliedTier, nextTier }
 }
 
+// 빌더에서 선택한 혜택(benefit_catalog) + 연차 성장값(catalog_tiers) 로드 — 선택 순서 유지
+async function loadCatalogBenefits(codes) {
+  if (!codes || !codes.length) return []
+  const [items] = await pool.query(
+    `SELECT id, benefit_cd, label, base_desc, category_cd AS category,
+            discount_rate AS rate, monthly_limit_amt AS monthlyLimit
+     FROM benefit_catalog WHERE benefit_cd IN (?)`, [codes]
+  )
+  const ids = items.map(i => i.id)
+  let tiers = []
+  if (ids.length) {
+    const [tr] = await pool.query(
+      `SELECT catalog_id, tenure_year, rate, monthly_limit_amt AS monthlyLimit
+       FROM benefit_catalog_tiers WHERE catalog_id IN (?) ORDER BY tenure_year`, [ids]
+    )
+    tiers = tr
+  }
+  const tmap = {}
+  tiers.forEach(t => { (tmap[t.catalog_id] = tmap[t.catalog_id] || []).push(t) })
+  items.forEach(i => { i.tiers = tmap[i.id] || [] })
+  const byCd = {}; items.forEach(i => { byCd[i.benefit_cd] = i })
+  return codes.map(cd => byCd[cd]).filter(Boolean)
+}
+
+// 카탈로그 혜택의 가입연차 기준 유효 율/한도 (rate NULL = 정액/횟수형)
+function applyCatalogTenure(item, tenureYear) {
+  const base = item.rate == null ? null : Number(item.rate)
+  let rate = base
+  let limit = item.monthlyLimit == null ? null : Number(item.monthlyLimit)
+  let nextTier = null
+  for (const t of item.tiers) {            // tenure_year 오름차순
+    if (t.tenure_year <= tenureYear) {
+      rate  = t.rate == null ? null : Number(t.rate)
+      limit = t.monthlyLimit == null ? limit : Number(t.monthlyLimit)
+    } else if (!nextTier) nextTier = t
+  }
+  return { base, rate, limit, nextTier }
+}
+
 // 유저의 라이프카드 발급(보유) 조회 — 가입연차는 달력기준(TIMESTAMPDIFF)으로 계산
 async function getMembership(userId, cardId) {
   const [rows] = await pool.query(
@@ -210,31 +249,89 @@ router.get('/my', authMiddleware, async (req, res) => {
     const yearProgress = membership ? progressFrom(membership.issued_dt) : 0
     const isHolder = !!membership
 
-    // 4) 내 단계+공통 혜택 → 성장형 율 적용 + 소비 매칭(See Why)
-    const eligible = data.benefits.filter(b => b.stage === stage || b.stage === 'ALL')
+    // 3-1) 내가 선택한 혜택 구성(빌더) 로드 — 리포트/히어로 공용
+    const [configs] = await pool.query(
+      'SELECT selected_fee, selected_benefits FROM user_benefit_configs WHERE user_id = ?',
+      [req.user.id]
+    )
+    let savedConfig = null, selectedCodes = []
+    if (configs.length) {
+      selectedCodes = Array.isArray(configs[0].selected_benefits)
+        ? configs[0].selected_benefits
+        : JSON.parse(configs[0].selected_benefits)
+      // 저장된 코드(cafe/pay…) → benefit_catalog 조인으로 라벨·아이콘 부여(하드코딩 제거)
+      let items = []
+      if (selectedCodes.length) {
+        const [cat] = await pool.query(
+          'SELECT benefit_cd, label, icon FROM benefit_catalog WHERE benefit_cd IN (?)',
+          [selectedCodes]
+        )
+        const cmap = {}
+        cat.forEach(c => { cmap[c.benefit_cd] = c })
+        items = selectedCodes.map(cd =>
+          cmap[cd] ? { cd, label: cmap[cd].label, icon: cmap[cd].icon } : { cd, label: cd, icon: '•' }
+        )
+      }
+      savedConfig = { selectedFee: configs[0].selected_fee, selectedBenefits: selectedCodes, items }
+    }
+
+    // 4) 활용 리포트 대상 혜택 → 성장형 율 적용 + 소비 매칭(See Why)
+    //    · 빌더에서 고른 구성이 있으면 "내가 선택한 혜택"(benefit_catalog) 기준
+    //    · 없으면 생애단계 기본 혜택(card_benefits)으로 폴백
     let nextUpgrade = null
-    const active = eligible.map(b => {
-      const { base, rate, limit, appliedTier, nextTier } = applyTenure(b, tenureYear)
-      const matched = !!(b.category && topCats.includes(b.category))
-      const spent   = b.category ? (spendByCat[b.category] || 0) : 0
-      const saved   = (matched && rate) ? Math.min(Math.round(spent * rate / 100), limit || Infinity) : 0
-      const grown   = base != null && rate != null && rate > base
-      // 매칭된 혜택 중 다음 단계가 있으면 대표 업그레이드로 노출
-      if (matched && nextTier && !nextUpgrade) {
-        nextUpgrade = {
-          benefit: b.desc, fromRate: rate, toRate: Number(nextTier.rate),
-          atYear: nextTier.tenure_year, label: nextTier.tier_label, yearProgress,
+    let active
+    if (selectedCodes.length) {
+      const chosen = await loadCatalogBenefits(selectedCodes)
+      active = chosen.map(item => {
+        const { base, rate, limit, nextTier } = applyCatalogTenure(item, tenureYear)
+        const matched = !!(item.category && topCats.includes(item.category))
+        const spent   = item.category ? (spendByCat[item.category] || 0) : 0
+        let saved = 0
+        if (matched) {
+          if (rate != null) saved = Math.min(Math.round(spent * rate / 100), limit || Infinity)
+          else if (limit != null) saved = limit          // 정액/횟수형: 매칭 시 한도만큼
         }
-      }
-      return {
-        type: b.type, desc: b.desc, category: b.category, stage: b.stage,
-        baseRate: base, effRate: rate, monthlyLimit: limit, grown,
-        matched, spent, saved,
-        reason: matched && rate
-          ? `이번 달 ${CAT_LABEL[b.category] || b.category} ${spent.toLocaleString()}원 사용 → ${rate}% 적용${grown ? ` (${tenureYear}년차 우대)` : ''}`
-          : null,
-      }
-    }).sort((a, b) => b.saved - a.saved)
+        const grown = base != null && rate != null && rate > base
+        if (matched && nextTier && !nextUpgrade) {
+          nextUpgrade = {
+            benefit: item.label, fromRate: rate,
+            toRate: nextTier.rate != null ? Number(nextTier.rate) : rate,
+            atYear: nextTier.tenure_year, label: `${nextTier.tenure_year}년차 우대`, yearProgress,
+          }
+        }
+        return {
+          type: 'BENEFIT', desc: item.base_desc || item.label, category: item.category, stage: 'CONFIG',
+          baseRate: base, effRate: rate, monthlyLimit: limit, grown,
+          matched, spent, saved,
+          reason: matched && rate
+            ? `이번 달 ${CAT_LABEL[item.category] || item.category} ${spent.toLocaleString()}원 사용 → ${rate}% 적용`
+            : null,
+        }
+      }).sort((a, b) => b.saved - a.saved)
+    } else {
+      const eligible = data.benefits.filter(b => b.stage === stage || b.stage === 'ALL')
+      active = eligible.map(b => {
+        const { base, rate, limit, nextTier } = applyTenure(b, tenureYear)
+        const matched = !!(b.category && topCats.includes(b.category))
+        const spent   = b.category ? (spendByCat[b.category] || 0) : 0
+        const saved   = (matched && rate) ? Math.min(Math.round(spent * rate / 100), limit || Infinity) : 0
+        const grown   = base != null && rate != null && rate > base
+        if (matched && nextTier && !nextUpgrade) {
+          nextUpgrade = {
+            benefit: b.desc, fromRate: rate, toRate: Number(nextTier.rate),
+            atYear: nextTier.tenure_year, label: nextTier.tier_label, yearProgress,
+          }
+        }
+        return {
+          type: b.type, desc: b.desc, category: b.category, stage: b.stage,
+          baseRate: base, effRate: rate, monthlyLimit: limit, grown,
+          matched, spent, saved,
+          reason: matched && rate
+            ? `이번 달 ${CAT_LABEL[b.category] || b.category} ${spent.toLocaleString()}원 사용 → ${rate}% 적용${grown ? ` (${tenureYear}년차 우대)` : ''}`
+            : null,
+        }
+      }).sort((a, b) => b.saved - a.saved)
+    }
 
     // 5) 사후관리 알림
     const [notifications] = await pool.query(
@@ -243,31 +340,7 @@ router.get('/my', authMiddleware, async (req, res) => {
       [req.user.id]
     )
 
-    // 6) 커스텀 혜택 구성 로드
-    const [configs] = await pool.query(
-      'SELECT selected_fee, selected_benefits FROM user_benefit_configs WHERE user_id = ?',
-      [req.user.id]
-    )
-    let savedConfig = null
-    if (configs.length) {
-      const selectedBenefits = Array.isArray(configs[0].selected_benefits)
-        ? configs[0].selected_benefits
-        : JSON.parse(configs[0].selected_benefits)
-      // 저장된 코드(cafe/pay…) → benefit_catalog 조인으로 라벨·아이콘 부여(하드코딩 제거)
-      let items = []
-      if (selectedBenefits.length) {
-        const [cat] = await pool.query(
-          'SELECT benefit_cd, label, icon FROM benefit_catalog WHERE benefit_cd IN (?)',
-          [selectedBenefits]
-        )
-        const map = {}
-        cat.forEach(c => { map[c.benefit_cd] = c })
-        items = selectedBenefits.map(cd =>
-          map[cd] ? { cd, label: map[cd].label, icon: map[cd].icon } : { cd, label: cd, icon: '•' }
-        )
-      }
-      savedConfig = { selectedFee: configs[0].selected_fee, selectedBenefits, items }
-    }
+    // (커스텀 혜택 구성은 위 3-1에서 이미 로드 → savedConfig)
 
     res.json({
       stage, stageLabel: STAGE_META[stage], age,
