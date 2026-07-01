@@ -362,14 +362,16 @@ export default function MyPage() {
           )}
         </div>
 
-        {/* ── 탭 ── */}
+        {/* ── 탭 (라이프 카드 보유자만 혜택 구성 탭 노출) ── */}
         <div className="mp-tabs">
           <button className={`mp-tab ${tab === 'analysis' ? 'active' : ''}`} onClick={() => setTab('analysis')}>
             소비 분석
           </button>
-          <button className={`mp-tab ${tab === 'builder' ? 'active' : ''}`} onClick={() => setTab('builder')}>
-            혜택 구성
-          </button>
+          {lifeMy?.isHolder && (
+            <button className={`mp-tab ${tab === 'builder' ? 'active' : ''}`} onClick={() => setTab('builder')}>
+              혜택 구성
+            </button>
+          )}
         </div>
 
         {/* ════════ 소비 분석 탭 ════════ */}
@@ -587,8 +589,19 @@ export default function MyPage() {
           </>
         )}
 
-        {/* ════════ 혜택 구성 탭 ════════ */}
-        {tab === 'builder' && <BenefitBuilder />}
+        {/* ════════ 혜택 구성 탭 (라이프 카드 보유자 전용) ════════ */}
+        {tab === 'builder' && (
+          lifeMy?.isHolder
+            ? <BenefitBuilder />
+            : (
+              <div className="mp-card mp-builder-locked">
+                <div className="mp-builder-lock-icon">🔒</div>
+                <p className="mp-empty-title">BNK 라이프 평생 카드 전용 기능이에요</p>
+                <p className="mp-empty-sub">라이프 카드를 신청하면 연회비에 맞는 혜택을 직접 골라 구성할 수 있어요</p>
+                <Link to="/life-card" className="mp-empty-btn">라이프 카드 알아보기</Link>
+              </div>
+            )
+        )}
 
       </div>
     </div>

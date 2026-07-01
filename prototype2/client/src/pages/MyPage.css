@@ -414,6 +414,8 @@
   text-decoration: none;
 }
 .mp-empty-btn:hover { opacity: .88; }
+.mp-builder-locked  { text-align: center; padding: 60px 28px; }
+.mp-builder-lock-icon { font-size: 40px; margin-bottom: 16px; }
 
 /* ════════════════════════════════════════════════════════════
    탭 네비게이션
