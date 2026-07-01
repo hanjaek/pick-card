@@ -2,6 +2,18 @@ const router = require('express').Router()
 const jwt    = require('jsonwebtoken')
 const pool   = require('../db')
 
+// 커스텀 혜택 구성 테이블 자동 생성
+pool.query(`
+  CREATE TABLE IF NOT EXISTS user_benefit_configs (
+    id           BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id      BIGINT NOT NULL,
+    selected_fee INT    NOT NULL DEFAULT 30000,
+    selected_benefits JSON NOT NULL,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user (user_id)
+  ) CHARACTER SET utf8mb4
+`).catch(err => console.error('[life-card] user_benefit_configs 생성 실패:', err.message))
+
 /* ======================================================
    BNK 라이프 평생 카드 — 생애단계·소비 기반 자동 혜택 + 성장형
    ====================================================== */
@@ -205,6 +217,18 @@ router.get('/my', authMiddleware, async (req, res) => {
       [req.user.id]
     )
 
+    // 6) 커스텀 혜택 구성 로드
+    const [configs] = await pool.query(
+      'SELECT selected_fee, selected_benefits FROM user_benefit_configs WHERE user_id = ?',
+      [req.user.id]
+    )
+    const savedConfig = configs.length ? {
+      selectedFee:      configs[0].selected_fee,
+      selectedBenefits: Array.isArray(configs[0].selected_benefits)
+        ? configs[0].selected_benefits
+        : JSON.parse(configs[0].selected_benefits),
+    } : null
+
     res.json({
       stage, stageLabel: STAGE_META[stage], age,
       spending, totalSpend, topCats,
@@ -217,10 +241,36 @@ router.get('/my', authMiddleware, async (req, res) => {
       } : null,
       nextUpgrade,          // 다음 혜택 업그레이드 (연차·율·진행률)
       notifications,        // 사후관리 알림
+      savedConfig,          // 커스텀 혜택 구성 (혜택 구성 빌더에서 저장한 값)
     })
   } catch (err) {
     console.error('[life-card GET /my]', err)
     res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
+/* ------------------------------------------------------
+   POST /api/life-card/my/config  —  커스텀 혜택 구성 저장
+   ------------------------------------------------------ */
+router.post('/my/config', authMiddleware, async (req, res) => {
+  try {
+    const { selectedFee, selectedBenefits } = req.body
+    if (!selectedFee || !Array.isArray(selectedBenefits)) {
+      return res.status(400).json({ message: '잘못된 요청입니다.' })
+    }
+    await pool.query(
+      `INSERT INTO user_benefit_configs (user_id, selected_fee, selected_benefits)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         selected_fee      = VALUES(selected_fee),
+         selected_benefits = VALUES(selected_benefits),
+         updated_at        = CURRENT_TIMESTAMP`,
+      [req.user.id, selectedFee, JSON.stringify(selectedBenefits)]
+    )
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[life-card POST /my/config]', err)
+    res.status(500).json({ message: '저장에 실패했습니다.' })
   }
 })
 

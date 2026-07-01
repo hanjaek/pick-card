@@ -7,6 +7,17 @@ const CAT_LABEL = {
   TELECOM: '통신요금',  CULTURE:   '영화·문화', PAY:      '간편결제',
   FOOD:    '식비·외식', MEDICAL:   '의료·건강',
 }
+
+const BENEFIT_META = {
+  transport: { icon: '🚌', label: '대중교통' },
+  pay:       { icon: '💳', label: '간편결제' },
+  cafe:      { icon: '☕', label: '카페·편의점' },
+  shopping:  { icon: '🛍', label: '온라인쇼핑' },
+  medical:   { icon: '💊', label: '약국·의료' },
+  telecom:   { icon: '📱', label: '통신요금' },
+  delivery:  { icon: '🛵', label: '배달앱' },
+  culture:   { icon: '🎬', label: '영화·문화' },
+}
 const CAT_ORDER = ['CAFE', 'TRANSPORT', 'SHOPPING', 'TELECOM', 'CULTURE', 'PAY']
 const CAT_META  = {
   CAFE:      { icon: '☕', keywords: ['카페', '편의점', '커피'] },
@@ -181,15 +192,26 @@ export default function MyPage() {
 
             {/* 우: 액션 */}
             <div className="mp-life-actions">
+              {lifeMy.savedConfig ? (
+                <div className="mp-my-config">
+                  <p className="mp-my-config-label">내 혜택 구성</p>
+                  <div className="mp-my-config-chips">
+                    {lifeMy.savedConfig.selectedBenefits.map(id => {
+                      const m = BENEFIT_META[id]
+                      return m ? <span key={id} className="mp-my-chip">{m.icon} {m.label}</span> : null
+                    })}
+                  </div>
+                  <p className="mp-my-config-fee">연회비 {lifeMy.savedConfig.selectedFee.toLocaleString()}원</p>
+                </div>
+              ) : (
+                <p className="mp-action-hint">연회비에 맞게 원하는 혜택을 직접 고를 수 있어요</p>
+              )}
               <Link to="/benefit-builder" className="mp-action-btn primary">
-                혜택 구성하기
+                {lifeMy.savedConfig ? '혜택 변경하기' : '혜택 구성하기'}
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8H13M9 4L13 8L9 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </Link>
-              <p className="mp-action-hint">
-                연회비에 맞게 원하는 혜택을 직접 고를 수 있어요
-              </p>
               <div className="mp-action-period">{period} 소비 분석 ↓</div>
             </div>
 

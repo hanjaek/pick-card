@@ -21,7 +21,7 @@
   border-radius: 22px;
   padding: 36px 40px;
   display: grid;
-  grid-template-columns: 220px 1fr 200px;
+  grid-template-columns: 220px 1fr 220px;
   gap: 36px;
   align-items: center;
   margin-bottom: 24px;
@@ -99,6 +99,7 @@
   color: #fff;
   letter-spacing: -.03em;
   line-height: 1;
+  white-space: nowrap;
 }
 .mp-lstat-val em {
   font-size: 14px;
@@ -112,12 +113,13 @@
 .mp-lstat-sub.good { color: #4ADE80; }
 .mp-lstat-val.good { color: #4ADE80; font-size: 20px; }
 .mp-lstat-upgrade-row {
-  display: flex; align-items: baseline; gap: 8px;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
 }
 .mp-lstat-yr {
   font-size: 11px; font-weight: 600;
   background: rgba(215,25,25,.3); color: #FF8A8A;
   padding: 2px 7px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
 }
 .mp-lstat-bar {
   height: 4px; background: rgba(255,255,255,.12);
@@ -160,6 +162,41 @@
   font-size: 11px;
   color: rgba(255,255,255,.3);
   margin-top: 8px;
+}
+
+/* ── 내 혜택 구성 표시 (마이페이지 히어로) ── */
+.mp-my-config {
+  width: 100%;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mp-my-config-label {
+  font-size: 11px;
+  color: rgba(255,255,255,.45);
+  letter-spacing: .04em;
+}
+.mp-my-config-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mp-my-chip {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.85);
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.mp-my-config-fee {
+  font-size: 11px;
+  color: rgba(255,255,255,.4);
 }
 
 /* ── 비보유자 헤더 ── */
@@ -277,7 +314,7 @@
 
 /* ── 반응형 ── */
 @media (max-width: 1000px) {
-  .mp-life-hero { grid-template-columns: 180px 1fr 160px; gap: 24px; padding: 28px 28px; }
+  .mp-life-hero { grid-template-columns: 180px 1fr 180px; gap: 24px; padding: 28px 28px; }
   .mp-lstat-val { font-size: 22px; }
 }
 @media (max-width: 860px) {

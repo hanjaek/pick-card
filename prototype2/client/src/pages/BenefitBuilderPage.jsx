@@ -46,24 +46,34 @@ export default function BenefitBuilderPage() {
   const [lifeMy,   setLifeMy]   = useState(null)
   const [loading,  setLoading]  = useState(true)
 
+  const LS_FEE   = 'bnk_selected_fee'
+  const LS_PICKS = 'bnk_selected_benefits'
+  const [selectedFee, setSelectedFee] = useState(30000)
+  const [picked,      setPicked]      = useState(new Set())
+  const [shake,       setShake]       = useState(null)
+  const [saved,       setSaved]       = useState(false)
+  const [saving,      setSaving]      = useState(false)
+
   useEffect(() => {
     if (!token) { navigate('/login'); return }
     fetch('/api/life-card/my', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null).catch(() => null)
-      .then(life => { setLifeMy(life); setLoading(false) })
+      .then(life => {
+        setLifeMy(life)
+        if (life?.savedConfig) {
+          setSelectedFee(life.savedConfig.selectedFee)
+          setPicked(new Set(life.savedConfig.selectedBenefits))
+        } else {
+          const lsFee = Number(localStorage.getItem(LS_FEE)) || 30000
+          const lsPicks = (() => { try { return JSON.parse(localStorage.getItem(LS_PICKS) || '[]') } catch { return [] } })()
+          setSelectedFee(lsFee)
+          setPicked(new Set(lsPicks))
+        }
+        setLoading(false)
+      })
   }, [])
 
   const tenureYear = lifeMy?.membership?.tenureYear || 1
-
-  const LS_FEE   = 'bnk_selected_fee'
-  const LS_PICKS = 'bnk_selected_benefits'
-  const [selectedFee, setSelectedFee] = useState(() => Number(localStorage.getItem(LS_FEE)) || 30000)
-  const [picked,      setPicked]      = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(LS_PICKS) || '[]')) }
-    catch { return new Set() }
-  })
-  const [shake, setShake] = useState(null)
-  const [saved, setSaved] = useState(false)
 
   const usedCost   = POOL.filter(b => picked.has(b.id)).reduce((s, b) => s + b.cost, 0)
   const remaining  = selectedFee - usedCost
@@ -91,10 +101,24 @@ export default function BenefitBuilderPage() {
     setPicked(next)
   }
 
-  function save() {
-    localStorage.setItem(LS_FEE,   String(selectedFee))
-    localStorage.setItem(LS_PICKS, JSON.stringify([...picked]))
-    setSaved(true); setTimeout(() => setSaved(false), 2500)
+  async function save() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/life-card/my/config', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ selectedFee, selectedBenefits: [...picked] }),
+      })
+      if (!res.ok) throw new Error('저장 실패')
+      localStorage.setItem(LS_FEE,   String(selectedFee))
+      localStorage.setItem(LS_PICKS, JSON.stringify([...picked]))
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch {
+      alert('저장에 실패했습니다. 다시 시도해 주세요.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) return <div className="bb-loading"><div className="bb-spinner" /></div>
@@ -304,10 +328,10 @@ export default function BenefitBuilderPage() {
               ? `${pickedList.length}개 혜택 선택 · 연회비 ${selectedFee.toLocaleString()}원`
               : '혜택을 골라보세요'}
           </p>
-          <button className={`bb-save ${saved ? 'done' : ''}`} onClick={save} disabled={pickedList.length === 0}>
+          <button className={`bb-save ${saved ? 'done' : ''}`} onClick={save} disabled={pickedList.length === 0 || saving}>
             {saved
               ? <><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#22C55E"/><path d="M4.5 8.5L7 11L11.5 6" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg> 저장 완료!</>
-              : '내 혜택 구성 저장하기'
+              : saving ? '저장 중...' : '내 혜택 구성 저장하기'
             }
           </button>
         </div>
