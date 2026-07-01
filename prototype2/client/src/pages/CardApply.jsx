@@ -39,6 +39,8 @@ export default function CardApply() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [resultId, setResultId] = useState(null)
+  const [resultCardNo, setResultCardNo]   = useState(null)
+  const [resultValid,  setResultValid]    = useState(null)
 
   // Step 1: 약관 동의 상태
   const [agreed, setAgreed] = useState({})
@@ -136,6 +138,8 @@ export default function CardApply() {
         return
       }
       setResultId(data.id)
+      setResultCardNo(data.cardNo || null)
+      setResultValid(data.validThru || null)
       setStep(3)
     } catch {
       alert('서버 오류가 발생했습니다.')
@@ -482,23 +486,34 @@ export default function CardApply() {
           </div>
         )}
 
-        {/* ===== STEP 3: 완료 ===== */}
+        {/* ===== STEP 3: 발급 완료 ===== */}
         {step === 3 && (
           <div className="apply-step-panel apply-done">
             <div className="apply-done-icon">✓</div>
-            <h2 className="apply-done-title">카드 신청이 완료되었습니다!</h2>
+            <h2 className="apply-done-title">카드가 발급되었습니다! 🎉</h2>
             <p className="apply-done-desc">
-              신청번호 <strong>#{resultId}</strong><br />
-              심사 결과는 영업일 기준 3~5일 이내에<br />
-              등록하신 연락처로 안내드립니다.
+              축하합니다, <strong>{verify.name}</strong>님!<br />
+              <strong>{card.name}</strong>가 발급되어 지금 바로 사용하실 수 있어요.
             </p>
-            <div className="apply-done-card"
+
+            <div className="apply-done-card adc"
               style={{ background: `linear-gradient(135deg, ${savedDesign?.colorFrom || savedDesign?.color_from || card.colorFrom}, ${savedDesign?.colorTo || savedDesign?.color_to || card.colorTo})` }}
             >
-              <span>{card.name}</span>
+              <span className="adc-net">{card.network}</span>
+              <div className="adc-chip" />
+              <span className="adc-name">{card.name}</span>
+              <span className="adc-no">{resultCardNo || '5310-••**-****-••••'}</span>
+              <span className="adc-valid">VALID THRU&nbsp;&nbsp;{resultValid || '--/--'}</span>
             </div>
+
+            <div className="apply-done-info">
+              <div><span>발급 상태</span><strong className="ok">발급 완료</strong></div>
+              <div><span>결제일</span><strong>매월 {form.billingDay}일</strong></div>
+              <div><span>연회비</span><strong>{card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</strong></div>
+            </div>
+
             <div className="apply-done-btns">
-              <Link to="/cards" className="apply-btn-next">카드 더 보기</Link>
+              <Link to="/mypage" className="apply-btn-next">MY페이지에서 관리하기 →</Link>
               <Link to="/" className="apply-btn-back">홈으로</Link>
             </div>
           </div>

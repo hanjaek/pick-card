@@ -2,6 +2,18 @@ const router  = require('express').Router()
 const jwt     = require('jsonwebtoken')
 const pool    = require('../db')
 
+// 발급용 마스킹 카드번호 / 유효기간 생성
+function genCardNo() {
+  const seg = () => String(Math.floor(1000 + Math.random() * 9000))
+  return `5310-${seg().slice(0, 2)}**-****-${seg()}`
+}
+function genValidThru() {
+  const d = new Date()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yy = String((d.getFullYear() + 5) % 100).padStart(2, '0')
+  return `${mm}/${yy}`
+}
+
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization
   if (!auth) return res.status(401).json({ message: '로그인이 필요합니다.' })
@@ -69,8 +81,8 @@ router.post('/', authMiddleware, async (req, res) => {
         (user_id, card_id, applicant_name, birth_dt, phone_no, home_phone, email,
          zip_code, address, residence_type, income_type, job_yn,
          billing_bank, billing_account, statement_method, contract_method, paper_terms_yn,
-         billing_day, credit_limit, apply_method, design_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         billing_day, credit_limit, apply_method, design_id, status, processed_dt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'APPROVED', NOW())`,
       [req.user.id, cardId, applicantName, birthDt, phoneNo, homePhone || null,
        email || null, zipCode || null, address || null,
        residenceType || null, incomeType || null, jobYn || 'N',
@@ -79,8 +91,22 @@ router.post('/', authMiddleware, async (req, res) => {
        billingDay || 15, creditLimit || 0,
        applyMethod || 'INTERNET', designId || null]
     )
+    const appId = result.insertId
 
-    res.status(201).json({ id: result.insertId, message: '카드 신청이 완료되었습니다.' })
+    // 신청 승인 → 실제 발급(card_memberships 생성). 발급 완료 화면에서 카드번호 노출.
+    const cardNo = genCardNo()
+    const validThru = genValidThru()
+    await pool.query(
+      `INSERT INTO card_memberships
+         (user_id, card_id, application_id, card_no_masked, issued_dt, valid_thru, membership_status, card_onoff)
+       VALUES (?, ?, ?, ?, CURDATE(), ?, 'ACTIVE', 'ON')`,
+      [req.user.id, cardId, appId, cardNo, validThru]
+    )
+
+    res.status(201).json({
+      id: appId, cardNo, validThru,
+      message: '카드가 발급되었습니다.',
+    })
   } catch (err) {
     console.error('[applications POST /]', err)
     // 입력값이 컬럼 제약(길이·형식)에 안 맞는 경우 → 친절한 400 (서버 500 방지)

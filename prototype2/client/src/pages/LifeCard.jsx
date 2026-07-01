@@ -62,15 +62,12 @@ export default function LifeCard() {
             <li>후불 교통카드</li>
             <li>나이·소비 맞춤 자동 혜택</li>
           </ul>
-          {!issued ? (
-            <button className="lc-btn-primary" onClick={() => setIssued(true)}>이 카드 만들기</button>
-          ) : (
-            <div className="lc-issued">
-              <p className="lc-issued-title">🎉 BNK 라이프 카드 발급 완료!</p>
-              <p className="lc-issued-sub">테스트 모드 — 신분증 확인 절차는 생략되었습니다.</p>
-              <button className="lc-btn-ghost" onClick={() => navigate('/mypage')}>마이페이지로</button>
-            </div>
-          )}
+          <button
+            className="lc-btn-primary"
+            onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}
+          >
+            이 카드 만들기
+          </button>
         </div>
       </section>
 
@@ -182,11 +179,9 @@ export default function LifeCard() {
       {/* ── 하단 CTA ── */}
       <section className="lc-cta-sec">
         <h2 className="lc-cta-title">평생 함께할 내 카드, 지금 만드세요</h2>
-        {!issued && (
-          <button className="lc-btn-white" onClick={() => { setIssued(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
-            이 카드 만들기
-          </button>
-        )}
+        <button className="lc-btn-white" onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}>
+          이 카드 만들기
+        </button>
       </section>
 
     </div>
