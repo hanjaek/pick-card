@@ -58,6 +58,7 @@ const HABIT_CATEGORIES = [
 
 const ALL_HABIT_ITEMS = HABIT_CATEGORIES.flatMap(c => c.items)
 const MAX_FEE = 50000
+const PAGE_SIZE = 6   // 한 페이지에 보여줄 카드 수
 
 export default function Cards() {
   const [allCards, setAllCards]                         = useState([])
@@ -66,6 +67,7 @@ export default function Cards() {
   const [selectedBenefitTypes, setSelectedBenefitTypes] = useState(new Set())
   const [selectedHabits, setSelectedHabits]             = useState(new Set())
   const [maxFee, setMaxFee]                             = useState(MAX_FEE)
+  const [page, setPage]                                 = useState(1)
 
   useEffect(() => {
     fetch('/api/cards')
@@ -73,6 +75,9 @@ export default function Cards() {
       .then(d => { setAllCards(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
+
+  // 필터가 바뀌면 첫 페이지로
+  useEffect(() => { setPage(1) }, [cardType, selectedBenefitTypes, selectedHabits, maxFee])
 
   const filtered = allCards.filter(card => {
     if (cardType && card.type !== cardType) return false
@@ -97,6 +102,10 @@ export default function Cards() {
 
     return true
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const curPage    = Math.min(page, totalPages)
+  const pageCards  = filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE)
 
   const toggleBenefitType = (label) => {
     setSelectedBenefitTypes(prev => {
@@ -235,11 +244,35 @@ export default function Cards() {
               </button>
             </div>
           ) : (
-            <div className="csrch-grid">
-              {filtered.map(card => (
-                <CardSearchItem key={card.id} card={card} />
-              ))}
-            </div>
+            <>
+              <div className="csrch-grid">
+                {pageCards.map(card => (
+                  <CardSearchItem key={card.id} card={card} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="csrch-pager">
+                  <button
+                    className="csrch-pg-btn"
+                    disabled={curPage === 1}
+                    onClick={() => setPage(curPage - 1)}
+                  >← 이전</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <button
+                      key={p}
+                      className={`csrch-pg-num${p === curPage ? ' on' : ''}`}
+                      onClick={() => setPage(p)}
+                    >{p}</button>
+                  ))}
+                  <button
+                    className="csrch-pg-btn"
+                    disabled={curPage === totalPages}
+                    onClick={() => setPage(curPage + 1)}
+                  >다음 →</button>
+                </div>
+              )}
+            </>
           )}
         </section>
 

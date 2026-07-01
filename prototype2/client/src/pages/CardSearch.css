@@ -310,3 +310,18 @@
   .csrch-body  { padding: 20px 14px 48px; }
   .csrch-grid  { grid-template-columns: 1fr; }
 }
+
+/* ── 페이지네이션 ── */
+.csrch-pager {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 40px; flex-wrap: wrap;
+}
+.csrch-pg-btn, .csrch-pg-num {
+  min-width: 40px; height: 40px; padding: 0 12px;
+  border: 1px solid var(--bnk-border); background: #fff; color: var(--bnk-text);
+  border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.csrch-pg-btn:hover:not(:disabled), .csrch-pg-num:hover { border-color: var(--bnk-red); color: var(--bnk-red); }
+.csrch-pg-btn:disabled { opacity: 0.4; cursor: default; }
+.csrch-pg-num.on { background: var(--bnk-red); color: #fff; border-color: var(--bnk-red); }
