@@ -699,10 +699,12 @@ INSERT IGNORE INTO users (username, password, cust_nm, is_admin) VALUES
 ('testuser1', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '김도윤', 0),
 ('testuser2', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '박민준', 0);
 
-INSERT IGNORE INTO user_details (user_id, birth_dt)
-SELECT id, '2000-03-15' FROM users WHERE username = 'testuser1'
+INSERT IGNORE INTO user_details (user_id, birth_dt, phone_no, email)
+SELECT id, '1990-05-15', '010-9999-1234', 'testuser@bnk.com'  FROM users WHERE username = 'testuser'
 UNION ALL
-SELECT id, '1988-07-20' FROM users WHERE username = 'testuser2';
+SELECT id, '2000-03-15', '010-1234-5678', 'doyun@example.com' FROM users WHERE username = 'testuser1'
+UNION ALL
+SELECT id, '1988-07-20', '010-5678-9012', 'minjun@example.com' FROM users WHERE username = 'testuser2';
 
 -- life_young 거래 (카페·교통 중심)
 INSERT IGNORE INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt)
