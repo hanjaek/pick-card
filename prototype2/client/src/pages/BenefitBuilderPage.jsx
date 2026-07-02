@@ -117,9 +117,9 @@ export default function BenefitBuilderPage() {
       <div className="bb-inner">
         <div className="bb-locked">
           <p className="bb-locked-icon">🔒</p>
-          <h2>BNK 01카드 전용 기능이에요</h2>
-          <p>BNK 01카드를 신청하면 연회비에 맞는 혜택을 직접 구성할 수 있어요</p>
-          <Link to="/life-card" className="bb-cta-btn">BNK 01카드 알아보기</Link>
+          <h2>BNK 영원카드 전용 기능이에요</h2>
+          <p>BNK 영원카드를 신청하면 연회비에 맞는 혜택을 직접 구성할 수 있어요</p>
+          <Link to="/life-card" className="bb-cta-btn">BNK 영원카드 알아보기</Link>
         </div>
       </div>
     </div>
@@ -149,7 +149,7 @@ export default function BenefitBuilderPage() {
             </h1>
             <p className="bb-hero-desc">
               일반 카드는 혜택이 처음부터 고정돼 있어요.<br/>
-              BNK 01카드는 연회비만큼 혜택을 직접 고르고,<br/>
+              BNK 영원카드는 연회비만큼 혜택을 직접 고르고,<br/>
               연차가 쌓일수록 할인율 자체가 높아져요.
             </p>
             <div className="bb-hero-pills">
@@ -160,9 +160,9 @@ export default function BenefitBuilderPage() {
           </div>
           <div className="bb-hero-right">
             <div className="bb-preview-card">
-              <img src="/cards/card-25.jpeg" alt="BNK 01카드" className="bb-preview-img" />
+              <img src="/cards/card-25.jpeg" alt="BNK 영원카드" className="bb-preview-img" />
             </div>
-            <p className="bb-preview-name">BNK 01카드</p>
+            <p className="bb-preview-name">BNK 영원카드</p>
             {pickedList.length > 0 && (
               <div className="bb-preview-slots">
                 {pickedList.slice(0, 4).map(b => (

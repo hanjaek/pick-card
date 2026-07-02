@@ -57,7 +57,7 @@ export default function ChatWidget() {
     }
   }
 
-  const cardLink = (c) => (c.name === 'BNK 01카드' ? '/life-card' : `/cards/${c.id}`)
+  const cardLink = (c) => (c.name === 'BNK 영원카드' ? '/life-card' : `/cards/${c.id}`)
 
   return (
     <>

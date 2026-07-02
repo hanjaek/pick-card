@@ -221,7 +221,7 @@ export default function MyPage() {
             <div className="mp-life-visual">
               <img
                 src="/cards/card-25.jpeg"
-                alt="BNK 01카드"
+                alt="BNK 영원카드"
                 className="mp-life-card-img"
               />
               <div className="mp-lc-meta">

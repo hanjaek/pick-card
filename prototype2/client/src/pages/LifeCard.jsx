@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './LifeCard.css'
 
-/* BNK 01카드 — 상세 설명 + AI 소비 분석 + 발급(테스트: 신분증 생략) */
+/* BNK 영원카드 — 상세 설명 + AI 소비 분석 + 발급(테스트: 신분증 생략) */
 
 export default function LifeCard() {
   const navigate  = useNavigate()
@@ -42,13 +42,13 @@ export default function LifeCard() {
         <div className="lc-hero-card">
           <img
             src="/cards/card-25.jpeg"
-            alt="BNK 01카드"
+            alt="BNK 영원카드"
             className="lc-card-img"
           />
         </div>
 
         <div className="lc-hero-text">
-          <p className="lc-eyebrow">BNK 01카드</p>
+          <p className="lc-eyebrow">BNK 영원카드</p>
           <h1 className="lc-title">고르지 마세요.<br />AI가 평생 챙겨드립니다.</h1>
           <p className="lc-desc">
             교통·카페·쇼핑·의료 등 8가지 혜택 중 내가 원하는 것만 골라 담는 신용카드예요.<br />

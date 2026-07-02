@@ -142,7 +142,7 @@ export default function CardApply() {
 
   useEffect(() => {
     if (!card) return
-    if (card.name !== 'BNK 01카드') return
+    if (card.name !== 'BNK 영원카드') return
     fetch('/api/life-card/benefit-catalog')
       .then(r => r.ok ? r.json() : [])
       .then(setCatalog)
@@ -152,7 +152,7 @@ export default function CardApply() {
   if (loading) return <div className="apply-loading"><div className="spinner" /></div>
   if (!card)   return <div className="apply-error">카드 정보를 찾을 수 없습니다.</div>
 
-  const isLifeCard = card.name === 'BNK 01카드'
+  const isLifeCard = card.name === 'BNK 영원카드'
   const STEPS      = isLifeCard ? LIFE_STEPS : BASE_STEPS
   const DONE_STEP  = isLifeCard ? 4 : 3
 
