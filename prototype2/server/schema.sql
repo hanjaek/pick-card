@@ -168,6 +168,287 @@ CREATE TABLE IF NOT EXISTS disclosures (
 );
 
 -- ============================================================
+-- [v2] 고도화 확장 스키마
+-- 실행: MySQL Workbench 또는 mysql -u root -p bnk_card < schema.sql
+-- ============================================================
+
+-- cards 시드 데이터: INSERT 시 이미 brand/traffic_yn/product_feature 포함됨
+-- (v2 별도 UPDATE 불필요)
+
+-- ============================================================
+-- 9. card_applications  (카드 신청 내역)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS card_applications (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id         BIGINT        NOT NULL,
+  card_id         BIGINT        NOT NULL,
+  -- 신청자 정보
+  applicant_name  VARCHAR(100)  NOT NULL,
+  birth_dt        DATE,
+  phone_no        VARCHAR(20),
+  home_phone      VARCHAR(20),                        -- 자택전화 (선택)
+  email           VARCHAR(100),
+  zip_code        VARCHAR(10),                        -- 우편번호
+  address         TEXT,
+  -- 고객 추가정보 (심사용)
+  residence_type  ENUM('자가','전세','월세','기타'),    -- 주거형태
+  income_type     ENUM('근로소득','사업소득','기타'),   -- 소득분류
+  job_yn          CHAR(1)       DEFAULT 'N',           -- 직장유무 (Y/N)
+  -- 청구/계약 정보
+  billing_bank      VARCHAR(50)  DEFAULT '부산은행',    -- 결제은행
+  billing_account   VARCHAR(50),                       -- 결제 계좌번호
+  statement_method  ENUM('POST_HOME','POST_WORK','EMAIL','SMART') DEFAULT 'EMAIL',  -- 청구서 수령방법
+  contract_method   ENUM('SMS','EMAIL') DEFAULT 'EMAIL',  -- 계약서류 수령방법
+  paper_terms_yn    CHAR(1)     DEFAULT 'N',           -- 종이약관 추가수령 (Y/N)
+  -- 카드 옵션
+  billing_day     INT           DEFAULT 15,           -- 결제일 (매월 N일)
+  credit_limit    INT           DEFAULT 0,            -- 한도 (체크카드=0)
+  apply_method    ENUM('INTERNET','MOBILE','BRANCH') DEFAULT 'INTERNET',
+  -- AI 커스텀 디자인 연결 (선택)
+  design_id       BIGINT,
+  -- 상태: 대기 / 승인 / 거절(관리자) / 취소(사용자)
+  status          ENUM('PENDING','APPROVED','REJECTED','CANCELLED') DEFAULT 'PENDING',
+  applied_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  processed_dt    TIMESTAMP     NULL,
+  FOREIGN KEY (user_id)  REFERENCES users(id),
+  FOREIGN KEY (card_id)  REFERENCES cards(id),
+  -- 내 신청내역 조회( WHERE user_id=? )용 인덱스
+  INDEX idx_app_user (user_id, status)
+);
+
+-- ============================================================
+-- 10. custom_designs  (AI 커스텀 카드 디자인)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS custom_designs (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id         BIGINT        NOT NULL,
+  card_id         BIGINT        NOT NULL,
+  -- 사용자 입력
+  user_prompt     TEXT,                               -- 자유 입력 프롬프트
+  -- AI 생성 결과
+  theme_name      VARCHAR(100),                       -- AI가 생성한 테마명
+  color_from      VARCHAR(20),                        -- 그라디언트 시작색
+  color_to        VARCHAR(20),                        -- 그라디언트 종료색
+  accent_color    VARCHAR(20),                        -- 강조색
+  pattern_type    VARCHAR(50),                        -- geometric/organic/minimal/abstract
+  ai_description  TEXT,                               -- AI 디자인 설명
+  design_data     JSON,                               -- 전체 파라미터 JSON
+  created_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (card_id) REFERENCES cards(id)
+);
+
+-- ============================================================
+-- 11-1. transactions  (회원 결제/거래 내역 - 소비 분석용)
+--    실제 결제 시스템 대용: 회원가입 시 모의 거래를 생성해 채움
+-- ============================================================
+CREATE TABLE IF NOT EXISTS transactions (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id      BIGINT        NOT NULL,
+  -- 소비 카테고리 = 혜택 카테고리(card_benefits.category_cd)와 동일 코드 체계로 통일.
+  -- → "내 소비 ↔ 카드 혜택" 을 문자열이 아닌 코드(category_cd)로 매칭할 수 있음.
+  category_cd  ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
+                    'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
+                    'TRAVEL','CONVENIENCE') NOT NULL,
+  merchant_nm  VARCHAR(100),                          -- 가맹점명
+  amount       INT           NOT NULL,                -- 결제금액(원)
+  paid_dt      DATE          NOT NULL,                -- 결제일
+  reg_dt       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_tx_user_date (user_id, paid_dt)
+);
+
+-- ============================================================
+-- 11. admin_logs  (관리자 활동 로그 - 감사 추적)
+--     누가/언제/무엇을/어떤 대상에 했는지 기록
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  admin_id     BIGINT        NOT NULL,                -- 수행한 관리자 (users.id)
+  admin_name   VARCHAR(100),                          -- 관리자명 (조회 편의)
+  action       VARCHAR(50)   NOT NULL,                -- CARD_UPDATE/CARD_STATUS/CARD_DELETE/APP_PROCESS 등
+  target_type  VARCHAR(30),                           -- CARD / APPLICATION / BENEFIT
+  target_id    BIGINT,                                -- 대상 ID
+  detail       TEXT,                                  -- 변경 내용 요약
+  created_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES users(id),
+  INDEX idx_adminlog_created (created_at)
+);
+
+-- ============================================================
+-- [확장] 시나리오·성장형·사후관리 테이블 (prototype2 본체화)
+--   회원→상담→신청→발급→성장→사후관리 전 생애주기 커버
+-- ============================================================
+
+-- ============================================================
+-- 13. card_memberships  (발급된 보유 카드)
+--   card_applications(신청) 과 구분: 신청이 승인되면 "발급"되어
+--   회원이 실제 보유하는 카드. issued_dt 는 성장형(가입연차)의 기준.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS card_memberships (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id           BIGINT        NOT NULL,             -- 보유 회원
+  card_id           BIGINT        NOT NULL,             -- 발급된 카드 상품
+  application_id    BIGINT,                             -- 발급 근거 신청건 (선택)
+  card_no_masked    VARCHAR(25),                        -- 마스킹 카드번호 (5310-98**-****-2749)
+  issued_dt         DATE          NOT NULL,             -- 발급일 = 가입연차(성장형) 기준
+  valid_thru        CHAR(5),                            -- 유효기간 MM/YY
+  membership_status ENUM('ACTIVE','BLOCKED','EXPIRED','CANCELLED') DEFAULT 'ACTIVE',  -- 카드 상태
+  card_onoff        ENUM('ON','OFF') DEFAULT 'ON',      -- 시나리오의 즉시 On/Off 관리
+  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  upd_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)        REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (card_id)        REFERENCES cards(id),
+  FOREIGN KEY (application_id) REFERENCES card_applications(id) ON DELETE SET NULL,
+  -- 내 보유카드 조회( WHERE user_id=? AND status=ACTIVE )용 인덱스
+  INDEX idx_membership_user (user_id, membership_status)
+);
+
+-- ============================================================
+-- 14. benefit_tiers  (성장형 혜택 단계)
+--   혜택(card_benefits)의 기본율은 1년차. 오래 쓸수록(가입연차)
+--   적립/할인율이 상승 → 이 표에 "N년차부터 적용될 율" 을 단계로 저장.
+--   적용 규칙: 내 연차 이하 tenure_year 중 가장 큰 단계의 율을 사용.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS benefit_tiers (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  benefit_id        BIGINT        NOT NULL,             -- 대상 혜택
+  tenure_year       INT           NOT NULL,             -- 가입 N년차부터 적용 (2,3,5 …)
+  discount_rate     DECIMAL(5,2),                       -- 그 시점 적립/할인율
+  monthly_limit_amt INT,                                -- 그 시점 월 한도(상향 가능)
+  tier_label        VARCHAR(50),                        -- 표시용 ("3년차 우대")
+  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (benefit_id) REFERENCES card_benefits(id) ON DELETE CASCADE,
+  INDEX idx_tier_benefit_year (benefit_id, tenure_year)
+);
+
+-- ============================================================
+-- 15. notifications  (사후관리 알림)
+--   MY페이지의 "놓친 혜택 / 업그레이드 임박 / 혜택 추가" 등을 저장.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id       BIGINT        NOT NULL,                 -- 수신 회원
+  membership_id BIGINT,                                 -- 관련 보유카드 (선택)
+  noti_type     ENUM('MISSED_BENEFIT','UPGRADE_SOON','BENEFIT_ADDED','STAGE_CHANGE','GENERAL') NOT NULL,
+  title         VARCHAR(200),
+  body          TEXT,
+  is_read       TINYINT(1)    DEFAULT 0,                -- 읽음 여부
+  created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)       REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (membership_id) REFERENCES card_memberships(id) ON DELETE CASCADE,
+  INDEX idx_noti_user (user_id, is_read, created_at)
+);
+
+-- ============================================================
+-- 16. consultations  (AI 상담 세션)
+--   시나리오의 "AI 상담 팝업" 1건. 비회원도 상담 가능(user_id NULL).
+--   상담 결과 추천 카드/요약을 기록 → 상담 데이터 자산화.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS consultations (
+  id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id             BIGINT,                           -- 상담 회원 (비회원=NULL)
+  channel             ENUM('POPUP','PAGE') DEFAULT 'POPUP',  -- 상담 진입 형태
+  entry_point         VARCHAR(50),                      -- 유입 지점 (HOME/CARD_DETAIL 등)
+  recommended_card_id BIGINT,                           -- 상담 결과 추천 카드
+  summary             VARCHAR(300),                     -- 상담 요약
+  started_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  ended_at            TIMESTAMP     NULL,
+  FOREIGN KEY (user_id)             REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (recommended_card_id) REFERENCES cards(id) ON DELETE SET NULL,
+  INDEX idx_consult_user (user_id, started_at)
+);
+
+-- ============================================================
+-- 17. consultation_messages  (상담 대화 로그)
+--   상담 세션 안의 USER/AI 메시지. 상담 품질 분석·재현에 사용.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS consultation_messages (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  consultation_id BIGINT        NOT NULL,               -- 소속 상담 세션
+  sender          ENUM('USER','AI') NOT NULL,           -- 발화 주체
+  content         TEXT,
+  created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE CASCADE,
+  INDEX idx_msg_consult (consultation_id, created_at)
+);
+
+-- ============================================================
+-- 18. user_benefit_configs  (회원 커스텀 혜택 구성 — 혜택 구성 빌더)
+--   BNK 라이프 '혜택 구성 빌더'에서 회원이 연회비(=예산)에 맞춰 직접 고른
+--   혜택 조합을 저장. 회원당 1건(UNIQUE user_id) → 재저장 시 덮어씀(UPSERT).
+--   ※ 과거 routes/lifecard.js 에서 런타임 CREATE 하던 테이블을 스키마로 승격
+--     (스키마 단일 출처화 + FK 무결성 확보).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_benefit_configs (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id           BIGINT        NOT NULL,                 -- 구성 소유 회원
+  selected_fee      INT           NOT NULL DEFAULT 30000,   -- 선택 연회비(=혜택 예산)
+  selected_benefits JSON          NOT NULL,                 -- 선택 혜택 id 배열 (예: ["cafe","delivery","pay"])
+  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- 회원당 1건만 유지 → 라우트의 ON DUPLICATE KEY UPDATE(업서트) 기준 키
+  UNIQUE KEY uq_user_benefit_config (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 19. benefit_catalog  (혜택 구성 빌더 — 선택 가능한 혜택 모듈)
+--   '혜택 구성 빌더'에서 회원이 고르는 혜택 후보. cost(예산 소진)로 조립.
+--   user_benefit_configs.selected_benefits(JSON)가 이 표의 benefit_cd 를 참조
+--   → 빌더 혜택 목록을 프론트 하드코딩이 아닌 DB에서 관리(관리자 편집 가능).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS benefit_catalog (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  benefit_cd    VARCHAR(30)   NOT NULL,              -- 안정 코드(cafe/pay/…) — 구성 저장의 참조 키
+  label         VARCHAR(50)   NOT NULL,              -- 표시명(카페·편의점)
+  icon          VARCHAR(10),                         -- 이모지 아이콘
+  base_desc     VARCHAR(100),                        -- 기본 혜택 문구(5% 적립)
+  note          VARCHAR(100),                        -- 부가 설명(월 최대 3,000원)
+  cost          INT           NOT NULL,              -- 예산 소진 비용(원)
+  color         VARCHAR(20),                         -- 표시 색
+  -- 연동용 숫자 필드: 소비(transactions)와 매칭해 절약액(spent×rate, limit 상한) 계산
+  --   rate NULL = 정률이 아닌 정액/횟수형 혜택(예: 통신 월 2,000원, 문화 월 1회) → 매칭 시 limit 만큼 적용
+  discount_rate     DECIMAL(5,2) NULL,               -- 1년차 기본 할인/적립률(%)
+  monthly_limit_amt INT          NULL,               -- 1년차 월 한도(원)
+  category_cd   ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
+                     'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
+                     'TRAVEL','CONVENIENCE') NULL,    -- 소비 카테고리(card_benefits와 동일 체계)
+  sort_order    INT           DEFAULT 0,             -- 노출 순서
+  is_active     TINYINT(1)    DEFAULT 1,             -- 노출 여부(끄면 빌더에서 숨김)
+  reg_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_benefit_cd (benefit_cd)
+);
+
+-- ============================================================
+-- 20. benefit_catalog_tiers  (빌더 혜택의 연차별 성장 표시값)
+--   benefit_tiers(라이프카드 자동혜택 성장)와 같은 원리 — 빌더 혜택도 연차로 성장.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS benefit_catalog_tiers (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  catalog_id   BIGINT        NOT NULL,
+  tenure_year  INT           NOT NULL,               -- 1,3,5…
+  display_val  VARCHAR(30)   NOT NULL,               -- 그 연차의 표시값(5% / 2,000원 / 월 2회)
+  -- 연동용 숫자값(연차별 성장) — display_val 은 표시, 아래는 계산용
+  rate              DECIMAL(5,2) NULL,               -- 그 연차의 할인/적립률(%) (정액형은 NULL)
+  monthly_limit_amt INT          NULL,               -- 그 연차의 월 한도(원)
+  FOREIGN KEY (catalog_id) REFERENCES benefit_catalog(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_catalog_year (catalog_id, tenure_year)
+);
+
+-- ############################################################
+-- #                                                          #
+-- #                  ↓↓↓  더미(시드) 데이터  ↓↓↓               #
+-- #                                                          #
+-- #  위쪽 = 스키마(DDL, 테이블 정의)  /  아래 = 데모용 데이터      #
+-- #  · 모든 테이블 생성 후 한 번에 실행됨                        #
+-- #  · INSERT 순서는 FK 의존성 때문에 그대로 유지 (섞지 말 것)     #
+-- #                                                          #
+-- ############################################################
+
+
+-- ============================================================
 -- 기본 데이터 삽입
 -- ============================================================
 
@@ -387,98 +668,6 @@ JOIN (
   UNION ALL SELECT '포인트이용약관', '신용카드'
 ) d ON (d.applies = 'ALL' OR d.applies = c.card_type_cd);
 
--- ============================================================
--- [v2] 고도화 확장 스키마
--- 실행: MySQL Workbench 또는 mysql -u root -p bnk_card < schema.sql
--- ============================================================
-
--- cards 시드 데이터: INSERT 시 이미 brand/traffic_yn/product_feature 포함됨
--- (v2 별도 UPDATE 불필요)
-
--- ============================================================
--- 9. card_applications  (카드 신청 내역)
--- ============================================================
-CREATE TABLE IF NOT EXISTS card_applications (
-  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id         BIGINT        NOT NULL,
-  card_id         BIGINT        NOT NULL,
-  -- 신청자 정보
-  applicant_name  VARCHAR(100)  NOT NULL,
-  birth_dt        DATE,
-  phone_no        VARCHAR(20),
-  home_phone      VARCHAR(20),                        -- 자택전화 (선택)
-  email           VARCHAR(100),
-  zip_code        VARCHAR(10),                        -- 우편번호
-  address         TEXT,
-  -- 고객 추가정보 (심사용)
-  residence_type  ENUM('자가','전세','월세','기타'),    -- 주거형태
-  income_type     ENUM('근로소득','사업소득','기타'),   -- 소득분류
-  job_yn          CHAR(1)       DEFAULT 'N',           -- 직장유무 (Y/N)
-  -- 청구/계약 정보
-  billing_bank      VARCHAR(50)  DEFAULT '부산은행',    -- 결제은행
-  billing_account   VARCHAR(50),                       -- 결제 계좌번호
-  statement_method  ENUM('POST_HOME','POST_WORK','EMAIL','SMART') DEFAULT 'EMAIL',  -- 청구서 수령방법
-  contract_method   ENUM('SMS','EMAIL') DEFAULT 'EMAIL',  -- 계약서류 수령방법
-  paper_terms_yn    CHAR(1)     DEFAULT 'N',           -- 종이약관 추가수령 (Y/N)
-  -- 카드 옵션
-  billing_day     INT           DEFAULT 15,           -- 결제일 (매월 N일)
-  credit_limit    INT           DEFAULT 0,            -- 한도 (체크카드=0)
-  apply_method    ENUM('INTERNET','MOBILE','BRANCH') DEFAULT 'INTERNET',
-  -- AI 커스텀 디자인 연결 (선택)
-  design_id       BIGINT,
-  -- 상태: 대기 / 승인 / 거절(관리자) / 취소(사용자)
-  status          ENUM('PENDING','APPROVED','REJECTED','CANCELLED') DEFAULT 'PENDING',
-  applied_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  processed_dt    TIMESTAMP     NULL,
-  FOREIGN KEY (user_id)  REFERENCES users(id),
-  FOREIGN KEY (card_id)  REFERENCES cards(id),
-  -- 내 신청내역 조회( WHERE user_id=? )용 인덱스
-  INDEX idx_app_user (user_id, status)
-);
-
--- ============================================================
--- 10. custom_designs  (AI 커스텀 카드 디자인)
--- ============================================================
-CREATE TABLE IF NOT EXISTS custom_designs (
-  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id         BIGINT        NOT NULL,
-  card_id         BIGINT        NOT NULL,
-  -- 사용자 입력
-  user_prompt     TEXT,                               -- 자유 입력 프롬프트
-  -- AI 생성 결과
-  theme_name      VARCHAR(100),                       -- AI가 생성한 테마명
-  color_from      VARCHAR(20),                        -- 그라디언트 시작색
-  color_to        VARCHAR(20),                        -- 그라디언트 종료색
-  accent_color    VARCHAR(20),                        -- 강조색
-  pattern_type    VARCHAR(50),                        -- geometric/organic/minimal/abstract
-  ai_description  TEXT,                               -- AI 디자인 설명
-  design_data     JSON,                               -- 전체 파라미터 JSON
-  created_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  upd_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (card_id) REFERENCES cards(id)
-);
-
--- ============================================================
--- 11-1. transactions  (회원 결제/거래 내역 - 소비 분석용)
---    실제 결제 시스템 대용: 회원가입 시 모의 거래를 생성해 채움
--- ============================================================
-CREATE TABLE IF NOT EXISTS transactions (
-  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id      BIGINT        NOT NULL,
-  -- 소비 카테고리 = 혜택 카테고리(card_benefits.category_cd)와 동일 코드 체계로 통일.
-  -- → "내 소비 ↔ 카드 혜택" 을 문자열이 아닌 코드(category_cd)로 매칭할 수 있음.
-  category_cd  ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
-                    'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
-                    'TRAVEL','CONVENIENCE') NOT NULL,
-  merchant_nm  VARCHAR(100),                          -- 가맹점명
-  amount       INT           NOT NULL,                -- 결제금액(원)
-  paid_dt      DATE          NOT NULL,                -- 결제일
-  reg_dt       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_tx_user_date (user_id, paid_dt)
-);
-
 -- 데모 계정(testuser)에 이번 달 모의 거래 시드 (소비 분석 즉시 동작)
 INSERT IGNORE INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt)
 SELECT u.id, t.category_cd, t.merchant_nm, t.amount, DATE_FORMAT(CURDATE(), '%Y-%m-05')
@@ -494,23 +683,6 @@ CROSS JOIN (
   UNION ALL SELECT 'PAY',       '네이버페이',       47000
 ) t
 WHERE u.username = 'testuser';
-
--- ============================================================
--- 11. admin_logs  (관리자 활동 로그 - 감사 추적)
---     누가/언제/무엇을/어떤 대상에 했는지 기록
--- ============================================================
-CREATE TABLE IF NOT EXISTS admin_logs (
-  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-  admin_id     BIGINT        NOT NULL,                -- 수행한 관리자 (users.id)
-  admin_name   VARCHAR(100),                          -- 관리자명 (조회 편의)
-  action       VARCHAR(50)   NOT NULL,                -- CARD_UPDATE/CARD_STATUS/CARD_DELETE/APP_PROCESS 등
-  target_type  VARCHAR(30),                           -- CARD / APPLICATION / BENEFIT
-  target_id    BIGINT,                                -- 대상 ID
-  detail       TEXT,                                  -- 변경 내용 요약
-  created_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (admin_id) REFERENCES users(id),
-  INDEX idx_adminlog_created (created_at)
-);
 
 -- ============================================================
 -- ★ BNK 라이프 평생 카드는 약관·공시 시드보다 먼저 존재해야 하므로
@@ -554,167 +726,6 @@ FROM users u CROSS JOIN (
   UNION ALL SELECT 'TELECOM',   'SKT 통신요금',     60000
   UNION ALL SELECT 'TRANSPORT', '부산교통공사',     30000
 ) t WHERE u.username = 'testuser2';
-
--- ============================================================
--- [확장] 시나리오·성장형·사후관리 테이블 (prototype2 본체화)
---   회원→상담→신청→발급→성장→사후관리 전 생애주기 커버
--- ============================================================
-
--- ============================================================
--- 13. card_memberships  (발급된 보유 카드)
---   card_applications(신청) 과 구분: 신청이 승인되면 "발급"되어
---   회원이 실제 보유하는 카드. issued_dt 는 성장형(가입연차)의 기준.
--- ============================================================
-CREATE TABLE IF NOT EXISTS card_memberships (
-  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id           BIGINT        NOT NULL,             -- 보유 회원
-  card_id           BIGINT        NOT NULL,             -- 발급된 카드 상품
-  application_id    BIGINT,                             -- 발급 근거 신청건 (선택)
-  card_no_masked    VARCHAR(25),                        -- 마스킹 카드번호 (5310-98**-****-2749)
-  issued_dt         DATE          NOT NULL,             -- 발급일 = 가입연차(성장형) 기준
-  valid_thru        CHAR(5),                            -- 유효기간 MM/YY
-  membership_status ENUM('ACTIVE','BLOCKED','EXPIRED','CANCELLED') DEFAULT 'ACTIVE',  -- 카드 상태
-  card_onoff        ENUM('ON','OFF') DEFAULT 'ON',      -- 시나리오의 즉시 On/Off 관리
-  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  upd_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id)        REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (card_id)        REFERENCES cards(id),
-  FOREIGN KEY (application_id) REFERENCES card_applications(id) ON DELETE SET NULL,
-  -- 내 보유카드 조회( WHERE user_id=? AND status=ACTIVE )용 인덱스
-  INDEX idx_membership_user (user_id, membership_status)
-);
-
--- ============================================================
--- 14. benefit_tiers  (성장형 혜택 단계)
---   혜택(card_benefits)의 기본율은 1년차. 오래 쓸수록(가입연차)
---   적립/할인율이 상승 → 이 표에 "N년차부터 적용될 율" 을 단계로 저장.
---   적용 규칙: 내 연차 이하 tenure_year 중 가장 큰 단계의 율을 사용.
--- ============================================================
-CREATE TABLE IF NOT EXISTS benefit_tiers (
-  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
-  benefit_id        BIGINT        NOT NULL,             -- 대상 혜택
-  tenure_year       INT           NOT NULL,             -- 가입 N년차부터 적용 (2,3,5 …)
-  discount_rate     DECIMAL(5,2),                       -- 그 시점 적립/할인율
-  monthly_limit_amt INT,                                -- 그 시점 월 한도(상향 가능)
-  tier_label        VARCHAR(50),                        -- 표시용 ("3년차 우대")
-  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (benefit_id) REFERENCES card_benefits(id) ON DELETE CASCADE,
-  INDEX idx_tier_benefit_year (benefit_id, tenure_year)
-);
-
--- ============================================================
--- 15. notifications  (사후관리 알림)
---   MY페이지의 "놓친 혜택 / 업그레이드 임박 / 혜택 추가" 등을 저장.
--- ============================================================
-CREATE TABLE IF NOT EXISTS notifications (
-  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id       BIGINT        NOT NULL,                 -- 수신 회원
-  membership_id BIGINT,                                 -- 관련 보유카드 (선택)
-  noti_type     ENUM('MISSED_BENEFIT','UPGRADE_SOON','BENEFIT_ADDED','STAGE_CHANGE','GENERAL') NOT NULL,
-  title         VARCHAR(200),
-  body          TEXT,
-  is_read       TINYINT(1)    DEFAULT 0,                -- 읽음 여부
-  created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id)       REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (membership_id) REFERENCES card_memberships(id) ON DELETE CASCADE,
-  INDEX idx_noti_user (user_id, is_read, created_at)
-);
-
--- ============================================================
--- 16. consultations  (AI 상담 세션)
---   시나리오의 "AI 상담 팝업" 1건. 비회원도 상담 가능(user_id NULL).
---   상담 결과 추천 카드/요약을 기록 → 상담 데이터 자산화.
--- ============================================================
-CREATE TABLE IF NOT EXISTS consultations (
-  id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id             BIGINT,                           -- 상담 회원 (비회원=NULL)
-  channel             ENUM('POPUP','PAGE') DEFAULT 'POPUP',  -- 상담 진입 형태
-  entry_point         VARCHAR(50),                      -- 유입 지점 (HOME/CARD_DETAIL 등)
-  recommended_card_id BIGINT,                           -- 상담 결과 추천 카드
-  summary             VARCHAR(300),                     -- 상담 요약
-  started_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  ended_at            TIMESTAMP     NULL,
-  FOREIGN KEY (user_id)             REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (recommended_card_id) REFERENCES cards(id) ON DELETE SET NULL,
-  INDEX idx_consult_user (user_id, started_at)
-);
-
--- ============================================================
--- 17. consultation_messages  (상담 대화 로그)
---   상담 세션 안의 USER/AI 메시지. 상담 품질 분석·재현에 사용.
--- ============================================================
-CREATE TABLE IF NOT EXISTS consultation_messages (
-  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-  consultation_id BIGINT        NOT NULL,               -- 소속 상담 세션
-  sender          ENUM('USER','AI') NOT NULL,           -- 발화 주체
-  content         TEXT,
-  created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE CASCADE,
-  INDEX idx_msg_consult (consultation_id, created_at)
-);
-
--- ============================================================
--- 18. user_benefit_configs  (회원 커스텀 혜택 구성 — 혜택 구성 빌더)
---   BNK 라이프 '혜택 구성 빌더'에서 회원이 연회비(=예산)에 맞춰 직접 고른
---   혜택 조합을 저장. 회원당 1건(UNIQUE user_id) → 재저장 시 덮어씀(UPSERT).
---   ※ 과거 routes/lifecard.js 에서 런타임 CREATE 하던 테이블을 스키마로 승격
---     (스키마 단일 출처화 + FK 무결성 확보).
--- ============================================================
-CREATE TABLE IF NOT EXISTS user_benefit_configs (
-  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id           BIGINT        NOT NULL,                 -- 구성 소유 회원
-  selected_fee      INT           NOT NULL DEFAULT 30000,   -- 선택 연회비(=혜택 예산)
-  selected_benefits JSON          NOT NULL,                 -- 선택 혜택 id 배열 (예: ["cafe","delivery","pay"])
-  reg_dt            TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  updated_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  -- 회원당 1건만 유지 → 라우트의 ON DUPLICATE KEY UPDATE(업서트) 기준 키
-  UNIQUE KEY uq_user_benefit_config (user_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- ============================================================
--- 19. benefit_catalog  (혜택 구성 빌더 — 선택 가능한 혜택 모듈)
---   '혜택 구성 빌더'에서 회원이 고르는 혜택 후보. cost(예산 소진)로 조립.
---   user_benefit_configs.selected_benefits(JSON)가 이 표의 benefit_cd 를 참조
---   → 빌더 혜택 목록을 프론트 하드코딩이 아닌 DB에서 관리(관리자 편집 가능).
--- ============================================================
-CREATE TABLE IF NOT EXISTS benefit_catalog (
-  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-  benefit_cd    VARCHAR(30)   NOT NULL,              -- 안정 코드(cafe/pay/…) — 구성 저장의 참조 키
-  label         VARCHAR(50)   NOT NULL,              -- 표시명(카페·편의점)
-  icon          VARCHAR(10),                         -- 이모지 아이콘
-  base_desc     VARCHAR(100),                        -- 기본 혜택 문구(5% 적립)
-  note          VARCHAR(100),                        -- 부가 설명(월 최대 3,000원)
-  cost          INT           NOT NULL,              -- 예산 소진 비용(원)
-  color         VARCHAR(20),                         -- 표시 색
-  -- 연동용 숫자 필드: 소비(transactions)와 매칭해 절약액(spent×rate, limit 상한) 계산
-  --   rate NULL = 정률이 아닌 정액/횟수형 혜택(예: 통신 월 2,000원, 문화 월 1회) → 매칭 시 limit 만큼 적용
-  discount_rate     DECIMAL(5,2) NULL,               -- 1년차 기본 할인/적립률(%)
-  monthly_limit_amt INT          NULL,               -- 1년차 월 한도(원)
-  category_cd   ENUM('CAFE','DELIVERY','TRANSPORT','SHOPPING','SUBSCRIPTION',
-                     'TELECOM','CULTURE','PAY','MEDICAL','FUEL','EDUCATION',
-                     'TRAVEL','CONVENIENCE') NULL,    -- 소비 카테고리(card_benefits와 동일 체계)
-  sort_order    INT           DEFAULT 0,             -- 노출 순서
-  is_active     TINYINT(1)    DEFAULT 1,             -- 노출 여부(끄면 빌더에서 숨김)
-  reg_dt        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_benefit_cd (benefit_cd)
-);
-
--- ============================================================
--- 20. benefit_catalog_tiers  (빌더 혜택의 연차별 성장 표시값)
---   benefit_tiers(라이프카드 자동혜택 성장)와 같은 원리 — 빌더 혜택도 연차로 성장.
--- ============================================================
-CREATE TABLE IF NOT EXISTS benefit_catalog_tiers (
-  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-  catalog_id   BIGINT        NOT NULL,
-  tenure_year  INT           NOT NULL,               -- 1,3,5…
-  display_val  VARCHAR(30)   NOT NULL,               -- 그 연차의 표시값(5% / 2,000원 / 월 2회)
-  -- 연동용 숫자값(연차별 성장) — display_val 은 표시, 아래는 계산용
-  rate              DECIMAL(5,2) NULL,               -- 그 연차의 할인/적립률(%) (정액형은 NULL)
-  monthly_limit_amt INT          NULL,               -- 그 연차의 월 한도(원)
-  FOREIGN KEY (catalog_id) REFERENCES benefit_catalog(id) ON DELETE CASCADE,
-  UNIQUE KEY uq_catalog_year (catalog_id, tenure_year)
-);
 
 -- ============================================================
 -- [확장 시드] 성장형·발급·알림·상담 데모 데이터
