@@ -26,6 +26,7 @@ export default function ChatWidget() {
   const [messages, setMsgs]   = useState([GREETING])
   const [input, setInput]     = useState('')
   const [loading, setLoading] = useState(false)
+  const [composing, setComposing] = useState(false)
   const navigate = useNavigate()
   const bodyRef  = useRef(null)
 
@@ -126,7 +127,9 @@ export default function ChatWidget() {
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && send()}
+              onKeyDown={e => e.key === 'Enter' && !composing && send()}
+              onCompositionStart={() => setComposing(true)}
+              onCompositionEnd={() => setComposing(false)}
               placeholder="여기에 질문을 입력해 주세요."
             />
             <button onClick={() => send()} disabled={loading} aria-label="전송">➤</button>
