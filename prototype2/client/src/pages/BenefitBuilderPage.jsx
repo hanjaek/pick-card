@@ -117,9 +117,9 @@ export default function BenefitBuilderPage() {
       <div className="bb-inner">
         <div className="bb-locked">
           <p className="bb-locked-icon">🔒</p>
-          <h2>BNK 라이프 평생 카드 전용 기능이에요</h2>
-          <p>라이프 카드를 신청하면 연회비에 맞는 혜택을 직접 구성할 수 있어요</p>
-          <Link to="/life-card" className="bb-cta-btn">라이프 카드 알아보기</Link>
+          <h2>BNK 01카드 전용 기능이에요</h2>
+          <p>BNK 01카드를 신청하면 연회비에 맞는 혜택을 직접 구성할 수 있어요</p>
+          <Link to="/life-card" className="bb-cta-btn">BNK 01카드 알아보기</Link>
         </div>
       </div>
     </div>

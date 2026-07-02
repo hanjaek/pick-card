@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import './Home.css'
 
 /* ─────────────────────────────────────────────
-   BNK 라이프 — 평생 카드 전용 랜딩 (프리미엄 제품 페이지)
+   BNK 01카드 — 평생 카드 전용 랜딩 (프리미엄 제품 페이지)
    ───────────────────────────────────────────── */
 
 /* 라인 SVG 아이콘 (이모지 대신 — 깔끔/일관) */
@@ -135,7 +135,7 @@ export default function Home() {
         <div className="kv-grid">
           <div className="kv-inner">
             <p className="kv-eyebrow">평생 함께 자라는 AI 카드</p>
-            <h1 className="kv-title">BNK 라이프<br />평생 카드</h1>
+            <h1 className="kv-title">BNK 01카드</h1>
             <p className="kv-sub">어릴 때부터 노년까지, AI가 내 소비와 나이에 맞춰<br />혜택을 알아서 바꿔주는 단 하나의 카드</p>
             <div className="kv-cta-row">
               <Link to="/life-card" className="kv-cta">내 카드 만들기</Link>
@@ -143,17 +143,12 @@ export default function Home() {
             </div>
           </div>
           <div className="kv-card-stage" onMouseMove={handleTilt} onMouseLeave={resetTilt}>
-            <div className="hero-card" ref={heroCardRef}>
-              <div className="hero-card-shine" />
-              <span className="hero-card-net">VISA</span>
-              <div className="hero-card-chip" />
-              <div className="hero-card-bottom">
-                <p className="hero-card-brand">BNK LIFE</p>
-                <p className="hero-card-name">BNK 라이프</p>
-                <p className="hero-card-num">1234&nbsp;56•• &nbsp;•••• &nbsp;7890</p>
-              </div>
-              <span className="hero-card-badge">∞ 평생</span>
-            </div>
+            <img
+              src="/cards/card-25.jpeg"
+              alt="BNK 01카드"
+              className="hero-card"
+              ref={heroCardRef}
+            />
           </div>
         </div>
         <div className="kv-scroll-hint"><div className="kv-scroll-line" /></div>
@@ -171,17 +166,11 @@ export default function Home() {
             혜택만 나와 함께 자랍니다.
           </p>
           <div className="lh-showcard">
-            <div className="hero-card hero-card--static">
-              <div className="hero-card-shine" />
-              <span className="hero-card-net">VISA</span>
-              <div className="hero-card-chip" />
-              <div className="hero-card-bottom">
-                <p className="hero-card-brand">BNK LIFE</p>
-                <p className="hero-card-name">BNK 라이프</p>
-                <p className="hero-card-num">1234&nbsp;56•• &nbsp;•••• &nbsp;7890</p>
-              </div>
-              <span className="hero-card-badge">∞ 평생</span>
-            </div>
+            <img
+              src="/cards/card-25.jpeg"
+              alt="BNK 01카드"
+              className="hero-card hero-card--static"
+            />
           </div>
         </div>
       </section>
@@ -189,7 +178,7 @@ export default function Home() {
       {/* ── 3 기둥 (라이트) ── */}
       <section className="lh-sec lh-cream">
         <div className="lh-inner sec-animate">
-          <p className="lh-eyebrow accent">왜 BNK 라이프인가</p>
+          <p className="lh-eyebrow accent">왜 BNK 01카드인가</p>
           <h2 className="lh-title dark">고르지 말고, 맡기세요</h2>
           <div className="pillar-grid">
             {PILLARS.map((p, i) => (
@@ -226,7 +215,7 @@ export default function Home() {
       {/* ── 이 카드만의 혜택 (라이트) ── */}
       <section className="lh-sec lh-cream">
         <div className="lh-inner sec-animate">
-          <p className="lh-eyebrow accent">BNK 라이프만의 혜택</p>
+          <p className="lh-eyebrow accent">BNK 01카드만의 혜택</p>
           <h2 className="lh-title dark">하나의 카드에<br />다 담았습니다</h2>
           <div className="bnf-grid">
             {BENEFITS.map((b, i) => (

@@ -134,25 +134,26 @@
   justify-content: center;
 }
 .hero-card {
-  position: relative;
+  display: block;
   width: 420px;
-  height: 262px;
-  padding: 30px;
-  border-radius: 24px;
-  color: #fff;
-  overflow: hidden;
-  background: linear-gradient(145deg, #D71919 0%, #B01414 50%, #7A1010 100%);
+  height: auto;
+  border-radius: 20px;
   box-shadow:
-    0 44px 90px rgba(120,12,12,0.5),
-    0 8px 24px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
+    0 40px 80px rgba(0,0,0,0.55),
+    0 12px 28px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.08);
   transform-style: preserve-3d;
   transition: transform 0.18s ease-out, box-shadow 0.3s ease;
   animation: heroFloat 6s ease-in-out infinite;
   will-change: transform;
   cursor: pointer;
 }
-.kv-card-stage:hover .hero-card { box-shadow: 0 54px 110px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2); }
+.kv-card-stage:hover .hero-card {
+  box-shadow:
+    0 56px 110px rgba(0,0,0,0.65),
+    0 16px 36px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(255,255,255,0.12);
+}
 
 @keyframes heroFloat {
   0%, 100% { transform: translateY(0)     rotateX(5deg) rotateY(-9deg); }
@@ -203,7 +204,7 @@
   .kv-grid { flex-direction: column; justify-content: center; gap: 44px; text-align: center; }
   .kv-inner { align-items: center; text-align: center; }
   .kv-cta-row { justify-content: center; }
-  .hero-card { width: 340px; height: 213px; }
+  .hero-card { width: 300px; height: auto; }
 }
 
 /* ── BNK 라이프 카드 비주얼 ── */
@@ -969,7 +970,8 @@
 .hero-card--static {
   animation: none;
   transform: rotateX(6deg) rotateY(-11deg);
-  width: 460px; height: 288px;
+  width: 460px;
+  height: auto;
 }
 
 /* 3 기둥 */
@@ -1039,7 +1041,7 @@
   .stage-line { grid-template-columns: repeat(2, 1fr); gap: 36px; }
   .stage-line::before { display: none; }
   .bnf-grid { grid-template-columns: 1fr; }
-  .hero-card--static { width: 360px; height: 226px; }
+  .hero-card--static { width: 360px; height: auto; }
 }
 @media (max-width: 560px) {
   .lh-sec { padding: 88px 0; }

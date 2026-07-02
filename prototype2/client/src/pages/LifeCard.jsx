@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './LifeCard.css'
 
-/* BNK 라이프 평생 카드 — 상세 설명 + AI 소비 분석 + 발급(테스트: 신분증 생략) */
+/* BNK 01카드 — 상세 설명 + AI 소비 분석 + 발급(테스트: 신분증 생략) */
 
 export default function LifeCard() {
   const navigate  = useNavigate()
@@ -40,21 +40,15 @@ export default function LifeCard() {
       {/* ── 상단: 카드 + 발급 ── */}
       <section className="lc-hero">
         <div className="lc-hero-card">
-          <div className="hero-card hero-card--static">
-            <div className="hero-card-shine" />
-            <span className="hero-card-net">{card?.network || 'VISA'}</span>
-            <div className="hero-card-chip" />
-            <div className="hero-card-bottom">
-              <p className="hero-card-brand">BNK LIFE</p>
-              <p className="hero-card-name">BNK 라이프</p>
-              <p className="hero-card-num">1234&nbsp;56•• &nbsp;•••• &nbsp;7890</p>
-            </div>
-            <span className="hero-card-badge">∞ 평생</span>
-          </div>
+          <img
+            src="/cards/card-25.jpeg"
+            alt="BNK 01카드"
+            className="lc-card-img"
+          />
         </div>
 
         <div className="lc-hero-text">
-          <p className="lc-eyebrow">BNK 라이프 평생 카드</p>
+          <p className="lc-eyebrow">BNK 01카드</p>
           <h1 className="lc-title">고르지 마세요.<br />AI가 평생 챙겨드립니다.</h1>
           <p className="lc-desc">
             수십 장의 카드 중 나에게 맞는 걸 고르는 데 지치셨나요?<br />
