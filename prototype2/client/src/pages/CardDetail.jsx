@@ -52,7 +52,7 @@ function CardDetail() {
   }, [id])
 
   useEffect(() => {
-    if (id === '9') {
+    if (id === '25') {
       fetch('/api/life-card')
         .then(r => r.ok ? r.json() : null)
         .then(setLifeInfo)

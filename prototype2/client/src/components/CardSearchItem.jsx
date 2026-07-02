@@ -45,7 +45,7 @@ export default function CardSearchItem({ card }) {
           <div className="csi-back">
             <p className="csi-back-title">{name}</p>
             <ul className="csi-back-list">
-              {card.id === 9 ? (
+              {card.id === 25 ? (
                 <>
                   <li><span className="csi-back-dot" />원하는 혜택을 직접 선택 가능</li>
                   <li><span className="csi-back-dot" />소득에 맞춰 연회비 선택 가능</li>
@@ -85,7 +85,7 @@ export default function CardSearchItem({ card }) {
 
         {/* 주요 혜택 2줄 */}
         <ul className="csi-benefits">
-          {card.id === 9 ? (
+          {card.id === 25 ? (
             <>
               <li>원하는 혜택을 직접 선택 가능</li>
               <li>소득에 맞춰 연회비 선택 가능</li>
