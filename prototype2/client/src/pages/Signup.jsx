@@ -54,6 +54,7 @@ export default function Signup() {
   const faceTimerRef  = useRef(null)
 
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -436,7 +437,7 @@ export default function Signup() {
                 모두 완료되었습니다.
               </p>
               <div className="auth-btn-area" style={{ width: '100%' }}>
-                <button className="auth-btn auth-btn-primary" onClick={() => navigate('/login')}>
+                <button className="auth-btn auth-btn-primary" onClick={() => navigate(searchParams.get('redirect') ? `/login?redirect=${searchParams.get('redirect')}` : '/login')}>
                   로그인하러 가기
                 </button>
                 <button className="auth-btn auth-btn-secondary" onClick={() => navigate('/')}>
@@ -887,7 +888,7 @@ export default function Signup() {
                 </button>
                 {step === 3 && (
                   <p className="auth-footer">
-                    이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+                    이미 계정이 있으신가요? {searchParams.get('redirect') ? <Link to={`/login?redirect=${searchParams.get('redirect')}`}>로그인</Link> : <Link to="/login">로그인</Link>}
                   </p>
                 )}
               </div>

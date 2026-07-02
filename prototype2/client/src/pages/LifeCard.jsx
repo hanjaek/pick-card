@@ -62,7 +62,7 @@ export default function LifeCard() {
           </ul>
           <button
             className="lc-btn-primary"
-            onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}
+            onClick={() => navigate(card ? `/cards/${card.id}/apply` : `/login?redirect=/cards/${card.id}/apply`)}
           >
             이 카드 만들기
           </button>
@@ -280,7 +280,7 @@ export default function LifeCard() {
       {/* ── 하단 CTA ── */}
       <section className="lc-cta-sec">
         <h2 className="lc-cta-title">카드 고르는 데 시간 낭비하지 마세요.<br />평생 함께할 내 카드, 지금 만드세요</h2>
-        <button className="lc-btn-white" onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}>
+        <button className="lc-btn-white" onClick={() => navigate(card ? `/cards/${card.id}/apply` : `/login?redirect=/cards/${card.id}/apply`)}>
           이 카드 만들기
         </button>
       </section>
