@@ -280,7 +280,7 @@ export default function CardApply() {
               <span className="hero-sep">·</span>
               <span>{card.type}</span>
               <span className="hero-sep">·</span>
-              <span>연회비 {card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</span>
+              <span>연회비 {card.annualFee == null ? '선택형' : card.annualFee == null ? '선택형' : card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</span>
             </div>
             <p className="apply-hero-sub">카드 신청 · 발급까지 약 3분</p>
           </div>
@@ -625,7 +625,7 @@ export default function CardApply() {
               <ul>
                 <li><span>카드명</span><span>{card.name}</span></li>
                 <li><span>신청자</span><span>{verify.name}</span></li>
-                <li><span>연회비</span><span>{card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</span></li>
+                <li><span>연회비</span><span>{card.annualFee == null ? '선택형' : card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</span></li>
                 <li><span>결제일</span><span>매월 {form.billingDay}일</span></li>
                 {card.type === '신용카드' && (
                   <li><span>신청한도</span><span>{Number(form.creditLimit).toLocaleString()}원</span></li>
@@ -827,7 +827,7 @@ export default function CardApply() {
             <div className="apply-done-info">
               <div><span>발급 상태</span><strong className="ok">발급 완료</strong></div>
               <div><span>결제일</span><strong>매월 {form.billingDay}일</strong></div>
-              <div><span>연회비</span><strong>{card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</strong></div>
+              <div><span>연회비</span><strong>{card.annualFee == null ? '선택형' : card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</strong></div>
             </div>
 
             <div className="apply-done-btns">
@@ -857,7 +857,7 @@ export default function CardApply() {
               <div className="sidebar-info">
                 <div className="sinfo-row"><span>카드 유형</span><strong>{card.type}</strong></div>
                 <div className="sinfo-row"><span>네트워크</span><strong>{card.network}</strong></div>
-                <div className="sinfo-row"><span>연회비</span><strong>{card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</strong></div>
+                <div className="sinfo-row"><span>연회비</span><strong>{card.annualFee == null ? '선택형' : card.annualFee === 0 ? '없음' : `${card.annualFee.toLocaleString()}원`}</strong></div>
                 {verify.name && step >= 1 && (
                   <div className="sinfo-row sinfo-row--highlight"><span>신청자</span><strong>{verify.name}</strong></div>
                 )}

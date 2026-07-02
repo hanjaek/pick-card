@@ -9,7 +9,6 @@
   background: #fff;
   border: 1px solid var(--bnk-border);
   border-radius: 20px;
-  overflow: hidden;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 .csi-wrap:hover {
