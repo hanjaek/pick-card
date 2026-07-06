@@ -30,6 +30,20 @@
 }
 @keyframes cwUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+/* 크기 조절 핸들 (좌상단) */
+.cw-resize-handle {
+  position: absolute; top: 0; left: 0;
+  width: 20px; height: 20px;
+  cursor: nwse-resize; z-index: 5;
+}
+.cw-resize-handle::before {
+  content: '';
+  position: absolute; top: 7px; left: 7px;
+  width: 8px; height: 8px;
+  border-top: 2px solid rgba(255,255,255,0.7);
+  border-left: 2px solid rgba(255,255,255,0.7);
+}
+
 .cw-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 18px;

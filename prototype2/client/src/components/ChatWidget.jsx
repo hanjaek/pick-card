@@ -21,16 +21,38 @@ const HASHTAGS = [
   { label: '# 온라인 쇼핑 할인',  value: '온라인 쇼핑 할인 많은 카드 추천해줘' },
 ]
 
+const MIN_W = 320, MIN_H = 400
+
 export default function ChatWidget() {
   const [open, setOpen]       = useState(false)
   const [messages, setMsgs]   = useState([GREETING])
   const [input, setInput]     = useState('')
   const [loading, setLoading] = useState(false)
   const [composing, setComposing] = useState(false)
+  const [size, setSize]       = useState({ width: 380, height: 560 })
   const navigate = useNavigate()
   const bodyRef  = useRef(null)
 
   useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight }, [messages, open, loading])
+
+  function startResize(e) {
+    e.preventDefault()
+    const startX = e.clientX, startY = e.clientY
+    const startW = size.width, startH = size.height
+    const maxW = window.innerWidth - 32, maxH = window.innerHeight - 60
+
+    function onMove(ev) {
+      const nextW = Math.min(maxW, Math.max(MIN_W, startW + (startX - ev.clientX)))
+      const nextH = Math.min(maxH, Math.max(MIN_H, startH + (startY - ev.clientY)))
+      setSize({ width: nextW, height: nextH })
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
 
   async function send(text) {
     const msg = (text ?? input).trim()
@@ -69,7 +91,8 @@ export default function ChatWidget() {
       )}
 
       {open && (
-        <div className="cw-panel" role="dialog" aria-label="AI 카드 상담">
+        <div className="cw-panel" role="dialog" aria-label="AI 카드 상담" style={{ width: size.width, height: size.height }}>
+          <div className="cw-resize-handle" onMouseDown={startResize} title="드래그해서 크기 조절" />
           <div className="cw-head">
             <div className="cw-head-title"><span className="cw-live" />피카 · AI 카드 상담</div>
             <button className="cw-close" onClick={() => setOpen(false)} aria-label="닫기">✕</button>
