@@ -298,20 +298,6 @@
   border-radius: 20px;
   backdrop-filter: blur(8px);
 }
-.cd-card-design-badge {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 700;
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-  padding: 3px 12px;
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  white-space: nowrap;
-}
 .cd-card-shine {
   position: absolute;
   inset: 0;
@@ -377,20 +363,6 @@
   text-align: center;
 }
 .cd-btn-primary:hover { background: var(--bnk-dark-red); }
-
-.cd-btn-design {
-  display: block;
-  padding: 14px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
-  transition: var(--transition);
-}
-.cd-btn-design:hover { opacity: 0.9; }
 
 .cd-btn-secondary {
   padding: 14px;

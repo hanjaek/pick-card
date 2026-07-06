@@ -33,7 +33,7 @@ router.post('/', authMiddleware, async (req, res) => {
     cardId, applicantName, birthDt, phoneNo, homePhone, email,
     zipCode, address, residenceType, incomeType, jobYn,
     billingBank, billingAccount, statementMethod, contractMethod, paperTermsYn,
-    billingDay, creditLimit, applyMethod, designId
+    billingDay, creditLimit, applyMethod
   } = req.body
 
   if (!cardId || !applicantName || !birthDt || !phoneNo) {
@@ -81,15 +81,15 @@ router.post('/', authMiddleware, async (req, res) => {
         (user_id, card_id, applicant_name, birth_dt, phone_no, home_phone, email,
          zip_code, address, residence_type, income_type, job_yn,
          billing_bank, billing_account, statement_method, contract_method, paper_terms_yn,
-         billing_day, credit_limit, apply_method, design_id, status, processed_dt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'APPROVED', NOW())`,
+         billing_day, credit_limit, apply_method, status, processed_dt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'APPROVED', NOW())`,
       [req.user.id, cardId, applicantName, birthDt, phoneNo, homePhone || null,
        email || null, zipCode || null, address || null,
        residenceType || null, incomeType || null, jobYn || 'N',
        billingBank || '부산은행', billingAccount || null,
        statementMethod || 'EMAIL', contractMethod || 'EMAIL', paperTermsYn || 'N',
        billingDay || 15, creditLimit || 0,
-       applyMethod || 'INTERNET', designId || null]
+       applyMethod || 'INTERNET']
     )
     const appId = result.insertId
 
@@ -129,11 +129,9 @@ router.get('/me', authMiddleware, async (req, res) => {
          a.billing_day AS billingDay, a.applied_dt AS appliedDt,
          c.id AS cardId, c.prd_nm AS cardName,
          c.card_type_cd AS cardType, c.color_from AS colorFrom, c.color_to AS colorTo,
-         c.network, c.annual_fee AS annualFee,
-         cd.theme_name AS designTheme, cd.color_from AS designColorFrom, cd.color_to AS designColorTo
+         c.network, c.annual_fee AS annualFee
        FROM card_applications a
        JOIN cards c ON c.id = a.card_id
-       LEFT JOIN custom_designs cd ON cd.id = a.design_id
        WHERE a.user_id = ?
        ORDER BY a.applied_dt DESC`,
       [req.user.id]

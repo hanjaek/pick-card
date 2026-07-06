@@ -2,16 +2,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import './CardDetail.css'
 
-function CardVisual({ card, design }) {
-  const colorFrom = design?.colorFrom || design?.color_from || card.colorFrom
-  const colorTo   = design?.colorTo   || design?.color_to   || card.colorTo
-  // AI 커스텀 디자인이 없고 실물 이미지가 있으면 실물 이미지
-  const img = !design && card.imageUrl ? card.imageUrl : null
+function CardVisual({ card }) {
+  // 실물 이미지가 있으면 이미지, 없으면 색 그라디언트 폴백
+  const img = card.imageUrl || null
 
   return (
     <div
       className="cd-card-visual"
-      style={img ? undefined : { background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
+      style={img ? undefined : { background: `linear-gradient(135deg, ${card.colorFrom}, ${card.colorTo})` }}
     >
       {img ? (
         <img className="cd-card-img" src={img} alt={card.name} />
@@ -24,9 +22,6 @@ function CardVisual({ card, design }) {
             <span className="cd-card-name">{card.name}</span>
             <span className="cd-card-badge">{card.type}</span>
           </div>
-          {design && (
-            <div className="cd-card-design-badge">✨ {design.themeName || design.theme_name}</div>
-          )}
           <div className="cd-card-shine" />
         </>
       )}
@@ -301,7 +296,7 @@ function CardDetail() {
 
         {/* ===== 우측: 카드 비주얼 + 신청 ===== */}
         <div className="cd-sidebar">
-          <CardVisual card={card} design={null} />
+          <CardVisual card={card} />
 
           {/* 신청 버튼 */}
           <div className="cd-actions">

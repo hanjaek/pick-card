@@ -107,14 +107,6 @@
   font-weight: 700;
   color: #fff;
 }
-.acp-design {
-  font-size: 11px;
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-  padding: 3px 10px;
-  border-radius: 20px;
-}
-
 /* ===== 패널 ===== */
 .apply-step-panel {
   background: #fff;
@@ -212,42 +204,6 @@
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-}
-
-/* ===== 디자인 확인 ===== */
-.apply-design-confirm {
-  padding: 16px;
-  background: var(--bnk-bg);
-  border-radius: 10px;
-}
-.apply-design-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--bnk-gray);
-  display: block;
-  margin-bottom: 10px;
-}
-.apply-design-preview {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.apply-design-swatch {
-  width: 56px;
-  height: 36px;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-.apply-design-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--bnk-text);
-  margin-bottom: 4px;
-}
-.apply-design-desc {
-  font-size: 12px;
-  color: var(--bnk-gray);
-  line-height: 1.5;
 }
 
 /* ===== 요약 ===== */

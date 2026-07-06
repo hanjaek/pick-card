@@ -10,7 +10,6 @@ import Signup     from './pages/Signup'
 import Cards      from './pages/Cards'
 import CardDetail from './pages/CardDetail'
 import CardApply  from './pages/CardApply'
-import CardDesign  from './pages/CardDesign'
 import MyPage      from './pages/MyPage'
 import Terms       from './pages/Terms'
 import Support     from './pages/Support'
@@ -64,7 +63,6 @@ function App() {
                   <Route path="/search"                element={<Navigate to="/cards" replace />} />
                   <Route path="/cards/:id"             element={<CardDetail />} />
                   <Route path="/cards/:id/apply"       element={<CardApply />}  />
-                  <Route path="/cards/:id/design"      element={<CardDesign />} />
                   <Route path="/mypage"                element={<MyPage />}     />
                   <Route path="/benefit-builder"      element={<BenefitBuilderPage />} />
                   <Route path="/terms"                 element={<Terms />}      />

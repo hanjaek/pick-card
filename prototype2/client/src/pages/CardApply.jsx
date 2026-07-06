@@ -32,7 +32,6 @@ export default function CardApply() {
   const { id }     = useParams()
   const navigate   = useNavigate()
   const location   = useLocation()
-  const savedDesign = location.state?.design || null
 
   const [step, setStep]     = useState(0)
   const [card, setCard]     = useState(null)
@@ -127,8 +126,7 @@ export default function CardApply() {
           paperTermsYn:   form.paperTermsYn,
           billingDay:     Number(form.billingDay),
           creditLimit:    card.type === '체크카드' ? 0 : Number(form.creditLimit),
-          applyMethod:    'INTERNET',
-          designId:       savedDesign?.id || null
+          applyMethod:    'INTERNET'
         })
       })
       const data = await res.json()
@@ -162,12 +160,11 @@ export default function CardApply() {
         <div
           className="apply-card-preview"
           style={{
-            background: `linear-gradient(135deg, ${savedDesign?.colorFrom || savedDesign?.color_from || card.colorFrom}, ${savedDesign?.colorTo || savedDesign?.color_to || card.colorTo})`
+            background: `linear-gradient(135deg, ${card.colorFrom}, ${card.colorTo})`
           }}
         >
           <span className="acp-network">{card.network}</span>
           <span className="acp-name">{card.name}</span>
-          {savedDesign && <span className="acp-design">✨ {savedDesign.themeName || savedDesign.theme_name}</span>}
         </div>
 
         {/* ===== STEP 0: 약관 동의 ===== */}
@@ -443,21 +440,6 @@ export default function CardApply() {
                 </label>
               )}
 
-              {savedDesign && (
-                <div className="apply-design-confirm">
-                  <span className="apply-design-label">선택된 AI 디자인</span>
-                  <div className="apply-design-preview">
-                    <div
-                      className="apply-design-swatch"
-                      style={{ background: `linear-gradient(135deg, ${savedDesign.colorFrom || savedDesign.color_from}, ${savedDesign.colorTo || savedDesign.color_to})` }}
-                    />
-                    <div>
-                      <p className="apply-design-name">{savedDesign.themeName || savedDesign.theme_name}</p>
-                      <p className="apply-design-desc">{savedDesign.designDescription || savedDesign.ai_description}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="apply-summary">
@@ -497,7 +479,7 @@ export default function CardApply() {
             </p>
 
             <div className="apply-done-card adc"
-              style={{ background: `linear-gradient(135deg, ${savedDesign?.colorFrom || savedDesign?.color_from || card.colorFrom}, ${savedDesign?.colorTo || savedDesign?.color_to || card.colorTo})` }}
+              style={{ background: `linear-gradient(135deg, ${card.colorFrom}, ${card.colorTo})` }}
             >
               <span className="adc-net">{card.network}</span>
               <div className="adc-chip" />

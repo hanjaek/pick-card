@@ -204,8 +204,6 @@ CREATE TABLE IF NOT EXISTS card_applications (
   billing_day     INT           DEFAULT 15,           -- 결제일 (매월 N일)
   credit_limit    INT           DEFAULT 0,            -- 한도 (체크카드=0)
   apply_method    ENUM('INTERNET','MOBILE','BRANCH') DEFAULT 'INTERNET',
-  -- AI 커스텀 디자인 연결 (선택)
-  design_id       BIGINT,
   -- 상태: 대기 / 승인 / 거절(관리자) / 취소(사용자)
   status          ENUM('PENDING','APPROVED','REJECTED','CANCELLED') DEFAULT 'PENDING',
   applied_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
@@ -214,29 +212,6 @@ CREATE TABLE IF NOT EXISTS card_applications (
   FOREIGN KEY (card_id)  REFERENCES cards(id),
   -- 내 신청내역 조회( WHERE user_id=? )용 인덱스
   INDEX idx_app_user (user_id, status)
-);
-
--- ============================================================
--- 10. custom_designs  (AI 커스텀 카드 디자인)
--- ============================================================
-CREATE TABLE IF NOT EXISTS custom_designs (
-  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id         BIGINT        NOT NULL,
-  card_id         BIGINT        NOT NULL,
-  -- 사용자 입력
-  user_prompt     TEXT,                               -- 자유 입력 프롬프트
-  -- AI 생성 결과
-  theme_name      VARCHAR(100),                       -- AI가 생성한 테마명
-  color_from      VARCHAR(20),                        -- 그라디언트 시작색
-  color_to        VARCHAR(20),                        -- 그라디언트 종료색
-  accent_color    VARCHAR(20),                        -- 강조색
-  pattern_type    VARCHAR(50),                        -- geometric/organic/minimal/abstract
-  ai_description  TEXT,                               -- AI 디자인 설명
-  design_data     JSON,                               -- 전체 파라미터 JSON
-  created_dt      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  upd_dt          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (card_id) REFERENCES cards(id)
 );
 
 -- ============================================================
