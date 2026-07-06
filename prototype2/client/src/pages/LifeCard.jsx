@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './LifeCard.css'
 
-/* BNK 라이프 평생 카드 — 상세 설명 + AI 소비 분석 + 발급(테스트: 신분증 생략) */
+/* BNK 영원카드 — 상세 설명 + AI 소비 분석 + 발급(테스트: 신분증 생략) */
 
 export default function LifeCard() {
   const navigate  = useNavigate()
@@ -40,35 +40,29 @@ export default function LifeCard() {
       {/* ── 상단: 카드 + 발급 ── */}
       <section className="lc-hero">
         <div className="lc-hero-card">
-          <div className="hero-card hero-card--static">
-            <div className="hero-card-shine" />
-            <span className="hero-card-net">{card?.network || 'VISA'}</span>
-            <div className="hero-card-chip" />
-            <div className="hero-card-bottom">
-              <p className="hero-card-brand">BNK LIFE</p>
-              <p className="hero-card-name">BNK 라이프</p>
-              <p className="hero-card-num">1234&nbsp;56•• &nbsp;•••• &nbsp;7890</p>
-            </div>
-            <span className="hero-card-badge">∞ 평생</span>
-          </div>
+          <img
+            src="/cards/card-25.jpeg"
+            alt="BNK 영원카드"
+            className="lc-card-img"
+          />
         </div>
 
         <div className="lc-hero-text">
-          <p className="lc-eyebrow">BNK 라이프 평생 카드</p>
+          <p className="lc-eyebrow">BNK 영원카드</p>
           <h1 className="lc-title">고르지 마세요.<br />AI가 평생 챙겨드립니다.</h1>
           <p className="lc-desc">
-            수십 장의 카드 중 나에게 맞는 걸 고르는 데 지치셨나요?<br />
-            평생카드는 만 14세부터 시니어까지 — AI가 내 소비 패턴을 분석해 혜택을 자동으로 설정합니다. 카드를 바꿀 필요 없어요.
+            교통·카페·쇼핑·의료 등 8가지 혜택 중 내가 원하는 것만 골라 담는 신용카드예요.<br />
+            연회비가 혜택 예산이 되고, 연차가 쌓일수록 할인율이 자동으로 올라갑니다.
           </p>
           <ul className="lc-quick">
-            <li>만 14세부터 발급</li>
-            <li>AI 혜택 자동 설정</li>
-            <li>연회비 선택형</li>
-            <li>장기고객 추가 혜택</li>
+            <li>혜택 직접 선택</li>
+            <li>연회비 = 혜택 예산</li>
+            <li>연차마다 할인율 UP</li>
+            <li>AI 소비 분석 제공</li>
           </ul>
           <button
             className="lc-btn-primary"
-            onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}
+            onClick={() => navigate(card ? `/cards/${card.id}/apply` : `/login?redirect=/cards/${card.id}/apply`)}
           >
             이 카드 만들기
           </button>
@@ -222,6 +216,37 @@ export default function LifeCard() {
         )}
       </section>
 
+      {/* ── 혜택 직접 구성 ── */}
+      <section className="lc-builder-sec">
+        <div className="lc-builder-head">
+          <span className="lc-badge-builder">혜택 직접 선택</span>
+          <h2 className="lc-section-title" style={{ marginTop: 12 }}>내가 고른 혜택만,<br />연회비만큼만 담아요</h2>
+          <p className="lc-section-sub">정해진 혜택 패키지가 아니에요. 8가지 혜택 중 원하는 것만 골라서 내 카드를 만들어요.</p>
+        </div>
+        <div className="lc-benefit-grid">
+          {[
+            { icon: '🚌', label: '대중교통', desc: '3% 할인', grow: '→ 5년차 7%' },
+            { icon: '☕', label: '카페·편의점', desc: '5% 적립', grow: '→ 5년차 9%' },
+            { icon: '🛍', label: '온라인쇼핑', desc: '2% 캐시백', grow: '→ 5년차 4%' },
+            { icon: '🛵', label: '배달앱', desc: '3% 할인', grow: '→ 5년차 6%' },
+            { icon: '💊', label: '약국·의료', desc: '5% 할인', grow: '→ 5년차 8%' },
+            { icon: '📱', label: '통신요금', desc: '월 2,000원 할인', grow: '→ 5년차 4,000원' },
+            { icon: '💳', label: '간편결제', desc: '1% 적립', grow: '→ 5년차 2%' },
+            { icon: '🎬', label: '영화·문화', desc: '월 1회 50% 할인', grow: '→ 5년차 무제한' },
+          ].map((b, i) => (
+            <div key={i} className="lc-benefit-tile">
+              <span className="lc-tile-icon">{b.icon}</span>
+              <p className="lc-tile-label">{b.label}</p>
+              <p className="lc-tile-desc">{b.desc}</p>
+              <p className="lc-tile-grow">{b.grow}</p>
+            </div>
+          ))}
+        </div>
+        <div className="lc-builder-cta">
+          <p className="lc-builder-cta-text">연회비 10,000원~100,000원 중 선택 · 예산만큼 혜택을 채우면 완성</p>
+        </div>
+      </section>
+
       {/* ── 생애단계별 혜택 (카드 설명) ── */}
       <section className="lc-stages-sec">
         <h2 className="lc-section-title">만 14세부터 시니어까지,<br />카드 하나로 평생</h2>
@@ -229,7 +254,6 @@ export default function LifeCard() {
         <div className="lc-loyalty-badges">
           <span>🎂 카드 생일 혜택</span>
           <span>🏅 10년 장기고객 추가 혜택</span>
-          <span>💳 체크 → 신용 전환 특별 혜택</span>
           <span>👨‍👩‍👧 부모 알림 서비스</span>
         </div>
         <div className="lc-stage-grid">
@@ -256,7 +280,7 @@ export default function LifeCard() {
       {/* ── 하단 CTA ── */}
       <section className="lc-cta-sec">
         <h2 className="lc-cta-title">카드 고르는 데 시간 낭비하지 마세요.<br />평생 함께할 내 카드, 지금 만드세요</h2>
-        <button className="lc-btn-white" onClick={() => navigate(card ? `/cards/${card.id}/apply` : '/login')}>
+        <button className="lc-btn-white" onClick={() => navigate(card ? `/cards/${card.id}/apply` : `/login?redirect=/cards/${card.id}/apply`)}>
           이 카드 만들기
         </button>
       </section>

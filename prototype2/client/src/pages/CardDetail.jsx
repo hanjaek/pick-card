@@ -32,9 +32,10 @@ function CardVisual({ card }) {
 function CardDetail() {
   const { id }   = useParams()
   const navigate = useNavigate()
-  const [card, setCard]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setTab]   = useState('info')
+  const [card, setCard]             = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [activeTab, setTab]         = useState('info')
+  const [lifeCardInfo, setLifeInfo] = useState(null)
 
   const token = localStorage.getItem('token')
 
@@ -43,6 +44,15 @@ function CardDetail() {
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => { setCard(data); setLoading(false) })
       .catch(() => { setLoading(false) })
+  }, [id])
+
+  useEffect(() => {
+    if (id === '25') {
+      fetch('/api/life-card')
+        .then(r => r.ok ? r.json() : null)
+        .then(setLifeInfo)
+        .catch(() => {})
+    }
   }, [id])
 
   if (loading) return <div className="cd-loading"><div className="spinner" /></div>
@@ -96,22 +106,29 @@ function CardDetail() {
           {/* ---- 상품안내 탭 ---- */}
           {activeTab === 'info' && (
             <div className="cd-tab-content">
-              {(card.benefits || []).length > 0 && (
-                <div className="cd-highlight-box">
-                  <p className="cd-highlight-title">{card.name} 혜택을 꼭!! 확인해 보세요.</p>
+              <div className="cd-highlight-box">
+                <p className="cd-highlight-title">{card.name}</p>
+                {lifeCardInfo ? (
+                  <ul className="cd-highlight-list">
+                    <li>원하는 혜택을 직접 선택 가능</li>
+                    <li>소득에 맞춰 연회비 선택 가능</li>
+                    <li>연차가 쌓일수록 할인율 자동 UP</li>
+                    <li>AI 소비 분석으로 혜택 추천</li>
+                  </ul>
+                ) : (
                   <ul className="cd-highlight-list">
                     {(card.benefits || []).map((b, i) => (
                       <li key={i}>{b.desc}</li>
                     ))}
                   </ul>
-                </div>
-              )}
+                )}
+              </div>
               <table className="cd-info-table">
                 <tbody>
                   <tr>
                     <th>연회비</th>
                     <td>
-                      {card.annualFee === 0
+                      {card.annualFee == null ? '선택형' : card.annualFee === 0
                         ? '없음'
                         : `${card.annualFee.toLocaleString()}원`}
                       {card.type === '체크카드' && ' (발급수수료 1천원)'}
@@ -164,20 +181,56 @@ function CardDetail() {
           {/* ---- 서비스안내 탭 ---- */}
           {activeTab === 'service' && (
             <div className="cd-tab-content">
-              <div className="cd-benefits-grid">
-                {(card.benefits || []).map((b, i) => (
-                  <div key={i} className="cd-benefit-card">
-                    <span className="cd-bnft-badge">{b.type}</span>
-                    <p className="cd-bnft-desc">{b.desc}</p>
-                    <div className="cd-bnft-meta">
-                      {b.discountRate > 0 && <span>할인율 {b.discountRate}%</span>}
-                      {b.monthlyLimit > 0 && (
-                        <span>월 한도 {Number(b.monthlyLimit).toLocaleString()}원</span>
-                      )}
+              {lifeCardInfo ? (
+                <>
+                  {lifeCardInfo.common.length > 0 && (
+                    <div className="cd-stage-group">
+                      <p className="cd-stage-group-label">전 생애 공통 혜택</p>
+                      <div className="cd-benefits-grid">
+                        {lifeCardInfo.common.map((b, i) => (
+                          <div key={i} className="cd-benefit-card">
+                            <span className="cd-bnft-badge">{b.type}</span>
+                            <p className="cd-bnft-desc">{b.desc}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                  {lifeCardInfo.stages.map((s, i) => (
+                    <div key={i} className="cd-stage-group">
+                      <p className="cd-stage-group-label">{s.age} · {s.label}</p>
+                      <p className="cd-stage-group-desc">{s.desc}</p>
+                      <div className="cd-benefits-grid">
+                        {s.benefits.map((b, j) => (
+                          <div key={j} className="cd-benefit-card">
+                            <span className="cd-bnft-badge">{b.type}</span>
+                            <p className="cd-bnft-desc">{b.desc}</p>
+                            <div className="cd-bnft-meta">
+                              {b.rate > 0 && <span>적용률 {b.rate}%</span>}
+                              {b.monthlyLimit > 0 && <span>월 한도 {Number(b.monthlyLimit).toLocaleString()}원</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="cd-benefits-grid">
+                  {(card.benefits || []).map((b, i) => (
+                    <div key={i} className="cd-benefit-card">
+                      <span className="cd-bnft-badge">{b.type}</span>
+                      <p className="cd-bnft-desc">{b.desc}</p>
+                      <div className="cd-bnft-meta">
+                        {b.discountRate > 0 && <span>할인율 {b.discountRate}%</span>}
+                        {b.monthlyLimit > 0 && (
+                          <span>월 한도 {Number(b.monthlyLimit).toLocaleString()}원</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="cd-service-notice">
                 ※ 전월실적 및 서비스 세부조건은 상품안내장 및 홈페이지 참고<br />
                 ※ 서비스 제공 조건: 전월 실적 전 1일부터 말일까지(승인시점 기준) 국내외 가맹점에서의 원시점/부분 이용실적 기준으로 적립됩니다.
@@ -192,9 +245,9 @@ function CardDetail() {
                 <h3 className="cd-fee-title">연회비</h3>
                 {card.type === '신용카드' ? (
                   <ul className="cd-fee-list">
-                    <li>국내전용(국내 로컬) 개인회원 : {card.annualFee > 0 ? `${card.annualFee.toLocaleString()}원` : '없음'}</li>
-                    <li>국내외겸용(마스터) 개인회원 : {card.annualFee > 0 ? `${(card.annualFee + 3000).toLocaleString()}원` : '없음'}</li>
-                    <li>국내외겸용(비자) 개인회원 : {card.annualFee > 0 ? `${(card.annualFee + 3000).toLocaleString()}원` : '없음'}</li>
+                    <li>국내전용(국내 로컬) 개인회원 : {card.annualFee == null ? '선택형 (10,000~100,000원)' : card.annualFee == null ? '선택형' : card.annualFee > 0 ? `${card.annualFee.toLocaleString()}원` : '없음'}</li>
+                    <li>국내외겸용(마스터) 개인회원 : {card.annualFee == null ? '선택형 (13,000~103,000원)' : card.annualFee == null ? '선택형' : card.annualFee > 0 ? `${(card.annualFee + 3000).toLocaleString()}원` : '없음'}</li>
+                    <li>국내외겸용(비자) 개인회원 : {card.annualFee == null ? '선택형 (13,000~103,000원)' : card.annualFee == null ? '선택형' : card.annualFee > 0 ? `${(card.annualFee + 3000).toLocaleString()}원` : '없음'}</li>
                   </ul>
                 ) : (
                   <ul className="cd-fee-list">

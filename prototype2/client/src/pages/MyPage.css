@@ -45,6 +45,13 @@
   justify-content: space-between;
   border: 1px solid rgba(255,255,255,.08);
 }
+.mp-life-card-img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.2);
+  display: block;
+}
 .mp-lc-chip {
   width: 32px; height: 22px;
   background: linear-gradient(135deg, #D4AF37, #C5922A);
@@ -199,6 +206,18 @@
   font-size: 11px;
   color: rgba(255,255,255,.4);
 }
+.mp-my-auto {
+  display: flex; align-items: center; gap: 8px;
+}
+.mp-my-auto-badge {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bnk-red); color: #fff;
+  font-size: 11px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+.mp-my-auto-label {
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.8);
+}
 
 /* ── 비보유자 헤더 ── */
 .mp-page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
@@ -298,6 +317,7 @@
 .mp-opp-item:last-child { border-bottom: none; }
 .mp-opp-item:hover { opacity: .7; }
 .mp-opp-color { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+.mp-opp-img   { width: 64px; height: auto; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .mp-opp-info  { flex: 1; min-width: 0; }
 .mp-opp-name  { font-size: 14px; font-weight: 600; color: #1C1C1E; margin-bottom: 2px; }
 .mp-opp-save  { font-size: 12px; color: #22C55E; font-weight: 500; }
@@ -519,6 +539,7 @@
   .mp-life-hero { grid-template-columns: 1fr; padding: 28px; }
   .mp-life-visual { flex-direction: row; align-items: center; }
   .mp-life-card-wrap { width: 160px; flex-shrink: 0; }
+  .mp-life-card-img { width: 160px; flex-shrink: 0; }
   .mp-life-stats { flex-wrap: wrap; }
   .mp-lstat { min-width: 140px; }
   .mp-life-actions { align-items: flex-start; }

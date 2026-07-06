@@ -6,10 +6,10 @@ const pool   = require('../db')
 //   과거 여기서 런타임 CREATE 하던 것을 스키마 단일 출처로 이관함.
 
 /* ======================================================
-   BNK 라이프 평생 카드 — 생애단계·소비 기반 자동 혜택 + 성장형
+   BNK 영원카드 — 생애단계·소비 기반 자동 혜택 + 성장형
    ====================================================== */
 
-const LIFE_CARD_NAME = 'BNK 라이프 평생 카드'
+const LIFE_CARD_NAME = 'BNK 영원카드'
 
 const STAGE_ORDER = ['TEEN', 'YOUNG', 'FAMILY', 'SENIOR']
 const STAGE_META  = {

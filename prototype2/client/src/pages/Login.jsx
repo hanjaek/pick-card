@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './Auth.css'
 
 const DECO_CARDS = [
@@ -16,6 +16,7 @@ export default function Login() {
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   const navigate                = useNavigate()
+  const [searchParams]          = useSearchParams()
   const inputRef                = useRef(null)
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function Login() {
       localStorage.setItem('token',    data.token)
       localStorage.setItem('isAdmin',  data.is_admin ? 'true' : 'false')
       localStorage.setItem('userName', data.name || '')
-      navigate(data.is_admin ? '/admin' : '/')
+      navigate(data.is_admin ? '/admin' : (searchParams.get('redirect') || '/'))
     } catch (err) {
       console.error('로그인 오류:', err)
       setError(`서버 연결 실패: ${err.message || err}`)

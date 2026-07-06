@@ -68,14 +68,6 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 
   try {
-    const [existing] = await pool.query(
-      "SELECT id FROM card_applications WHERE user_id = ? AND card_id = ? AND status != 'CANCELLED'",
-      [req.user.id, cardId]
-    )
-    if (existing.length > 0) {
-      return res.status(409).json({ message: '이미 신청한 카드입니다.' })
-    }
-
     const [result] = await pool.query(
       `INSERT INTO card_applications
         (user_id, card_id, applicant_name, birth_dt, phone_no, home_phone, email,

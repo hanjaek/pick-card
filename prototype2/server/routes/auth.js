@@ -163,6 +163,37 @@ router.get('/me', async (req, res) => {
 })
 
 /* ======================================================
+   GET /api/auth/profile  -  카드 신청 자동입력용 회원 프로필
+   ====================================================== */
+router.get('/profile', async (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ message: '로그인이 필요합니다.' })
+  }
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.cust_nm, ud.birth_dt, ud.phone_no, ud.email
+       FROM users u
+       LEFT JOIN user_details ud ON ud.user_id = u.id
+       WHERE u.id = ?`,
+      [req.session.user.id]
+    )
+    if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
+    const r = rows[0]
+    const dt = r.birth_dt
+    let birth = ''
+    if (dt instanceof Date) {
+      birth = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
+    } else if (dt) {
+      birth = String(dt).slice(0, 10)
+    }
+    res.json({ name: r.cust_nm || '', birth, phone: r.phone_no || '', email: r.email || '' })
+  } catch (err) {
+    console.error('[profile]', err)
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' })
+  }
+})
+
+/* ======================================================
    POST /api/auth/extend  -  세션 연장
    세션을 다시 저장(save)하면 connect-redis 가 Redis 키 TTL 을 60분으로 재설정.
    (TTL 이 곧 만료 기준이므로, TTL 갱신 = 세션 연장)

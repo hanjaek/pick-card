@@ -117,9 +117,9 @@ export default function BenefitBuilderPage() {
       <div className="bb-inner">
         <div className="bb-locked">
           <p className="bb-locked-icon">🔒</p>
-          <h2>BNK 라이프 평생 카드 전용 기능이에요</h2>
-          <p>라이프 카드를 신청하면 연회비에 맞는 혜택을 직접 구성할 수 있어요</p>
-          <Link to="/life-card" className="bb-cta-btn">라이프 카드 알아보기</Link>
+          <h2>BNK 영원카드 전용 기능이에요</h2>
+          <p>BNK 영원카드를 신청하면 연회비에 맞는 혜택을 직접 구성할 수 있어요</p>
+          <Link to="/life-card" className="bb-cta-btn">BNK 영원카드 알아보기</Link>
         </div>
       </div>
     </div>
@@ -144,13 +144,12 @@ export default function BenefitBuilderPage() {
         {/* ── 히어로 ── */}
         <div className="bb-hero">
           <div className="bb-hero-left">
-            <span className="bb-hero-tag">평생카드 전용 · {tenureYear}년차</span>
             <h1 className="bb-hero-title">
               내가 고른 혜택,<br/>연차마다 할인율이 올라가요
             </h1>
             <p className="bb-hero-desc">
               일반 카드는 혜택이 처음부터 고정돼 있어요.<br/>
-              라이프 카드는 연회비만큼 혜택을 직접 고르고,<br/>
+              BNK 영원카드는 연회비만큼 혜택을 직접 고르고,<br/>
               연차가 쌓일수록 할인율 자체가 높아져요.
             </p>
             <div className="bb-hero-pills">
@@ -161,21 +160,16 @@ export default function BenefitBuilderPage() {
           </div>
           <div className="bb-hero-right">
             <div className="bb-preview-card">
-              <div className="bb-preview-chip" />
-              <span className="bb-preview-net">VISA</span>
+              <img src="/cards/card-25.jpeg" alt="BNK 영원카드" className="bb-preview-img" />
+            </div>
+            <p className="bb-preview-name">BNK 영원카드</p>
+            {pickedList.length > 0 && (
               <div className="bb-preview-slots">
                 {pickedList.slice(0, 4).map(b => (
                   <span key={b.id} className="bb-slot filled" style={{ background: b.color }}>{b.icon}</span>
                 ))}
-                {Array.from({ length: Math.max(0, 4 - pickedList.length) }).map((_, i) => (
-                  <span key={i} className="bb-slot empty">+</span>
-                ))}
               </div>
-              <div className="bb-preview-info">
-                <p className="bb-preview-brand">BNK LIFE</p>
-                <p className="bb-preview-name">라이프 평생 카드</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

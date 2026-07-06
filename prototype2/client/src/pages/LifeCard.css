@@ -9,11 +9,32 @@
   grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 60px;
-  max-width: 1140px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 130px 40px 80px;
+  padding: 130px 48px 90px;
 }
-.lc-hero-card { display: flex; justify-content: center; perspective: 1300px; }
+.lc-hero-card {
+  display: flex;
+  justify-content: center;
+  perspective: 1300px;
+}
+.lc-card-img {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  border-radius: 22px;
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.22),
+    0 10px 28px rgba(0,0,0,0.14);
+  transform: rotateX(4deg) rotateY(8deg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.lc-hero-card:hover .lc-card-img {
+  transform: rotateX(2deg) rotateY(4deg) translateY(-6px);
+  box-shadow:
+    0 54px 100px rgba(0,0,0,0.28),
+    0 14px 36px rgba(0,0,0,0.18);
+}
 .lc-hero-text { }
 .lc-eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: var(--bnk-red); margin-bottom: 16px; }
 .lc-title { font-size: 42px; font-weight: 900; line-height: 1.18; letter-spacing: -1.4px; color: #16110f; margin-bottom: 18px; word-break: keep-all; }
@@ -176,12 +197,70 @@
   .lc-hero { grid-template-columns: 1fr; gap: 40px; text-align: center; padding-top: 60px; }
   .lc-hero-text { text-align: center; }
   .lc-quick { justify-content: center; }
+  .lc-card-img { max-width: 400px; }
   .lc-report-grid { grid-template-columns: 1fr; }
   .lc-stage-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px) {
   .lc-title { font-size: 32px; }
+  .lc-card-img { max-width: 300px; }
   .lc-stage-grid { grid-template-columns: 1fr; }
   .lc-bar-row { grid-template-columns: 64px 1fr; }
   .lc-bar-amt { display: none; }
+}
+
+/* ── 혜택 직접 구성 섹션 ── */
+.lc-builder-sec {
+  padding: 60px 24px;
+  background: #F9F9FB;
+}
+.lc-builder-head {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.lc-badge-builder {
+  display: inline-block;
+  background: #1C1C1E;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+.lc-benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.lc-benefit-tile {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 12px;
+  text-align: center;
+  border: 1px solid #F0F0F5;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.lc-tile-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+.lc-tile-label { font-size: 12px; font-weight: 700; color: #1C1C1E; margin-bottom: 4px; }
+.lc-tile-desc  { font-size: 13px; font-weight: 800; color: #D71919; margin-bottom: 4px; }
+.lc-tile-grow  { font-size: 10px; color: #8E8E93; }
+.lc-builder-cta {
+  text-align: center;
+  margin-top: 24px;
+}
+.lc-builder-cta-text {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid #E5E5EA;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 13px;
+  color: #636366;
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .lc-benefit-grid { grid-template-columns: repeat(2, 1fr); }
 }

@@ -219,15 +219,11 @@ export default function MyPage() {
         {isHolder ? (
           <div className="mp-life-hero">
             <div className="mp-life-visual">
-              <div className="mp-life-card-wrap">
-                <div className="mp-lc-chip" />
-                <span className="mp-lc-net">VISA</span>
-                <div className="mp-lc-bottom">
-                  <p className="mp-lc-brand">BNK LIFE</p>
-                  <p className="mp-lc-name">라이프 평생 카드</p>
-                  <p className="mp-lc-no">{lifeMy.membership?.cardNo || '•••• •••• •••• ••••'}</p>
-                </div>
-              </div>
+              <img
+                src="/cards/card-25.jpeg"
+                alt="BNK 영원카드"
+                className="mp-life-card-img"
+              />
               <div className="mp-lc-meta">
                 <span className="mp-lc-badge year">{curYear}년차</span>
                 <span className="mp-lc-badge stage">{lifeMy.stageLabel?.label || ''}</span>
@@ -273,12 +269,21 @@ export default function MyPage() {
               {lifeMy.savedConfig ? (
                 <div className="mp-my-config">
                   <p className="mp-my-config-label">내 혜택 구성</p>
-                  <div className="mp-my-config-chips">
-                    {(lifeMy.savedConfig.items || []).map(it => (
-                      <span key={it.cd} className="mp-my-chip"><CatIcon cat={it.cd} size={13} /> {it.label}</span>
-                    ))}
-                  </div>
-                  <p className="mp-my-config-fee">연회비 {lifeMy.savedConfig.selectedFee.toLocaleString()}원</p>
+                  {lifeMy.savedConfig.selectedFee === 0 ? (
+                    <div className="mp-my-auto">
+                      <span className="mp-my-auto-badge">1%</span>
+                      <span className="mp-my-auto-label">전 가맹점 자동 적립</span>
+                    </div>
+                  ) : (
+                    <div className="mp-my-config-chips">
+                      {(lifeMy.savedConfig.items || []).map(it => (
+                        <span key={it.cd} className="mp-my-chip"><CatIcon cat={it.cd} size={13} /> {it.label}</span>
+                      ))}
+                    </div>
+                  )}
+                  {lifeMy.savedConfig.selectedFee > 0 && (
+                    <p className="mp-my-config-fee">연회비 {lifeMy.savedConfig.selectedFee.toLocaleString()}원</p>
+                  )}
                 </div>
               ) : (
                 <p className="mp-action-hint">연회비에 맞게 원하는 혜택을 직접 고를 수 있어요</p>
@@ -463,7 +468,11 @@ export default function MyPage() {
               <div className="mp-opp-list">
                 {opps.map(card => (
                   <Link key={card.id} to={`/cards/${card.id}`} className="mp-opp-item">
-                    <div className="mp-opp-color" style={{ background: card.colorFrom || '#1C1C2E' }} />
+                    {card.imageUrl ? (
+                      <img src={card.imageUrl} alt={card.name} className="mp-opp-img" />
+                    ) : (
+                      <div className="mp-opp-color" style={{ background: card.colorFrom || '#1C1C2E' }} />
+                    )}
                     <div className="mp-opp-info">
                       <p className="mp-opp-name">{card.name}</p>
                       <p className="mp-opp-save">월 +{card.savings.toLocaleString()}원 더 절약 가능</p>

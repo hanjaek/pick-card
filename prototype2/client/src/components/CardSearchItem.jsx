@@ -8,7 +8,7 @@ export default function CardSearchItem({ card }) {
   const name      = card.name      || ''
   const type      = card.type      || ''
   const benefits  = card.benefits  || []
-  const annualFee = card.annualFee ?? 0
+  const annualFee = card.annualFee
   const img       = card.imageUrl  || null   // 실물 이미지(있으면) / 없으면 그라디언트
 
   const goDetail = ()  => navigate(`/cards/${card.id}`)
@@ -27,7 +27,7 @@ export default function CardSearchItem({ card }) {
             style={img ? undefined : { background: `linear-gradient(145deg, ${colorFrom}, ${colorTo})` }}
           >
             {img ? (
-              <img className="csi-img" src={img} alt={name} loading="lazy" />
+              <img className="csi-img" src={img} alt={name} loading="eager" />
             ) : (
               <>
                 <div className="csi-chip" />
@@ -45,16 +45,27 @@ export default function CardSearchItem({ card }) {
           <div className="csi-back">
             <p className="csi-back-title">{name}</p>
             <ul className="csi-back-list">
-              {benefits.map((b, i) => (
-                <li key={i}>
-                  <span className="csi-back-dot" />
-                  {typeof b === 'string' ? b : b.desc}
-                </li>
-              ))}
-              {benefits.length === 0 && <li>혜택 정보 없음</li>}
+              {card.id === 25 ? (
+                <>
+                  <li><span className="csi-back-dot" />원하는 혜택을 직접 선택 가능</li>
+                  <li><span className="csi-back-dot" />소득에 맞춰 연회비 선택 가능</li>
+                  <li><span className="csi-back-dot" />연차가 쌓일수록 할인율 자동 UP</li>
+                  <li><span className="csi-back-dot" />AI 소비 분석으로 혜택 추천</li>
+                </>
+              ) : (
+                <>
+                  {benefits.map((b, i) => (
+                    <li key={i}>
+                      <span className="csi-back-dot" />
+                      {typeof b === 'string' ? b : b.desc}
+                    </li>
+                  ))}
+                  {benefits.length === 0 && <li>혜택 정보 없음</li>}
+                </>
+              )}
             </ul>
             <p className="csi-back-fee">
-              연회비 {annualFee > 0 ? `${annualFee.toLocaleString()}원` : '없음'}
+              연회비 {annualFee == null ? '선택형' : annualFee > 0 ? `${annualFee.toLocaleString()}원` : '없음'}
             </p>
           </div>
 
@@ -74,15 +85,22 @@ export default function CardSearchItem({ card }) {
 
         {/* 주요 혜택 2줄 */}
         <ul className="csi-benefits">
-          {benefits.slice(0, 2).map((b, i) => (
-            <li key={i}>{typeof b === 'string' ? b : b.desc}</li>
-          ))}
+          {card.id === 25 ? (
+            <>
+              <li>원하는 혜택을 직접 선택 가능</li>
+              <li>소득에 맞춰 연회비 선택 가능</li>
+            </>
+          ) : (
+            benefits.slice(0, 2).map((b, i) => (
+              <li key={i}>{typeof b === 'string' ? b : b.desc}</li>
+            ))
+          )}
         </ul>
 
         {/* 연회비 + 신청 버튼 */}
         <div className="csi-footer">
           <span className="csi-fee">
-            연회비 {annualFee > 0 ? `${annualFee.toLocaleString()}원` : '없음'}
+            연회비 {annualFee == null ? '선택형' : annualFee > 0 ? `${annualFee.toLocaleString()}원` : '없음'}
           </span>
           <button className="csi-apply" onClick={goApply}>신청하기</button>
         </div>

@@ -584,7 +584,7 @@ INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm) 
 (24, 'BNK-2025-SIMP-024', '2025-06-28', '카드사업부');
 
 -- ============================================================
--- ★ BNK 라이프 평생 카드 (prototype2 대표 상품) — id 25
+-- ★ BNK 영원카드 (prototype2 대표 상품) — id 25
 --   생애단계(life_stage_cd) × 소비 카테고리(category_cd) 태그로
 --   "나이 + 소비" 기반 자동 혜택 매칭(개인화)의 기반 데이터
 --   ※ 아래 약관·공시 시드에 포함되도록 반드시 그 시드보다 위에서 생성함
@@ -592,7 +592,7 @@ INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm) 
 INSERT IGNORE INTO cards
   (prd_nm, card_type_cd, annual_fee, network, launch_dt, color_from, color_to, brand, traffic_yn, product_feature)
 VALUES
-  ('BNK 라이프 평생 카드', '체크카드', 0, 'VISA', '2026-01-01', '#D71919', '#7A1010', '국내전용', 'Y',
+  ('BNK 영원카드', '체크카드', 0, 'VISA', '2026-01-01', '#D71919', '#7A1010', '국내전용', 'Y',
    '어릴 때부터 노년까지, 하나의 카드로 평생. AI가 나이와 소비를 분석해 생애 단계마다 혜택을 자동으로 바꿔주는 BNK 평생 카드입니다.');
 
 -- 라이프 카드 혜택 (ALL=전 단계 공통 / 단계별 자동 적용 혜택)
@@ -615,12 +615,12 @@ JOIN (
   UNION ALL SELECT '할인', '병원·약국 10% 할인',                       10.00, 10000,  'SENIOR', 'MEDICAL'
   UNION ALL SELECT '적립', '여행·관광 10% 적립',                       10.00,  NULL,  'SENIOR', 'TRAVEL'
 ) x
-WHERE c.prd_nm = 'BNK 라이프 평생 카드';
+WHERE c.prd_nm = 'BNK 영원카드';
 
 -- 라이프 카드 공시 (대표 상품도 공시번호 보유 — 이름으로 안전하게 연결)
 INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm)
 SELECT id, 'BNK-2026-LIFE-025', '2025-12-20', '카드사업부'
-FROM cards WHERE prd_nm = 'BNK 라이프 평생 카드';
+FROM cards WHERE prd_nm = 'BNK 영원카드';
 
 -- 카드 실물 이미지 연결 (파일: prototype2/client/public/cards/card-NN.*)
 --   이미지 있으면 화면에 실물 이미지, 없으면(예: id 12) 색 그라디언트로 폴백
@@ -660,7 +660,7 @@ CROSS JOIN (
 WHERE u.username = 'testuser';
 
 -- ============================================================
--- ★ BNK 라이프 평생 카드는 약관·공시 시드보다 먼저 존재해야 하므로
+-- ★ BNK 영원카드는 약관·공시 시드보다 먼저 존재해야 하므로
 --   위쪽(cards 13~24 삽입 직후)으로 이동했습니다. 여기서는 생성하지 않습니다.
 -- ============================================================
 
@@ -674,10 +674,12 @@ INSERT IGNORE INTO users (username, password, cust_nm, is_admin) VALUES
 ('testuser1', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '김도윤', 0),
 ('testuser2', '$2b$10$dNx7zXUKI9V1w03bL7lSK.XPrzTa8fKEXzd9Gx1xsrvBUev9.fFiy', '박민준', 0);
 
-INSERT IGNORE INTO user_details (user_id, birth_dt)
-SELECT id, '2000-03-15' FROM users WHERE username = 'testuser1'
+INSERT IGNORE INTO user_details (user_id, birth_dt, phone_no, email)
+SELECT id, '1990-05-15', '010-9999-1234', 'testuser@bnk.com'  FROM users WHERE username = 'testuser'
 UNION ALL
-SELECT id, '1988-07-20' FROM users WHERE username = 'testuser2';
+SELECT id, '2000-03-15', '010-1234-5678', 'doyun@example.com' FROM users WHERE username = 'testuser1'
+UNION ALL
+SELECT id, '1988-07-20', '010-5678-9012', 'minjun@example.com' FROM users WHERE username = 'testuser2';
 
 -- life_young 거래 (카페·교통 중심)
 INSERT IGNORE INTO transactions (user_id, category_cd, merchant_nm, amount, paid_dt)
@@ -710,7 +712,7 @@ FROM users u CROSS JOIN (
 INSERT INTO benefit_tiers (benefit_id, tenure_year, discount_rate, monthly_limit_amt, tier_label)
 SELECT b.id, t.yr, t.rate, t.lim, t.label
 FROM card_benefits b
-JOIN cards c ON c.id = b.card_id AND c.prd_nm = 'BNK 라이프 평생 카드'
+JOIN cards c ON c.id = b.card_id AND c.prd_nm = 'BNK 영원카드'
 JOIN (
             SELECT '카페 20% 적립'  AS desc_match, 2 AS yr, 22.00 AS rate,  9000 AS lim, '2년차 우대'        AS label
   UNION ALL SELECT '카페 20% 적립',  3, 25.00, 10000, '3년차 우대'
@@ -726,7 +728,7 @@ INSERT INTO card_applications
   (user_id, card_id, applicant_name, birth_dt, phone_no, email, status, applied_dt, processed_dt)
 SELECT u.id, c.id, '김도윤', '2000-03-15', '010-1234-5678', 'doyun@example.com', 'APPROVED',
        DATE_SUB(CURDATE(), INTERVAL 2 YEAR), DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
-FROM users u JOIN cards c ON c.prd_nm = 'BNK 라이프 평생 카드'
+FROM users u JOIN cards c ON c.prd_nm = 'BNK 영원카드'
 WHERE u.username = 'testuser1';
 
 -- testuser1 의 BNK 라이프 카드 발급 (2년차 → 성장형/사후관리 데모)
@@ -735,7 +737,7 @@ INSERT INTO card_memberships
 SELECT u.id, c.id, a.id, '5310-98**-****-2749',
        DATE_SUB(CURDATE(), INTERVAL 2 YEAR), '12/31', 'ACTIVE', 'ON'
 FROM users u
-JOIN cards c ON c.prd_nm = 'BNK 라이프 평생 카드'
+JOIN cards c ON c.prd_nm = 'BNK 영원카드'
 JOIN card_applications a ON a.user_id = u.id AND a.card_id = c.id AND a.status = 'APPROVED'
 WHERE u.username = 'testuser1';
 
@@ -754,8 +756,8 @@ WHERE u.username = 'testuser1';
 -- AI 상담 세션 + 대화 로그 (testuser1, 홈 팝업 유입 예시)
 INSERT INTO consultations (user_id, channel, entry_point, recommended_card_id, summary, ended_at)
 SELECT u.id, 'POPUP', 'HOME', c.id,
-       '카페·배달 소비가 많은 사회초년생 → BNK 라이프 평생 카드 추천', NOW()
-FROM users u JOIN cards c ON c.prd_nm = 'BNK 라이프 평생 카드'
+       '카페·배달 소비가 많은 사회초년생 → BNK 영원카드 추천', NOW()
+FROM users u JOIN cards c ON c.prd_nm = 'BNK 영원카드'
 WHERE u.username = 'testuser1';
 
 INSERT INTO consultation_messages (consultation_id, sender, content)
@@ -763,7 +765,7 @@ SELECT co.id, m.sender, m.content
 FROM consultations co
 JOIN (
             SELECT 'USER' AS sender, '카페랑 배달 자주 쓰는데 나한테 맞는 카드 있어요?' AS content, 1 AS ord
-  UNION ALL SELECT 'AI',   'BNK 라이프 평생 카드를 추천해요. 카페 20% 적립이 기본이고, 오래 쓸수록 최대 28%까지 올라가요.', 2
+  UNION ALL SELECT 'AI',   'BNK 영원카드를 추천해요. 카페 20% 적립이 기본이고, 오래 쓸수록 최대 28%까지 올라가요.', 2
   UNION ALL SELECT 'USER', '오 좋다, 배달도 되나요?', 3
   UNION ALL SELECT 'AI',   '네, 배달앱 10% 적립도 포함돼요. 지금 가입하면 평생 함께 자라는 혜택을 받아요.', 4
 ) m ON 1=1
