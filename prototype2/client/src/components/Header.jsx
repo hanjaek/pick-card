@@ -57,8 +57,8 @@ function Header() {
             </>
           ) : (
             <>
-              <Link to="/login"  className="btn-login">로그인</Link>
-              <Link to="/signup" className="btn-signup">회원가입</Link>
+              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`}  className="btn-login">로그인</Link>
+              <Link to={`/signup?redirect=${encodeURIComponent(location.pathname)}`} className="btn-signup">회원가입</Link>
             </>
           )}
         </div>

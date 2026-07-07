@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import './SessionTimer.css'
 
@@ -18,6 +18,7 @@ const TICK_EVERY   = 1000            // 화면은 1초마다 갱신
  */
 export default function SessionTimer({ onLogout }) {
   const navigate     = useNavigate()
+  const location     = useLocation()
   const expiryRef    = useRef(null)   // 만료 절대시각(ms epoch). 서버 동기화로만 설정
   const [remaining, setRemaining] = useState(null)
   const [warned, setWarned]       = useState(false)
@@ -29,9 +30,13 @@ export default function SessionTimer({ onLogout }) {
     localStorage.removeItem('isAdmin')
     localStorage.removeItem('userName')
     if (onLogout) onLogout()
-    if (expired) alert('로그인 시간이 만료되어 자동 로그아웃되었습니다.')
-    navigate('/login')
-  }, [navigate, onLogout])
+    if (expired) {
+      alert('로그인 시간이 만료되어 자동 로그아웃되었습니다.')
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)
+    } else {
+      navigate('/login')
+    }
+  }, [navigate, onLogout, location])
 
   /* ── 서버와 동기화: 실제 남은 시간을 받아 만료시각 재설정 ── */
   const sync = useCallback(async () => {

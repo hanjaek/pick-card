@@ -160,7 +160,7 @@ export default function Login() {
                     다음
                   </button>
                   <p className="auth-footer">
-                    아직 계정이 없으신가요? <Link to="/signup">회원가입</Link>
+                    아직 계정이 없으신가요? <Link to={searchParams.get('redirect') ? `/signup?redirect=${searchParams.get('redirect')}` : '/signup'}>회원가입</Link>
                   </p>
                 </div>
               </div>
