@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import './CardDetail.css'
 
 function CardVisual({ card }) {
@@ -32,6 +32,7 @@ function CardVisual({ card }) {
 function CardDetail() {
   const { id }   = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [card, setCard]             = useState(null)
   const [loading, setLoading]       = useState(true)
   const [activeTab, setTab]         = useState('info')
@@ -59,7 +60,7 @@ function CardDetail() {
   if (!card)   return <div className="cd-error">카드 정보를 불러올 수 없습니다.</div>
 
   const handleApply = () => {
-    if (!token) { navigate('/login'); return }
+    if (!token) { navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`); return }
     navigate(`/cards/${id}/apply`)
   }
 
@@ -110,9 +111,8 @@ function CardDetail() {
                 <p className="cd-highlight-title">{card.name}</p>
                 {lifeCardInfo ? (
                   <ul className="cd-highlight-list">
-                    <li>원하는 혜택을 직접 선택 가능</li>
-                    <li>소득에 맞춰 연회비 선택 가능</li>
-                    <li>연차가 쌓일수록 할인율 자동 UP</li>
+                    <li>전 가맹점 기본 0.5% 자동 할인</li>
+                    <li>연차가 쌓일수록 할인율 자동 UP (최대 1.6%)</li>
                     <li>AI 소비 분석으로 혜택 추천</li>
                   </ul>
                 ) : (

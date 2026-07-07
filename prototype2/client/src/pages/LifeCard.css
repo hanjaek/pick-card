@@ -242,6 +242,23 @@
   text-align: center;
   border: 1px solid #F0F0F5;
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  position: relative;
+}
+.lc-benefit-tile.current {
+  border-color: #D71919;
+  box-shadow: 0 0 0 3px rgba(215,25,25,.12);
+}
+.lc-tile-current-tag {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #D71919;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
 }
 .lc-tile-icon { font-size: 28px; display: block; margin-bottom: 8px; }
 .lc-tile-label { font-size: 12px; font-weight: 700; color: #1C1C1E; margin-bottom: 4px; }

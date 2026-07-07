@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
+import { LIFE_CARD_GROWTH, currentSimpleRate } from '../constants/lifeCardBenefit'
 import './CardApply.css'
 
 const BASE_STEPS    = ['약관 동의', '본인 확인', '신청 정보', '완료']
-const LIFE_STEPS    = ['약관 동의', '본인 확인', '신청 정보', '혜택 구성', '완료']
-const FEE_TIERS = [
-  { fee: 10000,  label: '10,000원', sub: '혜택 1~2개' },
-  { fee: 30000,  label: '30,000원', sub: '혜택 3~4개', rec: true },
-  { fee: 50000,  label: '50,000원', sub: '혜택 5~6개' },
-  { fee: 100000, label: '100,000원',sub: '모든 혜택'  },
-]
+const LIFE_STEPS    = ['약관 동의', '본인 확인', '신청 정보', '혜택 안내', '완료']
 
 const REQUIRED_TERMS = [
   { key: 'service',  label: '카드 서비스 이용약관 (필수)' },
@@ -69,10 +64,9 @@ export default function CardApply() {
   const [resultCardNo, setResultCardNo]   = useState(null)
   const [resultValid,  setResultValid]    = useState(null)
 
-  // 평생카드 혜택 구성
-  const [benefitMode,  setBenefitMode]  = useState(null)   // null | 'auto' | 'custom'
+  // 평생카드 혜택 구성 (연회비는 고정, 가입 시점 한도 안에서 카테고리만 선택)
+  const [benefitMode,  setBenefitMode]  = useState(null)   // null | 'simple' | 'custom'
   const [catalog,      setCatalog]      = useState([])
-  const [selectedFee,  setSelectedFee]  = useState(30000)
   const [benefitPicks, setBenefitPicks] = useState(new Set())
 
   // Step 1: 약관 동의 상태
@@ -98,7 +92,7 @@ export default function CardApply() {
   const token = localStorage.getItem('token')
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return }
+    if (!token) { navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`); return }
     fetch(`/api/cards/${id}`)
       .then(r => r.json())
       .then(data => { setCard(data); setLoading(false) })
@@ -155,27 +149,22 @@ export default function CardApply() {
   const STEPS      = isLifeCard ? LIFE_STEPS : BASE_STEPS
   const DONE_STEP  = isLifeCard ? 4 : 3
 
-  const usedCost  = catalog.filter(b => benefitPicks.has(b.id)).reduce((s, b) => s + b.cost, 0)
-  const remaining = selectedFee - usedCost
-  const pct       = Math.min(100, Math.round(usedCost / selectedFee * 100))
+  // 신규 가입은 0년차 기준 한도(=기본 한도)로 시작
+  const startBudget = LIFE_CARD_GROWTH[0].cap
+  const startRate   = LIFE_CARD_GROWTH[0].rate
+  const usedCost    = catalog.filter(b => benefitPicks.has(b.id)).reduce((s, b) => s + b.cost, 0)
+  const remaining   = startBudget - usedCost
+  const pct         = Math.min(100, Math.round(usedCost / startBudget * 100))
 
   function toggleBenefit(b) {
     setBenefitPicks(prev => {
       const n = new Set(prev)
       if (n.has(b.id)) { n.delete(b.id) } else {
-        if (usedCost + b.cost > selectedFee) return prev
+        if (usedCost + b.cost > startBudget) return prev
         n.add(b.id)
       }
       return n
     })
-  }
-  function changeFee(fee) {
-    setSelectedFee(fee)
-    let budget = fee; const next = new Set()
-    for (const b of catalog) {
-      if (benefitPicks.has(b.id) && budget >= b.cost) { next.add(b.id); budget -= b.cost }
-    }
-    setBenefitPicks(next)
   }
 
   const handleSendOtp = () => {
@@ -187,7 +176,10 @@ export default function CardApply() {
       return
     }
     setOtpSent(true)
-    alert('인증번호가 발송되었습니다. (시뮬레이션: 123456)')
+    alert('인증번호가 발송되었습니다.')
+    // 실제 SMS 연동 전 데모 환경 — 문자 수신 후 자동입력되는 흐름을 흉내내기 위해
+    // 발송 후 잠시 뒤 인증번호를 자동으로 채워준다 (화면에 코드값을 노출하지 않음)
+    setTimeout(() => setVerify(p => ({ ...p, otp: '123456' })), 1400)
   }
 
   function validateStep2() {
@@ -242,15 +234,13 @@ export default function CardApply() {
       setResultId(data.id)
       setResultCardNo(data.cardNo || null)
       setResultValid(data.validThru || null)
-      // 평생카드: 혜택 구성 서버에 저장
+      // 평생카드: 고른 혜택 구성 서버에 저장 (전체자동 모드면 전 카테고리를 저장)
       if (isLifeCard && token) {
+        const benefitsToSave = benefitMode === 'simple' ? catalog.map(b => b.id) : [...benefitPicks]
         fetch('/api/life-card/my/config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            selectedFee:      benefitMode === 'custom' ? selectedFee : 0,
-            selectedBenefits: benefitMode === 'custom' ? [...benefitPicks] : [],
-          }),
+          body: JSON.stringify({ selectedFee: startBudget, selectedBenefits: benefitsToSave, benefitMode }),
         }).catch(() => {})
       }
       setStep(DONE_STEP)
@@ -425,7 +415,7 @@ export default function CardApply() {
                   <span>인증번호</span>
                   <input
                     type="text"
-                    placeholder="123456"
+                    placeholder="6자리 숫자 입력"
                     maxLength={6}
                     value={verify.otp}
                     onChange={e => setVerify(p => ({ ...p, otp: e.target.value }))}
@@ -635,35 +625,25 @@ export default function CardApply() {
             <div className="apply-benefit-header">
               <span className="apply-benefit-eyebrow">평생카드 전용</span>
               <h2 className="apply-benefit-title">혜택을 어떻게<br/>받으시겠어요?</h2>
-              <p className="apply-benefit-sub">지금 결정하지 않아도 마이페이지에서 언제든 바꿀 수 있어요</p>
+              <p className="apply-benefit-sub">연회비는 15,000원 고정이에요. 방식은 언제든 마이페이지에서 바꿀 수 있어요</p>
             </div>
 
             {/* 선택 카드 2종 */}
             <div className="apply-bc-list">
-
-              {/* 자동 옵션 */}
               <button
-                className={`apply-bc-row ${benefitMode === 'auto' ? 'active' : ''}`}
-                onClick={() => setBenefitMode('auto')}
+                className={`apply-bc-row ${benefitMode === 'simple' ? 'active' : ''}`}
+                onClick={() => setBenefitMode('simple')}
               >
                 <div className="apply-bc-left">
-                  <div className="apply-bc-pct">1%</div>
+                  <div className="apply-bc-pct">{currentSimpleRate(0)}%</div>
                 </div>
                 <div className="apply-bc-body">
                   <p className="apply-bc-name">편하게 할게요</p>
-                  <p className="apply-bc-info">전 가맹점 자동 적립 · 선택 없이 바로 시작</p>
-                  <div className="apply-bc-growth">
-                    <span>1년차 <b>1.0%</b></span>
-                    <span className="apply-bc-arrow">→</span>
-                    <span>3년차 <b>1.5%</b></span>
-                    <span className="apply-bc-arrow">→</span>
-                    <span>5년차 <b>2.0%</b></span>
-                  </div>
+                  <p className="apply-bc-info">고르지 않고 전 카테고리에 자동 적용 · 할인율은 낮아요</p>
                 </div>
-                <div className={`apply-bc-radio ${benefitMode === 'auto' ? 'on' : ''}`} />
+                <div className={`apply-bc-radio ${benefitMode === 'simple' ? 'on' : ''}`} />
               </button>
 
-              {/* 커스텀 옵션 */}
               <button
                 className={`apply-bc-row ${benefitMode === 'custom' ? 'active' : ''}`}
                 onClick={() => setBenefitMode('custom')}
@@ -675,62 +655,42 @@ export default function CardApply() {
                 </div>
                 <div className="apply-bc-body">
                   <p className="apply-bc-name">직접 골라볼게요</p>
-                  <p className="apply-bc-info">연회비만큼 원하는 혜택 조립</p>
-                  <p className="apply-bc-info2">카페·교통·통신 등 8종 중 선택</p>
+                  <p className="apply-bc-info">한도 안에서 원하는 카테고리만 · 할인율은 정상({startRate}%)</p>
                 </div>
                 <div className={`apply-bc-radio ${benefitMode === 'custom' ? 'on' : ''}`} />
               </button>
-
             </div>
 
-            {/* 자동 모드: 선택 완료 확인 */}
-            {benefitMode === 'auto' && (
+            {/* 편하게: 전체 카테고리 자동 확인 */}
+            {benefitMode === 'simple' && (
               <div className="apply-auto-confirm">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <circle cx="10" cy="10" r="10" fill="#22C55E"/>
                   <path d="M5.5 10.5L8.5 13.5L14.5 7" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <div>
-                  <p className="apply-auto-confirm-title">전 가맹점 1% 자동 적립으로 시작해요</p>
-                  <p className="apply-auto-confirm-desc">연차가 쌓일수록 자동으로 올라가요. 마이페이지에서 언제든 커스텀으로 바꿀 수 있어요.</p>
+                  <p className="apply-auto-confirm-title">전 카테고리에 {currentSimpleRate(0)}% 자동 할인이 적용돼요</p>
+                  <p className="apply-auto-confirm-desc">카테고리를 고를 필요 없이 모든 소비에 자동으로 적용돼요. 연차가 쌓이면 할인율도 자동으로 올라가요.</p>
                 </div>
               </div>
             )}
 
-            {/* 커스텀 모드: 미니 빌더 */}
+            {/* 직접 선택: 한도 안에서 카테고리 선택 */}
             {benefitMode === 'custom' && (
               <div className="apply-mini-builder">
 
-                {/* 연회비 */}
-                <div className="apply-mb-section">
-                  <p className="apply-mb-label">연회비 선택</p>
-                  <div className="apply-fee-row">
-                    {FEE_TIERS.map(t => (
-                      <button
-                        key={t.fee}
-                        className={`apply-fee-chip ${selectedFee === t.fee ? 'active' : ''}`}
-                        onClick={() => changeFee(t.fee)}
-                      >
-                        {t.rec && <span className="apply-fee-rec">추천</span>}
-                        <span className="apply-fee-amt">{t.label}</span>
-                        <span className="apply-fee-sub">{t.sub}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 예산 바 */}
+                {/* 한도 바 */}
                 <div className="apply-mb-section apply-budget-bar">
                   <div className="apply-budget-info">
                     <span className="apply-budget-used">{usedCost.toLocaleString()}원</span>
-                    <span className="apply-budget-sep">&nbsp;/&nbsp;{selectedFee.toLocaleString()}원</span>
+                    <span className="apply-budget-sep">&nbsp;/&nbsp;{startBudget.toLocaleString()}원</span>
                     <span className="apply-budget-pct">{pct}%</span>
                     {remaining > 0 && <span className="apply-budget-remain">잔여 {remaining.toLocaleString()}원</span>}
                   </div>
                   <div className="apply-bar-track">
                     {catalog.filter(b => benefitPicks.has(b.id)).map(b => (
                       <div key={b.id} className="apply-bar-seg"
-                        style={{ width: `${(b.cost / selectedFee) * 100}%`, background: b.color, minWidth: 4 }}
+                        style={{ width: `${(b.cost / startBudget) * 100}%`, background: b.color, minWidth: 4 }}
                       />
                     ))}
                     {pct === 0 && <div className="apply-bar-empty" />}
@@ -745,7 +705,7 @@ export default function CardApply() {
                   <div className="apply-catalog-grid">
                     {catalog.map(b => {
                       const on        = benefitPicks.has(b.id)
-                      const wouldOver = !on && usedCost + b.cost > selectedFee
+                      const wouldOver = !on && usedCost + b.cost > startBudget
                       return (
                         <button
                           key={b.id}
@@ -763,7 +723,7 @@ export default function CardApply() {
                           )}
                           <span className="apply-cat-icon">{b.icon}</span>
                           <span className="apply-cat-label">{b.label}</span>
-                          <span className="apply-cat-val" style={on ? { color: b.color } : {}}>{b.growth?.[0]?.val || b.desc}</span>
+                          <span className="apply-cat-val" style={on ? { color: b.color } : {}}>{startRate}% 할인</span>
                           <span className={`apply-cat-cost ${wouldOver ? 'over' : ''}`}>{(b.cost / 1000).toLocaleString()}천원</span>
                         </button>
                       )

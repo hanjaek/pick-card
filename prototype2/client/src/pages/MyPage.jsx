@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { currentLifeCardTier } from '../constants/lifeCardBenefit'
 import './MyPage.css'
 
 /* ── 카테고리 표시용 (아이콘·라벨) ── */
@@ -118,6 +119,7 @@ function CatIcon({ cat, size = 18 }) {
 
 export default function MyPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const token    = localStorage.getItem('token')
   const userName = localStorage.getItem('userName') || '회원'
 
@@ -129,7 +131,7 @@ export default function MyPage() {
   const [anim,     setAnim]     = useState(false)   // 마운트 후 애니메이션 트리거
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return }
+    if (!token) { navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`); return }
     const auth = { headers: { Authorization: `Bearer ${token}` } }
     Promise.all([
       fetch('/api/cards').then(r => r.json()),
@@ -266,30 +268,16 @@ export default function MyPage() {
             </div>
 
             <div className="mp-life-actions">
-              {lifeMy.savedConfig ? (
-                <div className="mp-my-config">
-                  <p className="mp-my-config-label">내 혜택 구성</p>
-                  {lifeMy.savedConfig.selectedFee === 0 ? (
-                    <div className="mp-my-auto">
-                      <span className="mp-my-auto-badge">1%</span>
-                      <span className="mp-my-auto-label">전 가맹점 자동 적립</span>
-                    </div>
-                  ) : (
-                    <div className="mp-my-config-chips">
-                      {(lifeMy.savedConfig.items || []).map(it => (
-                        <span key={it.cd} className="mp-my-chip"><CatIcon cat={it.cd} size={13} /> {it.label}</span>
-                      ))}
-                    </div>
-                  )}
-                  {lifeMy.savedConfig.selectedFee > 0 && (
-                    <p className="mp-my-config-fee">연회비 {lifeMy.savedConfig.selectedFee.toLocaleString()}원</p>
-                  )}
+              <div className="mp-my-config">
+                <p className="mp-my-config-label">내 혜택</p>
+                <div className="mp-my-auto">
+                  <span className="mp-my-auto-badge">{currentLifeCardTier(curYear).rate}%</span>
+                  <span className="mp-my-auto-label">전 가맹점 자동 할인</span>
                 </div>
-              ) : (
-                <p className="mp-action-hint">연회비에 맞게 원하는 혜택을 직접 고를 수 있어요</p>
-              )}
+                <p className="mp-my-config-fee">연회비 15,000원 · 월 한도 {currentLifeCardTier(curYear).cap.toLocaleString()}원</p>
+              </div>
               <Link to="/benefit-builder" className="mp-action-btn primary">
-                {lifeMy.savedConfig ? '혜택 변경하기' : '혜택 구성하기'}
+                내 혜택 확인하기
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M9 4L13 8L9 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </Link>
             </div>
@@ -353,7 +341,7 @@ export default function MyPage() {
                   </div>
                 ))}
                 <Link to="/benefit-builder" className="mp-util-edit">
-                  혜택 구성 변경하기 <IconArrow />
+                  내 혜택 확인하기 <IconArrow />
                 </Link>
               </div>
             </div>

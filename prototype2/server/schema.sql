@@ -592,8 +592,8 @@ INSERT IGNORE INTO disclosures (card_id, disclosure_no, disclosure_dt, dept_nm) 
 INSERT IGNORE INTO cards
   (prd_nm, card_type_cd, annual_fee, network, launch_dt, color_from, color_to, brand, traffic_yn, product_feature)
 VALUES
-  ('BNK 영원카드', '체크카드', 0, 'VISA', '2026-01-01', '#D71919', '#7A1010', '국내전용', 'Y',
-   '어릴 때부터 노년까지, 하나의 카드로 평생. AI가 나이와 소비를 분석해 생애 단계마다 혜택을 자동으로 바꿔주는 BNK 평생 카드입니다.');
+  ('BNK 영원카드', '체크카드', 15000, 'VISA', '2026-01-01', '#D71919', '#7A1010', '국내전용', 'Y',
+   '어릴 때부터 노년까지, 하나의 카드로 평생. 가입 연차가 쌓일수록 전 가맹점 할인율이 자동으로 올라가는 BNK 평생 카드입니다.');
 
 -- 라이프 카드 혜택 (ALL=전 단계 공통 / 단계별 자동 적용 혜택)
 INSERT INTO card_benefits
@@ -601,8 +601,7 @@ INSERT INTO card_benefits
 SELECT c.id, x.bnft_type_cd, x.bnft_desc, x.discount_rate, x.monthly_limit_amt, x.life_stage_cd, x.category_cd
 FROM cards c
 JOIN (
-            SELECT '면제' AS bnft_type_cd, '연회비 평생 무료'             AS bnft_desc, NULL AS discount_rate, NULL AS monthly_limit_amt, 'ALL'    AS life_stage_cd, NULL          AS category_cd
-  UNION ALL SELECT '무료', '후불 교통카드 (전국 버스·지하철)',           NULL,  NULL,  'ALL',    'TRANSPORT'
+            SELECT '무료' AS bnft_type_cd, '후불 교통카드 (전국 버스·지하철)' AS bnft_desc, NULL AS discount_rate, NULL AS monthly_limit_amt, 'ALL'    AS life_stage_cd, NULL          AS category_cd
   UNION ALL SELECT '우대', '해외 결제 수수료 우대',                      NULL,  NULL,  'ALL',    'TRAVEL'
   UNION ALL SELECT '적립', '편의점 5% 적립',                            5.00,  3000,  'TEEN',   'CONVENIENCE'
   UNION ALL SELECT '적립', '대중교통 10% 적립',                        10.00,  3000,  'TEEN',   'TRANSPORT'

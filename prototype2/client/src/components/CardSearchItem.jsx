@@ -47,9 +47,8 @@ export default function CardSearchItem({ card }) {
             <ul className="csi-back-list">
               {card.id === 25 ? (
                 <>
-                  <li><span className="csi-back-dot" />원하는 혜택을 직접 선택 가능</li>
-                  <li><span className="csi-back-dot" />소득에 맞춰 연회비 선택 가능</li>
-                  <li><span className="csi-back-dot" />연차가 쌓일수록 할인율 자동 UP</li>
+                  <li><span className="csi-back-dot" />전 가맹점 기본 0.5% 자동 할인</li>
+                  <li><span className="csi-back-dot" />연차가 쌓일수록 할인율 자동 UP (최대 1.6%)</li>
                   <li><span className="csi-back-dot" />AI 소비 분석으로 혜택 추천</li>
                 </>
               ) : (
@@ -87,8 +86,8 @@ export default function CardSearchItem({ card }) {
         <ul className="csi-benefits">
           {card.id === 25 ? (
             <>
-              <li>원하는 혜택을 직접 선택 가능</li>
-              <li>소득에 맞춰 연회비 선택 가능</li>
+              <li>전 가맹점 기본 0.5% 자동 할인</li>
+              <li>연차 쌓일수록 최대 1.6%까지 UP</li>
             </>
           ) : (
             benefits.slice(0, 2).map((b, i) => (

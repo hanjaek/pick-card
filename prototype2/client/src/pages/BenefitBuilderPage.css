@@ -147,36 +147,42 @@
   font-size: 13px; color: var(--bnk-gray); margin-bottom: 16px;
 }
 
-/* ── 연회비 선택 ── */
-.bb-fee-grid {
+/* ── 방식 선택 (편하게 / 직접 선택) ── */
+.bb-mode-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-.bb-fee-card {
+.bb-mode-btn {
   background: #fff;
   border: 2px solid var(--bnk-border);
   border-radius: 16px;
-  padding: 20px 18px;
-  cursor: pointer;
+  padding: 18px;
   text-align: left;
-  position: relative;
+  cursor: pointer;
+  display: flex; flex-direction: column; gap: 4px;
   transition: border-color .15s, transform .1s;
-  display: flex; flex-direction: column; gap: 6px;
 }
-.bb-fee-card:hover { border-color: var(--bnk-light-gray); transform: translateY(-1px); }
-.bb-fee-card.active { border-color: var(--bnk-text); box-shadow: 0 0 0 3px rgba(28,28,30,.08); }
-.bb-fee-card.rec.active { border-color: #D71919; box-shadow: 0 0 0 3px rgba(215,25,25,.1); }
-.bb-rec-badge {
-  position: absolute; top: -10px; left: 14px;
-  background: #D71919; color: #fff;
-  font-size: 11px; font-weight: 700;
-  padding: 2px 8px; border-radius: 20px;
-}
-.bb-fee-num { font-size: 18px; font-weight: 800; color: var(--bnk-text); letter-spacing: -.02em; }
-.bb-fee-desc { font-size: 12px; color: var(--bnk-gray); }
+.bb-mode-btn:hover { border-color: var(--bnk-light-gray); transform: translateY(-1px); }
+.bb-mode-btn.active { border-color: #D71919; box-shadow: 0 0 0 3px rgba(215,25,25,.1); }
+.bb-mode-pct { font-size: 20px; font-weight: 800; color: #D71919; }
+.bb-mode-name { font-size: 15px; font-weight: 700; color: var(--bnk-text); }
+.bb-mode-info { font-size: 12px; color: var(--bnk-gray); }
 
-/* ── 예산 현황 ── */
+/* ── 편하게 모드 확인 박스 ── */
+.bb-auto-confirm {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 14px;
+  padding: 16px 18px;
+}
+.bb-auto-confirm-title { font-size: 14px; font-weight: 700; color: #15803D; margin-bottom: 4px; }
+.bb-auto-confirm-desc  { font-size: 13px; color: #166534; line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .bb-mode-row { grid-template-columns: 1fr; }
+}
+
+/* ── 현재 등급 요약 ── */
 .bb-budget {
   background: #fff;
   border-radius: 16px;
@@ -267,6 +273,11 @@
   display: grid;
   grid-template-columns: 150px repeat(3, 1fr);
 }
+.bb-growth-head.tiers5,
+.bb-growth-row.tiers5 {
+  grid-template-columns: 150px repeat(5, 1fr);
+}
+.bb-growth-cap { font-size: 10px; color: var(--bnk-light-gray); }
 .bb-growth-head {
   background: var(--bnk-bg);
   border-bottom: 1px solid var(--bnk-bg);
@@ -349,12 +360,14 @@
   .bb-fee-grid { grid-template-columns: repeat(2, 1fr); }
   .bb-grid     { grid-template-columns: repeat(3, 1fr); }
   .bb-growth-head, .bb-growth-row { grid-template-columns: 110px repeat(3, 1fr); }
+  .bb-growth-head.tiers5, .bb-growth-row.tiers5 { grid-template-columns: 90px repeat(5, 1fr); }
 }
 @media (max-width: 600px) {
   .bb-inner    { padding: 16px 14px 48px; }
   .bb-hero-title { font-size: 24px; }
   .bb-grid     { grid-template-columns: repeat(2, 1fr); }
   .bb-growth-head, .bb-growth-row { grid-template-columns: 80px repeat(3, 1fr); }
+  .bb-growth-head.tiers5, .bb-growth-row.tiers5 { grid-template-columns: 64px repeat(5, 1fr); }
   .bb-growth-name { padding: 14px 10px; font-size: 12px; }
   .bb-footer   { flex-direction: column; gap: 14px; align-items: stretch; }
   .bb-save     { justify-content: center; }
