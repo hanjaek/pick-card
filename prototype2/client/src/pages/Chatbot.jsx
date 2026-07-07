@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { renderChatText } from '../utils/renderChatText'
 import './Chatbot.css'
 
 const QUICK_ACTIONS = [
@@ -120,9 +121,7 @@ export default function Chatbot() {
               <div className="cb-content-wrap">
                 {msg.role === 'assistant' && <span className="cb-sender">피카</span>}
                 <div className={`cb-bubble ${msg.role === 'user' ? 'user' : 'bot'}`}>
-                  {msg.content.split('\n').map((line, i, arr) => (
-                    <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-                  ))}
+                  {renderChatText(msg.content)}
                 </div>
 
                 {msg.isWelcome && (

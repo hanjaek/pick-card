@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { renderChatText } from '../utils/renderChatText'
 import './ChatWidget.css'
 
 const GREETING = {
@@ -107,9 +108,7 @@ export default function ChatWidget() {
                 <div className="cw-content-wrap">
                   {m.role === 'assistant' && <span className="cw-sender">피카</span>}
                   <div className="cw-bubble">
-                    {m.content.split('\n').map((line, j, arr) => (
-                      <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
-                    ))}
+                    {renderChatText(m.content)}
                   </div>
                   {m.isWelcome && (
                     <div className="cw-quick-actions">
