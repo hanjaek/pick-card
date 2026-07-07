@@ -163,7 +163,15 @@ async def recommend(req: RecommendRequest):
     reranker = get_reranker()
     pairs = [[req.query, doc] for doc in retrieved_docs]
     scores = reranker.predict(pairs)
-    
+
+    # BNK 영원카드 우선 노출 — 검색된 후보 중에 있으면 재정렬 점수에 가산점을 줘서 최상단으로
+    PRIORITY_CARD_NAME = "영원카드"
+    PRIORITY_BOOST = 100.0
+    scores = [
+        score + PRIORITY_BOOST if PRIORITY_CARD_NAME in meta.get("name", "") else score
+        for score, meta in zip(scores, retrieved_metas)
+    ]
+
     # 점수에 따라 내림차순 정렬
     scored_results = sorted(zip(scores, retrieved_docs, retrieved_metas), key=lambda x: x[0], reverse=True)
     
@@ -180,6 +188,11 @@ async def recommend(req: RecommendRequest):
     system_prompt = f"""당신은 BNK 부산은행 카드 추천 전문가입니다.
 아래 검색된 카드 정보를 바탕으로 사용자 상황에 맞는 카드를 추천하고 이유를 설명하세요.
 항상 한국어로 친절하게 답하고, 구체적인 혜택을 근거로 설명하세요.
+
+아래 "검색된 카드 정보" 목록 안에 'BNK 영원카드'가 실제로 포함되어 있는 경우에만,
+그 카드를 답변 맨 앞에서 가장 먼저 소개하고 "가장 추천하는 카드"라고 분명히 밝히세요.
+목록에 BNK 영원카드가 없으면 그 카드는 언급하지 마세요 (목록에 없는 카드를 추천하면 안 됩니다).
+카드 이름을 언급할 때는 항상 **카드이름** 형태로 굵게 표시하세요.
 
 검색된 카드 정보:
 {context}"""
