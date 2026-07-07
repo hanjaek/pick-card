@@ -1,213 +1,108 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1340" viewBox="0 0 2000 1340" font-family="'Apple SD Gothic Neo','Malgun Gothic','Pretendard',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1250" viewBox="0 0 1800 1250" font-family="'Apple SD Gothic Neo','Malgun Gothic','Pretendard',sans-serif">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#546E7A"/>
     </marker>
-    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#1565C0"/>
     </marker>
-    <marker id="arrowPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#8E24AA"/>
     </marker>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.15"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.18"/>
     </filter>
   </defs>
 
-  <rect x="0" y="0" width="2000" height="1340" fill="#FAFBFC"/>
+  <rect x="0" y="0" width="1800" height="1250" fill="#FAFBFC"/>
 
   <!-- Title -->
-  <text x="1000" y="55" text-anchor="middle" font-size="34" font-weight="700" fill="#1A237E">BNK Pickard(BNK 라이프) 서비스 아키텍처</text>
-  <text x="1000" y="85" text-anchor="middle" font-size="16" fill="#607D8B">Docker Compose 기반 컨테이너 분리 구조 · React SPA + Node.js WAS 이중화 + Python RAG/OCR AI 서버</text>
+  <text x="900" y="55" text-anchor="middle" font-size="34" font-weight="700" fill="#1A237E">BNK Pickard 서비스 아키텍처</text>
+  <text x="900" y="85" text-anchor="middle" font-size="16" fill="#607D8B">Docker 컨테이너 분리 · WAS 이중화 · RAG 기반 AI 카드 추천</text>
 
-  <!-- Client -->
-  <rect x="850" y="110" width="300" height="72" rx="10" fill="#FFFFFF" stroke="#90A4AE" stroke-width="2" filter="url(#shadow)"/>
-  <text x="1000" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#37474F">사용자 브라우저</text>
-  <text x="1000" y="163" text-anchor="middle" font-size="13" fill="#607D8B">React SPA (Client)</text>
+  <!-- Client (left) -->
+  <rect x="90" y="615" width="240" height="70" rx="10" fill="#FFFFFF" stroke="#90A4AE" stroke-width="2" filter="url(#shadow)"/>
+  <text x="210" y="645" text-anchor="middle" font-size="17" font-weight="700" fill="#37474F">사용자 브라우저</text>
+  <text x="210" y="668" text-anchor="middle" font-size="12.5" fill="#607D8B">React SPA</text>
 
-  <line x1="1000" y1="182" x2="1000" y2="228" stroke="#546E7A" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <text x="1015" y="210" font-size="12" fill="#607D8B">HTTPS :3000</text>
+  <line x1="330" y1="650" x2="388" y2="650" stroke="#546E7A" stroke-width="2.5" marker-end="url(#arrow)"/>
 
-  <!-- Docker Host Boundary (x40~1770, y232~1012) -->
-  <rect x="40" y="232" width="1730" height="780" rx="14" fill="#F3F9FF" stroke="#2496ED" stroke-width="2.5" stroke-dasharray="10,6"/>
-  <text x="65" y="266" font-size="19" font-weight="700" fill="#2496ED">🐳 Docker Compose 네트워크 (bridge, 172.28.0.0/16)</text>
-  <text x="65" y="288" font-size="12.5" fill="#5A6B78">컨테이너 단위로 완전 분리 · 헬스체크 &amp; restart:unless-stopped 로 자동 복구 · 볼륨으로 데이터 영속화</text>
+  <!-- Docker boundary -->
+  <rect x="392" y="170" width="1058" height="980" rx="16" fill="#F3F9FF" stroke="#2496ED" stroke-width="2.5" stroke-dasharray="10,6"/>
+  <text x="416" y="205" font-size="19" font-weight="700" fill="#2496ED">🐳 Docker — 서비스별 컨테이너 완전 분리</text>
 
-  <!-- Frontend container -->
-  <rect x="790" y="310" width="420" height="100" rx="10" fill="#E8F6FD" stroke="#29B6F6" stroke-width="2" filter="url(#shadow)"/>
-  <text x="1000" y="336" text-anchor="middle" font-size="16" font-weight="700" fill="#01579B">frontend (Nginx) — 단일 진입점</text>
-  <text x="1000" y="358" text-anchor="middle" font-size="12.5" fill="#0277BD">React 18 정적 빌드 서빙 · 호스트 3000 → 컨테이너 80</text>
-  <text x="1000" y="378" text-anchor="middle" font-size="12.5" fill="#0277BD">/api, /uploads → 백엔드 리버스 프록시 + 로드밸런싱(round-robin)</text>
-  <text x="1000" y="398" text-anchor="middle" font-size="11.5" fill="#0288D1">container: pickard-frontend · image: pickard-frontend:local</text>
+  <!-- Nginx -->
+  <rect x="460" y="600" width="240" height="100" rx="10" fill="#E8F6FD" stroke="#29B6F6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="580" y="632" text-anchor="middle" font-size="16" font-weight="700" fill="#01579B">Nginx</text>
+  <text x="580" y="654" text-anchor="middle" font-size="12.5" fill="#0277BD">단일 진입점 · 로드밸런싱</text>
+  <text x="580" y="674" text-anchor="middle" font-size="11" fill="#0288D1">:3000</text>
 
-  <!-- LB arrows -->
-  <path d="M 880 410 L 610 458" stroke="#1565C0" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
-  <path d="M 1120 410 L 1400 458" stroke="#1565C0" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
-  <text x="700" y="435" font-size="12" fill="#1565C0">LB</text>
-  <text x="1280" y="435" font-size="12" fill="#1565C0">LB</text>
+  <!-- Nginx -> WAS split (up/down) -->
+  <path d="M 700 615 L 758 320" stroke="#1565C0" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M 700 685 L 758 980" stroke="#1565C0" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
 
-  <!-- WAS server-1 -->
-  <rect x="380" y="460" width="380" height="132" rx="10" fill="#EAF7EE" stroke="#68A063" stroke-width="2" filter="url(#shadow)"/>
-  <text x="570" y="486" text-anchor="middle" font-size="16" font-weight="700" fill="#2E5D34">pickard-server-1 (WAS)</text>
-  <text x="570" y="508" text-anchor="middle" font-size="12.5" fill="#3C6E42">Node.js 18 + Express · :4000</text>
-  <text x="570" y="526" text-anchor="middle" font-size="12.5" fill="#3C6E42">JWT / bcrypt / multer / mysql2</text>
-  <text x="570" y="544" text-anchor="middle" font-size="12.5" fill="#3C6E42">express-session (Redis 저장)</text>
-  <text x="570" y="565" text-anchor="middle" font-size="11" fill="#4E7C54">/api/health 헬스체크 · 한 대 죽어도 무중단</text>
-  <text x="570" y="582" text-anchor="middle" font-size="11" fill="#4E7C54">image: pickard2-server:local</text>
+  <!-- WAS #1 (top) -->
+  <rect x="760" y="250" width="280" height="130" rx="10" fill="#EAF7EE" stroke="#68A063" stroke-width="2" filter="url(#shadow)"/>
+  <text x="900" y="282" text-anchor="middle" font-size="16" font-weight="700" fill="#2E5D34">WAS 서버 #1</text>
+  <text x="900" y="306" text-anchor="middle" font-size="13" fill="#3C6E42">Node.js + Express</text>
+  <text x="900" y="328" text-anchor="middle" font-size="13" fill="#3C6E42">로그인 · 카드 · 신청 API</text>
+  <text x="900" y="352" text-anchor="middle" font-size="11.5" fill="#4E7C54">2대 이중화 — 한 대 죽어도 무중단</text>
 
-  <!-- WAS server-2 -->
-  <rect x="1240" y="460" width="380" height="132" rx="10" fill="#EAF7EE" stroke="#68A063" stroke-width="2" filter="url(#shadow)"/>
-  <text x="1430" y="486" text-anchor="middle" font-size="16" font-weight="700" fill="#2E5D34">pickard-server-2 (WAS)</text>
-  <text x="1430" y="508" text-anchor="middle" font-size="12.5" fill="#3C6E42">Node.js 18 + Express · :4000</text>
-  <text x="1430" y="526" text-anchor="middle" font-size="12.5" fill="#3C6E42">JWT / bcrypt / multer / mysql2</text>
-  <text x="1430" y="544" text-anchor="middle" font-size="12.5" fill="#3C6E42">express-session (Redis 저장)</text>
-  <text x="1430" y="565" text-anchor="middle" font-size="11" fill="#4E7C54">동일 이미지로 수평 확장(스케일 아웃)</text>
-  <text x="1430" y="582" text-anchor="middle" font-size="11" fill="#4E7C54">image: pickard2-server:local</text>
+  <!-- WAS #2 (bottom) -->
+  <rect x="760" y="930" width="280" height="130" rx="10" fill="#EAF7EE" stroke="#68A063" stroke-width="2" filter="url(#shadow)"/>
+  <text x="900" y="962" text-anchor="middle" font-size="16" font-weight="700" fill="#2E5D34">WAS 서버 #2</text>
+  <text x="900" y="986" text-anchor="middle" font-size="13" fill="#3C6E42">Node.js + Express</text>
+  <text x="900" y="1008" text-anchor="middle" font-size="13" fill="#3C6E42">로그인 · 카드 · 신청 API</text>
+  <text x="900" y="1032" text-anchor="middle" font-size="11.5" fill="#4E7C54">동일 이미지로 수평 확장</text>
 
-  <!-- Arrows servers -> data layer -->
-  <path d="M 460 592 L 330 660" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <path d="M 590 592 L 800 660" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <path d="M 700 592 L 900 660" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-
-  <path d="M 1340 592 L 1150 660" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <path d="M 1420 592 L 1250 660" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-
-  <!-- server2 <-> RAG bidirectional (card indexing) -->
-  <path d="M 1570 592 L 1570 658" stroke="#00897B" stroke-width="2" fill="none" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <!-- WAS -> data column arrows -->
+  <path d="M 1000 380 L 1078 455" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 1040 360 L 1078 615" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 1040 950 L 1078 690" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 1000 930 L 1078 850" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
 
   <!-- MySQL -->
-  <rect x="140" y="660" width="330" height="150" rx="10" fill="#FFF3E0" stroke="#EF6C00" stroke-width="2" filter="url(#shadow)"/>
-  <text x="305" y="688" text-anchor="middle" font-size="16" font-weight="700" fill="#8A4B00">MySQL 8.0</text>
-  <text x="305" y="710" text-anchor="middle" font-size="12.5" fill="#A15A00">container: pickard-mysql · :3306</text>
-  <text x="305" y="730" text-anchor="middle" font-size="12.5" fill="#A15A00">DB: bnk_life / bnk_card</text>
-  <text x="305" y="750" text-anchor="middle" font-size="12.5" fill="#A15A00">schema.sql 자동 초기 시드</text>
-  <text x="305" y="770" text-anchor="middle" font-size="12.5" fill="#A15A00">유저/카드/신청/약관 데이터</text>
-  <text x="305" y="796" text-anchor="middle" font-size="11" fill="#B06A10">volume: mysql-data (영속화)</text>
+  <rect x="1080" y="390" width="300" height="140" rx="10" fill="#FFF3E0" stroke="#EF6C00" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1230" y="424" text-anchor="middle" font-size="16" font-weight="700" fill="#8A4B00">MySQL</text>
+  <text x="1230" y="450" text-anchor="middle" font-size="13" fill="#A15A00">회원 · 카드 · 신청 데이터</text>
+  <text x="1230" y="470" text-anchor="middle" font-size="13" fill="#A15A00">영구 저장(RDB)</text>
+  <text x="1230" y="496" text-anchor="middle" font-size="11" fill="#B06A10">volume 으로 데이터 보존</text>
 
-  <!-- Redis HA cluster -->
-  <rect x="710" y="660" width="580" height="220" rx="10" fill="#FDEDED" stroke="#DC382D" stroke-width="2" filter="url(#shadow)"/>
-  <text x="1000" y="688" text-anchor="middle" font-size="16" font-weight="700" fill="#A32017">Redis 7 — HA 클러스터 (세션 &amp; 캐시)</text>
+  <!-- Redis -->
+  <rect x="1080" y="550" width="300" height="200" rx="10" fill="#FDEDED" stroke="#DC382D" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1230" y="584" text-anchor="middle" font-size="16" font-weight="700" fill="#A32017">Redis</text>
+  <text x="1230" y="606" text-anchor="middle" font-size="12" fill="#A32017">(세션 · 캐시)</text>
+  <text x="1230" y="632" text-anchor="middle" font-size="12.5" fill="#B5463C">서버 2대의 로그인</text>
+  <text x="1230" y="652" text-anchor="middle" font-size="12.5" fill="#B5463C">세션 공유</text>
+  <text x="1230" y="676" text-anchor="middle" font-size="12.5" fill="#B5463C">Master-Replica + Sentinel</text>
+  <text x="1230" y="700" text-anchor="middle" font-size="11" fill="#C25A50">장애 시 자동 승격(Failover)</text>
+  <text x="1230" y="722" text-anchor="middle" font-size="11" fill="#C25A50">이중화</text>
 
-  <rect x="730" y="704" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#DC382D" stroke-width="1.5"/>
-  <text x="810" y="726" text-anchor="middle" font-size="12.5" font-weight="700" fill="#A32017">Master</text>
-  <text x="810" y="744" text-anchor="middle" font-size="11" fill="#B5463C">:6379</text>
+  <!-- AI / RAG / OCR -->
+  <rect x="1080" y="770" width="300" height="140" rx="10" fill="#E0F2F1" stroke="#00897B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1230" y="804" text-anchor="middle" font-size="16" font-weight="700" fill="#00594E">AI 서버</text>
+  <text x="1230" y="826" text-anchor="middle" font-size="12" fill="#00594E">(RAG · OCR)</text>
+  <text x="1230" y="850" text-anchor="middle" font-size="12.5" fill="#00695C">벡터 검색 기반 카드 추천</text>
+  <text x="1230" y="870" text-anchor="middle" font-size="12.5" fill="#00695C">신분증 OCR 자동 인식</text>
+  <text x="1230" y="894" text-anchor="middle" font-size="11" fill="#0F9188">Python · FastAPI</text>
 
-  <rect x="905" y="704" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#DC382D" stroke-width="1.5"/>
-  <text x="985" y="726" text-anchor="middle" font-size="12.5" font-weight="700" fill="#A32017">Replica</text>
-  <text x="985" y="744" text-anchor="middle" font-size="11" fill="#B5463C">:6380</text>
+  <!-- AI -> external -->
+  <path d="M 1380 840 L 1428 840" stroke="#8E24AA" stroke-width="2.5" fill="none" marker-end="url(#arrowPurple)"/>
 
-  <rect x="1080" y="704" width="190" height="56" rx="8" fill="#FFFFFF" stroke="#DC382D" stroke-width="1.5"/>
-  <text x="1175" y="722" text-anchor="middle" font-size="12.5" font-weight="700" fill="#A32017">Sentinel x 3</text>
-  <text x="1175" y="740" text-anchor="middle" font-size="11" fill="#B5463C">:26379 · 쿼럼 2 · 자동 페일오버</text>
+  <!-- External LLM (outside boundary) -->
+  <rect x="1436" y="762" width="160" height="156" rx="10" fill="#F9F1FB" stroke="#8E24AA" stroke-width="2" stroke-dasharray="6,4" filter="url(#shadow)"/>
+  <text x="1516" y="794" text-anchor="middle" font-size="15" font-weight="700" fill="#6A1B9A">외부 LLM</text>
+  <text x="1516" y="820" text-anchor="middle" font-size="13" fill="#8E24AA">Groq</text>
+  <text x="1516" y="842" text-anchor="middle" font-size="13" fill="#8E24AA">Gemini</text>
+  <text x="1516" y="864" text-anchor="middle" font-size="13" fill="#8E24AA">Claude</text>
+  <text x="1516" y="890" text-anchor="middle" font-size="11" fill="#9C4DBB">답변 생성</text>
 
-  <path d="M 890 732 L 905 732" stroke="#A32017" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="1000" y="778" text-anchor="middle" font-size="12" fill="#A32017">→ 서버 2대의 세션(session) 공유 저장소 · 마스터 장애 시 자동 승격</text>
-  <text x="1000" y="800" text-anchor="middle" font-size="12" fill="#A32017">RedisInsight(:5540)로 모니터링 · sentinel.conf / master.conf / replica.conf</text>
-  <text x="1000" y="822" text-anchor="middle" font-size="11" fill="#B5463C">volumes: master-data, replica-data, sentinel-data ×3</text>
-  <text x="1000" y="844" text-anchor="middle" font-size="11" fill="#B5463C">containers: redis-master · redis-replica · redis-sentinel-1/2/3 · redisinsight</text>
+  <!-- RAG pipeline caption (inside boundary) -->
+  <rect x="460" y="1085" width="920" height="46" rx="8" fill="#FFFFFF" stroke="#B0BEC5" stroke-width="1.3"/>
+  <text x="920" y="1113" text-anchor="middle" font-size="13.5" fill="#37474F">RAG 파이프라인&#160; &#160;질문 임베딩 → 벡터 검색(카드 DB) → 재정렬(Re-rank) → LLM이 추천 답변 생성</text>
 
-  <!-- RAG/OCR AI server -->
-  <rect x="1400" y="660" width="340" height="220" rx="10" fill="#E0F2F1" stroke="#00897B" stroke-width="2" filter="url(#shadow)"/>
-  <text x="1570" y="686" text-anchor="middle" font-size="15.5" font-weight="700" fill="#00594E">pickard-rag</text>
-  <text x="1570" y="705" text-anchor="middle" font-size="12.5" font-weight="700" fill="#00594E">AI 서버 (RAG · OCR)</text>
-  <text x="1570" y="726" text-anchor="middle" font-size="12" fill="#00695C">Python · FastAPI · :8000</text>
-  <text x="1570" y="745" text-anchor="middle" font-size="12" fill="#00695C">임베딩: ko-sroberta-multitask</text>
-  <text x="1570" y="764" text-anchor="middle" font-size="12" fill="#00695C">재정렬: ko-reranker</text>
-  <text x="1570" y="783" text-anchor="middle" font-size="12" fill="#00695C">벡터DB: ChromaDB(volume)</text>
-  <text x="1570" y="802" text-anchor="middle" font-size="12" fill="#00695C">OCR: Tesseract(kor+eng)</text>
-  <text x="1570" y="821" text-anchor="middle" font-size="12" fill="#00695C">/index · /recommend · /ocr</text>
-  <text x="1570" y="843" text-anchor="middle" font-size="10.5" fill="#0F9188">image: pickard-rag:local</text>
-  <text x="1570" y="860" text-anchor="middle" font-size="10.5" fill="#0F9188">volumes: chroma-data, uploads-data</text>
-
-  <!-- Uploads shared note -->
-  <text x="150" y="945" font-size="12" fill="#607D8B">※ 업로드 파일(신분증 등)은 서버 2대 &amp; RAG 컨테이너가 볼륨/바인드마운트로 공유 (uploads-data)</text>
-
-  <!-- RAG -> external LLM APIs (outside docker boundary) -->
-  <path d="M 1740 770 L 1778 770" stroke="#8E24AA" stroke-width="2" fill="none" marker-end="url(#arrowPurple)"/>
-  <text x="1875" y="645" text-anchor="middle" font-size="12" font-weight="700" fill="#8E24AA">외부 LLM API</text>
-  <text x="1875" y="660" text-anchor="middle" font-size="10.5" fill="#8E24AA">(답변 생성 · Generation)</text>
-
-  <rect x="1780" y="672" width="190" height="62" rx="8" fill="#FFFFFF" stroke="#8E24AA" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="1875" y="696" text-anchor="middle" font-size="13" font-weight="700" fill="#6A1B9A">Groq</text>
-  <text x="1875" y="713" text-anchor="middle" font-size="10.5" fill="#8E24AA">Llama 3.3 70B (기본값)</text>
-  <text x="1875" y="727" text-anchor="middle" font-size="9.5" fill="#8E24AA">groq SDK</text>
-
-  <rect x="1780" y="746" width="190" height="62" rx="8" fill="#FFFFFF" stroke="#8E24AA" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="1875" y="770" text-anchor="middle" font-size="13" font-weight="700" fill="#6A1B9A">Google Gemini</text>
-  <text x="1875" y="787" text-anchor="middle" font-size="10.5" fill="#8E24AA">2.0 Flash</text>
-  <text x="1875" y="801" text-anchor="middle" font-size="9.5" fill="#8E24AA">google-genai SDK</text>
-
-  <rect x="1780" y="820" width="190" height="62" rx="8" fill="#FFFFFF" stroke="#8E24AA" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="1875" y="844" text-anchor="middle" font-size="13" font-weight="700" fill="#6A1B9A">Anthropic Claude</text>
-  <text x="1875" y="861" text-anchor="middle" font-size="10.5" fill="#8E24AA">Opus 4.x</text>
-  <text x="1875" y="875" text-anchor="middle" font-size="9.5" fill="#8E24AA">anthropic SDK</text>
-
-  <!-- ===================== Tech stack footer ===================== -->
-  <text x="65" y="1050" font-size="19" font-weight="700" fill="#1A237E">기술 스택</text>
-
-  <!-- column 1: Frontend -->
-  <rect x="40" y="1068" width="360" height="230" rx="10" fill="#FFFFFF" stroke="#29B6F6" stroke-width="1.5" filter="url(#shadow)"/>
-  <rect x="40" y="1068" width="360" height="34" rx="10" fill="#29B6F6"/>
-  <rect x="40" y="1084" width="360" height="18" fill="#29B6F6"/>
-  <text x="220" y="1091" text-anchor="middle" font-size="14.5" font-weight="700" fill="#FFFFFF">Frontend</text>
-  <text x="60" y="1124" font-size="12.5" fill="#37474F">• React 18 (SPA)</text>
-  <text x="60" y="1148" font-size="12.5" fill="#37474F">• Vite 5 (빌드/개발 서버)</text>
-  <text x="60" y="1172" font-size="12.5" fill="#37474F">• React Router DOM 6</text>
-  <text x="60" y="1196" font-size="12.5" fill="#37474F">• Axios (HTTP 클라이언트)</text>
-  <text x="60" y="1220" font-size="12.5" fill="#37474F">• Nginx (정적 서빙 + LB)</text>
-  <text x="60" y="1244" font-size="12.5" fill="#37474F">• Docker (multi-stage build)</text>
-  <text x="60" y="1268" font-size="12.5" fill="#37474F">• 반응형 UI / IME 대응 채팅</text>
-
-  <!-- column 2: WAS -->
-  <rect x="420" y="1068" width="360" height="230" rx="10" fill="#FFFFFF" stroke="#68A063" stroke-width="1.5" filter="url(#shadow)"/>
-  <rect x="420" y="1068" width="360" height="34" rx="10" fill="#68A063"/>
-  <rect x="420" y="1084" width="360" height="18" fill="#68A063"/>
-  <text x="600" y="1091" text-anchor="middle" font-size="14.5" font-weight="700" fill="#FFFFFF">Backend (WAS)</text>
-  <text x="440" y="1124" font-size="12.5" fill="#37474F">• Node.js 18 + Express 4</text>
-  <text x="440" y="1148" font-size="12.5" fill="#37474F">• JWT + bcrypt (인증/인가)</text>
-  <text x="440" y="1172" font-size="12.5" fill="#37474F">• express-session + connect-redis</text>
-  <text x="440" y="1196" font-size="12.5" fill="#37474F">• multer (파일 업로드)</text>
-  <text x="440" y="1220" font-size="12.5" fill="#37474F">• mysql2 / ioredis (드라이버)</text>
-  <text x="440" y="1244" font-size="12.5" fill="#37474F">• 서버 2대 이중화 + 헬스체크</text>
-  <text x="440" y="1268" font-size="12.5" fill="#37474F">• Docker (컨테이너 수평 확장)</text>
-
-  <!-- column 3: AI / RAG -->
-  <rect x="800" y="1068" width="360" height="230" rx="10" fill="#FFFFFF" stroke="#00897B" stroke-width="1.5" filter="url(#shadow)"/>
-  <rect x="800" y="1068" width="360" height="34" rx="10" fill="#00897B"/>
-  <rect x="800" y="1084" width="360" height="18" fill="#00897B"/>
-  <text x="980" y="1091" text-anchor="middle" font-size="14.5" font-weight="700" fill="#FFFFFF">AI / RAG · OCR</text>
-  <text x="820" y="1124" font-size="12.5" fill="#37474F">• Python 3.12 + FastAPI</text>
-  <text x="820" y="1148" font-size="12.5" fill="#37474F">• ChromaDB (벡터 스토어)</text>
-  <text x="820" y="1172" font-size="12.5" fill="#37474F">• sentence-transformers (임베딩)</text>
-  <text x="820" y="1196" font-size="12.5" fill="#37474F">• CrossEncoder (Re-ranking)</text>
-  <text x="820" y="1220" font-size="12.5" fill="#37474F">• Tesseract OCR (Pillow 전처리)</text>
-  <text x="820" y="1244" font-size="12.5" fill="#37474F">• Groq / Gemini / Claude SDK</text>
-  <text x="820" y="1268" font-size="12.5" fill="#37474F">• Docker (독립 AI 서버 분리)</text>
-
-  <!-- column 4: Infra / Data -->
-  <rect x="1180" y="1068" width="360" height="230" rx="10" fill="#FFFFFF" stroke="#DC382D" stroke-width="1.5" filter="url(#shadow)"/>
-  <rect x="1180" y="1068" width="360" height="34" rx="10" fill="#DC382D"/>
-  <rect x="1180" y="1084" width="360" height="18" fill="#DC382D"/>
-  <text x="1360" y="1091" text-anchor="middle" font-size="14.5" font-weight="700" fill="#FFFFFF">Infra / Data</text>
-  <text x="1200" y="1124" font-size="12.5" fill="#37474F">• Docker Compose (전체 오케스트레이션)</text>
-  <text x="1200" y="1148" font-size="12.5" fill="#37474F">• MySQL 8.0 (RDB, utf8mb4)</text>
-  <text x="1200" y="1172" font-size="12.5" fill="#37474F">• Redis 7 (Master/Replica/Sentinel)</text>
-  <text x="1200" y="1196" font-size="12.5" fill="#37474F">• RedisInsight (모니터링 UI)</text>
-  <text x="1200" y="1220" font-size="12.5" fill="#37474F">• bridge network (172.28.0.0/16)</text>
-  <text x="1200" y="1244" font-size="12.5" fill="#37474F">• Docker Volume (데이터 영속화)</text>
-  <text x="1200" y="1268" font-size="12.5" fill="#37474F">• healthcheck + restart:unless-stopped</text>
-
-  <!-- column 5: Highlights -->
-  <rect x="1560" y="1068" width="400" height="230" rx="10" fill="#FFF9E6" stroke="#F9A825" stroke-width="1.5" filter="url(#shadow)"/>
-  <rect x="1560" y="1068" width="400" height="34" rx="10" fill="#F9A825"/>
-  <rect x="1560" y="1084" width="400" height="18" fill="#F9A825"/>
-  <text x="1760" y="1091" text-anchor="middle" font-size="14.5" font-weight="700" fill="#FFFFFF">아키텍처 핵심 포인트</text>
-  <text x="1580" y="1124" font-size="12.5" fill="#5D4009">✓ 서비스별 컨테이너 완전 분리 (FE/WAS×2/RAG/DB/캐시)</text>
-  <text x="1580" y="1148" font-size="12.5" fill="#5D4009">✓ Nginx 로드밸런싱으로 WAS 이중화 · 무중단 운영</text>
-  <text x="1580" y="1172" font-size="12.5" fill="#5D4009">✓ Redis Sentinel 자동 페일오버로 세션 유실 방지</text>
-  <text x="1580" y="1196" font-size="12.5" fill="#5D4009">✓ RAG: 임베딩→검색→Re-rank→LLM 생성 파이프라인</text>
-  <text x="1580" y="1220" font-size="12.5" fill="#5D4009">✓ 3개 LLM(Groq/Gemini/Claude) 선택형 연동</text>
-  <text x="1580" y="1244" font-size="12.5" fill="#5D4009">✓ 신분증 OCR로 회원가입 자동입력 지원</text>
-  <text x="1580" y="1268" font-size="12.5" fill="#5D4009">✓ 전 컨테이너 healthcheck + 자동 재기동</text>
+  <!-- Note below boundary -->
+  <text x="900" y="1185" text-anchor="middle" font-size="14" fill="#37474F">각 컨테이너는 독립적으로 배포되며, 장애 시 자동 재기동(healthcheck)</text>
+  <text x="900" y="1210" text-anchor="middle" font-size="14" fill="#37474F">Redis Sentinel 로 세션 유실 없이 자동 장애조치(Failover)</text>
 
 </svg>
